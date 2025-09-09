@@ -1,0 +1,11 @@
+# -*- coding: utf-8 -*-
+
+# Macro Begin: C:\Users\marco\OneDrive - Caja Costarricense de Seguro Social\Documentos\FreeCAD\Macros\Prueba.FCMacro +++++++++++++++++++++++++++++++++++++++++++++++++
+import FreeCAD
+
+# Gui.runCommand('Std_DlgMacroRecord',0)
+# Gui.Selection.clearSelection()
+# Gui.Selection.addSelection('Pacayas','Clone040','Edge7',60420.3,22325.8,2530)
+# Gui.Selection.addSelection('Pacayas','Clone041','Edge7',60420.3,23816.3,2530)
+# Gui.Selection.clearSelection()
+# Macro End: C:\Users\marco\OneDrive - Caja Costarricense de Seguro Social\Documentos\FreeCAD\Macros\Prueba.FCMacro +++++++++++++++++++++++++++++++++++++++++++++++++

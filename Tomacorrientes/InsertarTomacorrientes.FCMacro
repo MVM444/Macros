@@ -1,0 +1,91 @@
+import FreeCAD
+import FreeCADGui
+import Part
+import os
+from datetime import datetime
+
+# Comentario generado por ChatGPT
+# Fecha y hora: 2024-11-13 19:00:00
+# Problemas conocidos: Los tomacorrientes estaban orientados en la dirección contraria. 
+# Se realizaron ajustes para invertir la orientación de todos los tomacorrientes.
+
+def insertar_tomacorrientes():
+    doc = FreeCAD.ActiveDocument
+
+    # Obtener la ruta del directorio de macros y los archivos STEP
+    try:
+        directorio_macro = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Macro").GetString("MacroPath", "")
+        archivo_tomacorriente = os.path.join(directorio_macro, "Resources", "SimboloToma.step")
+    except Exception as e:
+        FreeCAD.Console.PrintError(f"Error al obtener la ruta del archivo: {str(e)}\n")
+        return
+    
+    # Verifica si el archivo existe
+    if not os.path.exists(archivo_tomacorriente):
+        FreeCAD.Console.PrintError("El archivo SimboloToma.step no existe en la ruta especificada.\n")
+        return
+    
+    # Importa el archivo STEP
+    imported_part = Part.read(archivo_tomacorriente)
+    
+    # Obtener la selección actual del usuario
+    selection = FreeCADGui.Selection.getSelectionEx()
+    if not selection:
+        FreeCAD.Console.PrintError("No hay ninguna selección. Por favor seleccione al menos una línea.\n")
+        return
+    
+    for selected_object in selection:
+        if selected_object.HasSubObjects:
+            for sub_object in selected_object.SubObjects:
+                if isinstance(sub_object, Part.Edge):
+                    edge = sub_object
+                    length = edge.Length
+                    
+                    # Determinar el número de tomacorrientes a insertar
+                    num_tomacorrientes = max(1, int(length // 1800))
+                    
+                    # Calcular la posición de los tomacorrientes a lo largo del borde
+                    for i in range(num_tomacorrientes):
+                        parameter = (i + 1) / (num_tomacorrientes + 1)
+                        point_on_edge = edge.valueAt(parameter * length)
+
+                        # Obtener la tangente en el punto para determinar la orientación del tomacorriente
+                        tangent_vector = edge.tangentAt(parameter * length)
+                        tangent_vector.normalize()
+
+                        # Ajustar la posición para centrar el tomacorriente en el borde
+                        ortho_vector = tangent_vector.cross(FreeCAD.Vector(0, 0, 1))
+                        ortho_vector.normalize()
+                        ortho_vector.multiply(60)  # Ajuste perpendicular de 60 mm
+
+                        # Calcular la posición final desplazada
+                        final_position = point_on_edge.add(ortho_vector)
+
+                        # Crear el tomacorriente en la ubicación especificada
+                        part_feature = doc.addObject("Part::Feature", f"Tomacorriente_{i + 1}")
+                        part_feature.Shape = imported_part.copy()
+
+                        # Corregir la orientación del tomacorriente invirtiendo el ángulo de rotación
+                        if tangent_vector.y == 0:  # Orientación en eje X
+                            if tangent_vector.x > 0:
+                                angulo_rotacion = 180  # Invertir de 0 a 180 grados
+                            else:
+                                angulo_rotacion = 0
+                        elif tangent_vector.x == 0:  # Orientación en eje Y
+                            if tangent_vector.y > 0:
+                                angulo_rotacion = -90  # Invertir de 90 a -90 grados si va hacia arriba
+                            else:
+                                angulo_rotacion = 90  # Invertir de -90 a 90 grados si va hacia abajo
+                        else:
+                            # Calcular el ángulo de rotación en relación con el eje X y corregir la dirección
+                            angulo_rotacion = -tangent_vector.getAngle(FreeCAD.Vector(1, 0, 0)) * (180 / 3.14159)
+
+                        # Ajustar la colocación precisa del tomacorriente
+                        part_feature.Placement = FreeCAD.Placement(final_position, FreeCAD.Rotation(FreeCAD.Vector(0, 0, 1), angulo_rotacion))
+                        part_feature.Label = f"Tomacorriente_{i + 1}"
+                    
+                    # Recomputa el documento después de crear los tomacorrientes
+                    doc.recompute()
+
+# Ejecuta la función para insertar los tomacorrientes
+insertar_tomacorrientes()

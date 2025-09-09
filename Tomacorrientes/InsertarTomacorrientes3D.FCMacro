@@ -1,0 +1,91 @@
+import FreeCAD
+import FreeCADGui
+import Part
+import os
+from datetime import datetime
+
+# Comentario generado por ChatGPT
+# Fecha y hora: 2025-01-10 16:00:00
+# Problemas conocidos: Ninguno identificado hasta el momento.
+# Inserta el archivo 3D "tomacorriente-3D.step" con una elevación configurable sobre la posición original.
+
+def insertar_tomacorrientes_3D():
+    doc = FreeCAD.ActiveDocument
+
+    # Ruta al archivo STEP del tomacorriente en el subdirectorio "Resources"
+    directorio_macro = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Macro").GetString("MacroPath", "")
+    archivo_tomacorriente = os.path.join(directorio_macro, "Resources", "tomacorriente-3D.step")
+
+    # Verifica si el archivo existe
+    if not os.path.exists(archivo_tomacorriente):
+        FreeCAD.Console.PrintError("El archivo tomacorriente-3D.step no existe en la ruta especificada.\n")
+        return
+
+    # Mostrar diálogo para configurar la altura
+    from PySide2 import QtWidgets
+
+    class AlturaDialog(QtWidgets.QDialog):
+        def __init__(self, parent=None):
+            super(AlturaDialog, self).__init__(parent)
+            self.setWindowTitle("Configurar Altura de Tomacorrientes")
+
+            layout = QtWidgets.QVBoxLayout()
+
+            self.altura_input = QtWidgets.QDoubleSpinBox()
+            self.altura_input.setRange(-1000, 1000)  # Rango en mm
+            self.altura_input.setValue(300)  # Valor por defecto en mm
+            self.altura_input.setSuffix(" mm")
+            layout.addWidget(QtWidgets.QLabel("Altura de los tomacorrientes:"))
+            layout.addWidget(self.altura_input)
+
+            button_box = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
+            button_box.accepted.connect(self.accept)
+            button_box.rejected.connect(self.reject)
+            layout.addWidget(button_box)
+
+            self.setLayout(layout)
+
+        def get_altura(self):
+            return self.altura_input.value()
+
+    dialog = AlturaDialog()
+    if not dialog.exec_():
+        return  # Salir si se cancela el diálogo
+
+    altura = dialog.get_altura()
+
+    # Obtener la selección actual del usuario
+    selection = FreeCADGui.Selection.getSelection()
+    if not selection:
+        FreeCAD.Console.PrintError("No hay ninguna selección. Por favor seleccione al menos un objeto.\n")
+        return
+
+    for obj in selection:
+        if hasattr(obj, 'Placement'):
+            posicion_actual = obj.Placement.Base
+            rotacion_actual = obj.Placement.Rotation
+
+            # Crear un nuevo objeto para el tomacorriente 3D
+            part_feature = doc.addObject("Part::Feature", f"Tomacorriente3D_{obj.Label}")
+
+            # Importar el archivo STEP y asignarlo al Shape del objeto
+            try:
+                imported_shape = Part.Shape()
+                imported_shape.read(archivo_tomacorriente)
+                part_feature.Shape = imported_shape
+            except Exception as e:
+                FreeCAD.Console.PrintError(f"Error al leer el archivo STEP: {e}\n")
+                continue
+
+            # Ajustar la posición del tomacorriente
+            nueva_posicion = FreeCAD.Vector(posicion_actual.x, posicion_actual.y, altura)
+            part_feature.Placement = FreeCAD.Placement(nueva_posicion, rotacion_actual)
+
+            # Etiqueta del nuevo objeto
+            part_feature.Label = f"Tomacorriente3D_{obj.Label}"
+
+    # Recomputa el documento después de crear los tomacorrientes
+    doc.recompute()
+
+# Ejecuta la función para insertar los tomacorrientes
+insertar_tomacorrientes_3D()

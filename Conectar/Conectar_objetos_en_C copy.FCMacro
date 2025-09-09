@@ -1,0 +1,108 @@
+# -*- coding: utf-8 -*-
+
+import FreeCAD
+import FreeCADGui
+import Part
+import Draft
+import math
+from pivy.coin import SoMouseButtonEvent
+
+class ViewObserver:
+    def __init__(self, callback):
+        self.callback = callback
+        self.point = None
+        self.enabled = True
+
+    def addObserver(self):
+        self.view = FreeCADGui.ActiveDocument.ActiveView
+        self.view.addEventCallback("SoEvent", self.eventCallback)
+
+    def removeObserver(self):
+        self.view.removeEventCallback("SoEvent", self.eventCallback)
+        self.enabled = False
+
+    def eventCallback(self, event):
+        if not self.enabled:
+            return
+
+        try:
+            if isinstance(event, SoMouseButtonEvent) and event.getState() == SoMouseButtonEvent.DOWN:
+                if event.getButton() == SoMouseButtonEvent.BUTTON1:  # Botón izquierdo del ratón
+                    position = event.getPosition()
+                    info = self.view.getObjectInfo((position[0], position[1]))
+                    if info and "x" in info and "y" in info and "z" in info:
+                        self.point = FreeCAD.Vector(info["x"], info["y"], info["z"])
+                        self.callback(self.point)
+                        self.removeObserver()
+        except Exception as e:
+            FreeCAD.Console.PrintError(f"Error en eventCallback: {e}\n")
+
+def conectar_objetos_en_C():
+    """
+    Esta macro conecta dos objetos seleccionados (aristas o caras) con una trayectoria en forma de 'C'.
+    Utiliza tres puntos: los centros de las aristas o caras seleccionadas y un tercer punto que define
+    la dirección y distancia de la línea intermedia. El tercer punto se selecciona después de ejecutar
+    la macro con un clic en el área de trabajo.
+    """
+    doc = FreeCAD.ActiveDocument
+    selected_objects = FreeCADGui.Selection.getSelectionEx()
+
+    if len(selected_objects) != 2:
+        FreeCAD.Console.PrintError("Debe seleccionar exactamente dos aristas o caras antes de ejecutar la macro.\n")
+        return
+
+    FreeCAD.Console.PrintMessage(f"Objetos seleccionados: {[obj.Object.Label for obj in selected_objects]}\n")
+
+    def obtener_punto_central(selection_detail):
+        """
+        Obtiene el punto central de una arista o cara seleccionada.
+        """
+        if selection_detail.HasSubObjects:
+            for sub_obj in selection_detail.SubObjects:
+                if isinstance(sub_obj, Part.Edge):
+                    return sub_obj.CenterOfMass
+                elif isinstance(sub_obj, Part.Face):
+                    return sub_obj.CenterOfMass
+        return None
+
+    # Obtener los puntos centrales de las aristas o caras seleccionadas
+    punto1 = obtener_punto_central(selected_objects[0])
+    punto2 = obtener_punto_central(selected_objects[1])
+
+    if punto1 is None or punto2 is None:
+        FreeCAD.Console.PrintError("Error al obtener los puntos centrales de las aristas o caras seleccionadas.\n")
+        return
+
+    def procesar_punto3(punto3):
+        # Calcular la dirección y distancia basadas en el tercer punto
+        direccion = (punto3 - punto1).normalize()
+        distancia = (punto3 - punto1).Length
+
+        # Redondear la distancia a múltiplos de 100 mm
+        distancia_redondeada = math.floor(distancia / 100) * 100
+
+        # Generar puntos intermedios para la trayectoria en 'C'
+        punto_intermedio1 = punto1 + (direccion * distancia_redondeada)
+        punto_intermedio2 = FreeCAD.Vector(punto_intermedio1.x, punto_intermedio1.y, punto2.z)
+
+        # Calcular el radio del fillet como una fracción de la distancia redondeada
+        radio_fillet = max(5, min(distancia_redondeada / 2, 10))
+
+        # Crear la conexión con Draft Wire
+        puntos = [punto1, punto_intermedio1, punto_intermedio2, punto2]
+        wire = Draft.make_wire(puntos, closed=False)
+        wire.Label = f'Conexion_C_{selected_objects[0].Object.Label}_{selected_objects[1].Object.Label}'
+
+        # Aplicar fillet a las esquinas del wire
+        Draft.fillet(wire, radius=radio_fillet)
+
+        # Recalcular el documento
+        doc.recompute()
+
+    # Crear el observador de la vista y esperar la selección del tercer punto
+    FreeCAD.Console.PrintMessage("Seleccione un punto en la pantalla para definir la direccion y distancia.\n")
+    view_observer = ViewObserver(procesar_punto3)
+    view_observer.addObserver()
+
+# Ejecutar la función
+conectar_objetos_en_C()

@@ -1,0 +1,149 @@
+# Macro: CombinarLucesEdificio.FCMacro
+# Descripcion:
+#  Macro para combinar un modelo de edificio y un modelo de luces en un solo X3D,
+#  configurar NavigationInfo con avatarSize correcto,
+#  aplicar Transform para eje Z como arriba,
+#  recordar rutas y archivos (edificio, luces, viewer, salida) en preferencias,
+#  y lanzar automaticamente Castle Model Viewer.
+# Autor: GPT + Usuario
+# Fecha: 2025-07-12 21:45
+
+import os
+import subprocess
+import FreeCAD
+import FreeCADGui
+from PySide import QtWidgets
+
+# Parametros de configuracion
+prefs = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Macro/CombinarLucesEdificio")
+# Claves pref
+KEY_BUILDING = "LastBuilding"
+KEY_LIGHTS = "LastLights"
+KEY_VIEWER = "ViewerPath"
+KEY_OUTPUT = "LastOutput"
+
+# Dialogo de configuracion para rutas y archivo de salida
+def show_config_dialog():
+    dlg = QtWidgets.QDialog(None)
+    dlg.setWindowTitle("Configuracion CombinarLucesEdificio")
+    layout = QtWidgets.QFormLayout(dlg)
+    # Edificio
+    edt_b = QtWidgets.QLineEdit(prefs.GetString(KEY_BUILDING, ""))
+    btn_b = QtWidgets.QPushButton("Cambiar...")
+    btn_b.clicked.connect(lambda: select_file(KEY_BUILDING, "Seleccionar X3D edificio", edt_b, "X3D Files (*.x3d)"))
+    hb1 = QtWidgets.QHBoxLayout()
+    hb1.addWidget(edt_b)
+    hb1.addWidget(btn_b)
+    layout.addRow("Archivo edificio:", hb1)
+    # Luces
+    edt_l = QtWidgets.QLineEdit(prefs.GetString(KEY_LIGHTS, ""))
+    btn_l = QtWidgets.QPushButton("Cambiar...")
+    btn_l.clicked.connect(lambda: select_file(KEY_LIGHTS, "Seleccionar X3D luces", edt_l, "X3D Files (*.x3d)"))
+    hb2 = QtWidgets.QHBoxLayout()
+    hb2.addWidget(edt_l)
+    hb2.addWidget(btn_l)
+    layout.addRow("Archivo luces:", hb2)
+    # Viewer
+    edt_v = QtWidgets.QLineEdit(prefs.GetString(KEY_VIEWER, ""))
+    btn_v = QtWidgets.QPushButton("Cambiar...")
+    btn_v.clicked.connect(lambda: select_file(KEY_VIEWER, "Seleccionar Castle Model Viewer", edt_v, "Executables (*.exe);;All files (*)"))
+    hb3 = QtWidgets.QHBoxLayout()
+    hb3.addWidget(edt_v)
+    hb3.addWidget(btn_v)
+    layout.addRow("Castle Model Viewer:", hb3)
+    # Salida
+    edt_o = QtWidgets.QLineEdit(prefs.GetString(KEY_OUTPUT, ""))
+    btn_o = QtWidgets.QPushButton("Cambiar...")
+    btn_o.clicked.connect(lambda: select_file(KEY_OUTPUT, "Seleccionar archivo X3D de salida", edt_o, "X3D Files (*.x3d)"))
+    hb4 = QtWidgets.QHBoxLayout()
+    hb4.addWidget(edt_o)
+    hb4.addWidget(btn_o)
+    layout.addRow("Archivo salida:", hb4)
+    # Boton aceptar
+    btn_ok = QtWidgets.QPushButton("Aceptar")
+    btn_ok.clicked.connect(lambda: on_config_accept(dlg, edt_b, edt_l, edt_v, edt_o))
+    layout.addRow(btn_ok)
+    dlg.exec_()
+
+# Handlers de dialogo
+def select_file(key, title, line_edit, filter_str):
+    path, _ = QtWidgets.QFileDialog.getOpenFileName(None, title, "", filter_str)
+    if path:
+        line_edit.setText(path)
+
+def on_config_accept(dlg, edt_b, edt_l, edt_v, edt_o):
+    prefs.SetString(KEY_BUILDING, edt_b.text())
+    prefs.SetString(KEY_LIGHTS, edt_l.text())
+    prefs.SetString(KEY_VIEWER, edt_v.text())
+    prefs.SetString(KEY_OUTPUT, edt_o.text())
+    dlg.accept()
+
+# Extrae nodos de luz y geometria
+def show_lights(body):
+    lights = []
+    for tag in ['PointLight', 'SpotLight']:
+        pos = 0
+        while True:
+            start = body.find(f'<{tag}', pos)
+            if start < 0:
+                break
+            end = body.find('/>', start) + 2
+            lights.append(body[start:end])
+            pos = end
+    return ('\n  <!-- Lights and Geometry -->' +
+            ''.join(f"\n  {l}" for l in lights) +
+            '\n  ' + body)
+
+# Macro principal
+def combine_x3d():
+    FreeCAD.Console.PrintMessage("DEBUG: iniciar combine_x3d()\n")
+    # Config dialog si falta algo
+    if not prefs.GetString(KEY_BUILDING) or not prefs.GetString(KEY_LIGHTS) or not prefs.GetString(KEY_VIEWER) or not prefs.GetString(KEY_OUTPUT):
+        show_config_dialog()
+    bfile = prefs.GetString(KEY_BUILDING)
+    lfile = prefs.GetString(KEY_LIGHTS)
+    vfile = prefs.GetString(KEY_VIEWER)
+    ofile = prefs.GetString(KEY_OUTPUT)
+    FreeCAD.Console.PrintMessage(f"DEBUG: b={bfile}, l={lfile}, v={vfile}, o={ofile}\n")
+    # Validar rutas
+    for p in [bfile, lfile, vfile]:
+        if not os.path.isfile(p):
+            FreeCAD.Console.PrintMessage(f"ERROR: no existe {p}\n")
+            return
+    # Lectura
+    with open(bfile, 'r', encoding='utf-8') as f:
+        ed = f.read()
+    with open(lfile, 'r', encoding='utf-8') as f:
+        lu = f.read()
+    FreeCAD.Console.PrintMessage("DEBUG: archivos leidos\n")
+    # Extraer Scene
+    si = ed.find('<Scene')
+    sie = ed.find('>', si) + 1
+    se = ed.rfind('</Scene>')
+    header = ed[:sie]
+    body_ed = ed[sie:se]
+    footer = ed[se:]
+    li = lu.find('<Scene')
+    lie = lu.find('>', li) + 1
+    le = lu.rfind('</Scene>')
+    body_lu = lu[lie:le]
+    # Construir nuevo body
+    nav = '\n  <!-- NavigationInfo -->\n  <NavigationInfo avatarSize="0.25 1600 0.75" speed="2000"/>'
+    zup = '\n  <!-- Z-UP Rotate -->\n  <Transform rotation="1 0 0 -1.5708">'
+    zupc = '\n  </Transform>\n'
+    lights_section = show_lights(body_lu)
+    new_body = nav + zup + body_ed + lights_section + zupc
+    combined = header + new_body + footer
+    # Guardar
+    with open(ofile, 'w', encoding='utf-8') as f:
+        f.write(combined)
+    FreeCAD.Console.PrintMessage(f"Archivo combinado guardado: {ofile}\n")
+    # Lanzar viewer
+    FreeCAD.Console.PrintMessage("DEBUG: lanzar viewer...\n")
+    try:
+        subprocess.Popen([vfile, ofile])
+    except Exception as e:
+        FreeCAD.Console.PrintMessage(f"ERROR lanzar viewer: {e}\n")
+
+# Ejecutar macro
+combine_x3d()

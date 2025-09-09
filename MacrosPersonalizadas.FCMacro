@@ -1,0 +1,115 @@
+"""
+Macro: MenuMacrosPersonalizadas
+Descripcion: Crea un menu de macros personalizadas y otro con las 5 macros mas recientes, ordenadas del mas reciente al menos.
+Autor: ChatGPT
+Fecha: 2025-06-23 09:00
+"""
+
+import FreeCAD
+import FreeCADGui
+import os
+import json
+from os.path import normpath, abspath
+from PySide2 import QtWidgets
+from functools import partial
+
+# Directorio de macros y fichero para almacenar recien usadas
+raw_dir = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Macro").GetString("MacroPath", "")
+MACRO_DIR = normpath(abspath(raw_dir))
+RECENT_FILE = normpath(abspath(os.path.join(MACRO_DIR, ".macro_recent.json")))
+MAX_RECENT = 5
+
+
+def load_recent():
+    """Carga lista de macros recien usadas"""
+    try:
+        with open(RECENT_FILE, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        if isinstance(data, list):
+            return data
+    except Exception:
+        pass
+    return []
+
+
+def save_recent(lst):
+    """Guarda lista de macros recien usadas"""
+    try:
+        with open(RECENT_FILE, 'w', encoding='utf-8') as f:
+            json.dump(lst, f, indent=2)
+    except Exception as e:
+        FreeCAD.Console.PrintError(f"Error guardando recien usadas: {e}\n")
+
+
+def populate_recent_menu(menu):
+    """Repuebla el menu de macros frecuentes con las más recientes"""
+    menu.clear()
+    recent = load_recent()
+    for path in recent:
+        name = os.path.splitext(os.path.basename(path))[0]
+        act = menu.addAction(name)
+        act.triggered.connect(partial(run_macro, path))
+
+
+def create_recent_menu(bar):
+    """Crea menu de macros frecuentes y enlaza a aboutToShow"""
+    freq = bar.addMenu("Macros Frecuentes")
+    freq.aboutToShow.connect(lambda: populate_recent_menu(freq))
+
+
+def create_custom_menu(bar):
+    """Crea menu de macros personalizadas"""
+    custom = bar.addMenu("Macros Personalizadas")
+    if not os.path.isdir(MACRO_DIR):
+        FreeCAD.Console.PrintError(f"Directorio de macros no existe: {MACRO_DIR}\n")
+        return
+    for root, dirs, files in os.walk(MACRO_DIR):
+        rel = os.path.relpath(root, MACRO_DIR)
+        macros = [f for f in sorted(files) if f.lower().endswith('.fcmacro')]
+        if not macros:
+            continue
+        submenu = custom if rel in ('.', './') else custom.addMenu(rel)
+        for f in macros:
+            path = normpath(abspath(os.path.join(root, f)))
+            name = os.path.splitext(f)[0]
+            act = submenu.addAction(name)
+            act.triggered.connect(partial(run_macro, path))
+
+
+def recreate_menus():
+    """Elimina y crea ambos menus"""
+    mw = FreeCADGui.getMainWindow()
+    bar = mw.menuBar()
+    for title in ("Macros Frecuentes", "Macros Personalizadas"):
+        for m in bar.findChildren(QtWidgets.QMenu):
+            if m.title() == title:
+                bar.removeAction(m.menuAction())
+    create_recent_menu(bar)
+    create_custom_menu(bar)
+
+
+def run_macro(path):
+    """Ejecuta macro y actualiza recien usadas"""
+    path = normpath(abspath(path))
+    recent = load_recent()
+    if path in recent:
+        recent.remove(path)
+    recent.insert(0, path)
+    if len(recent) > MAX_RECENT:
+        recent = recent[:MAX_RECENT]
+    save_recent(recent)
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            exec(f.read(), globals())
+    except Exception as e:
+        FreeCAD.Console.PrintError(f"Error en macro {path}: {e}\n")
+    # actualizar menu inmediato
+    mw = FreeCADGui.getMainWindow()
+    for m in mw.menuBar().findChildren(QtWidgets.QMenu):
+        if m.title() == "Macros Frecuentes":
+            populate_recent_menu(m)
+            break
+
+# Al iniciar FreeCAD, construir menus
+if FreeCAD.GuiUp:
+    recreate_menus()

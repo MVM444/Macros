@@ -1,0 +1,175 @@
+"""
+Macro: MacroRunnerDialog
+Descripción: Esta macro proporciona una ventana en FreeCAD para ejecutar macros de manera organizada.
+- Permite buscar y ejecutar macros almacenadas en el directorio de macros.
+- Agrupa las macros en columnas según sus subdirectorios.
+- Guarda y muestra una lista de macros usadas recientemente.
+- Evita la apertura de múltiples instancias de la ventana.
+- Guarda la posición y tamaño de la ventana entre sesiones.
+- Agrega un ícono SVG desde un directorio de iconos.
+
+Fecha: 2025-02-19
+Autor: [Tu Nombre]
+
+Genera: Una interfaz gráfica en FreeCAD para ejecutar macros almacenadas en el sistema de archivos.
+"""
+
+import FreeCAD
+import FreeCADGui
+import os
+from PySide2 import QtGui, QtCore, QtWidgets
+from functools import partial
+
+class MacroRunnerDialog(QtWidgets.QDialog):
+    instance = None  # Variable de clase para asegurar una única instancia
+    
+    def __init__(self, parent=None):
+        super(MacroRunnerDialog, self).__init__(parent)
+        self.setWindowTitle("Macro Runner")
+        self.setMinimumWidth(600)
+
+        # Agregar ícono a la ventana
+        self.set_window_icon()
+        
+        # Restaurar tamaño y posición
+        self.load_window_settings()
+        
+        # Layout principal
+        layout = QtWidgets.QVBoxLayout(self)
+
+        # Campo de búsqueda
+        self.search_input = QtWidgets.QLineEdit()
+        self.search_input.setPlaceholderText("Buscar macro...")
+        self.search_input.textChanged.connect(self.update_macro_list)
+        layout.addWidget(self.search_input)
+        
+        # Botón para actualizar lista de macros
+        self.update_button = QtWidgets.QPushButton("Actualizar macros")
+        self.update_button.clicked.connect(self.update_macro_list)
+        layout.addWidget(self.update_button)
+
+        # Área de scroll con lista de macros agrupadas por subdirectorios
+        self.scroll_area = QtWidgets.QScrollArea()
+        self.scroll_area.setWidgetResizable(True)
+        self.scroll_widget = QtWidgets.QWidget()
+        self.scroll_layout = QtWidgets.QGridLayout(self.scroll_widget)
+        self.scroll_area.setWidget(self.scroll_widget)
+        self.scroll_area.setMinimumHeight(250)  # Ajuste de altura
+        layout.addWidget(self.scroll_area)
+
+        # Sección de macros usadas recientemente
+        self.recent_macros_label = QtWidgets.QLabel("Macros Usadas Recientemente")
+        layout.addWidget(self.recent_macros_label)
+        self.recent_macros_list = QtWidgets.QListWidget()
+        self.recent_macros_list.setMaximumHeight(100)  # Reducción de altura
+        layout.addWidget(self.recent_macros_list)
+        
+        # Botones de aceptar y cancelar
+        botones = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
+        layout.addWidget(botones)
+
+        # Conectar los botones a las funciones correspondientes
+        botones.accepted.connect(self.accept)
+        botones.rejected.connect(self.reject)
+
+        self.setLayout(layout)
+        
+        # Inicializar la lista de macros
+        self.update_macro_list()
+        self.load_recent_macros()
+
+    def set_window_icon(self):
+        """Carga un ícono SVG desde un directorio de iconos y lo asigna a la ventana."""
+        macro_dir = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Macro").GetString("MacroPath", "")
+        icon_dir = os.path.join(macro_dir, "iconos")
+        icon_path = os.path.join(icon_dir, "Ventana de Macros.SVG")
+
+        FreeCAD.Console.PrintMessage(f"Buscando ícono en: {icon_path}\n")
+
+        if not os.path.exists(icon_path):
+            FreeCAD.Console.PrintWarning("No se encontró 'Ventana de Macros.SVG' en el directorio de iconos.\n")
+        else:
+            self.setWindowIcon(QtGui.QIcon(icon_path))
+
+    def update_macro_list(self):
+        """Actualiza la lista de macros disponibles en el sistema."""
+        FreeCAD.Console.PrintMessage("Actualizando lista de macros...\n")
+        for i in reversed(range(self.scroll_layout.count())):
+            widget = self.scroll_layout.itemAt(i).widget()
+            if widget is not None:
+                widget.deleteLater()
+
+        macro_dir = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Macro").GetString("MacroPath", "")
+        if not os.path.exists(macro_dir):
+            FreeCAD.Console.PrintError("El directorio de macros no existe.\n")
+            return
+
+        macros_by_category = {}
+        for root, dirs, files in os.walk(macro_dir):
+            category = os.path.relpath(root, macro_dir)
+            macros_by_category[category] = []
+            for file in sorted(files):
+                if file.endswith(".FCMacro"):
+                    macros_by_category[category].append(os.path.join(root, file))
+
+        col = 0
+        for category, macros in macros_by_category.items():
+            if macros:
+                category_label = QtWidgets.QLabel(f"{category}")
+                self.scroll_layout.addWidget(category_label, 0, col)
+                row = 1
+                for macro in macros:
+                    macro_name = os.path.splitext(os.path.basename(macro))[0]  # Remueve la extensión
+                    macro_button = QtWidgets.QPushButton(macro_name)
+                    macro_button.clicked.connect(partial(self.run_macro, macro))
+                    self.scroll_layout.addWidget(macro_button, row, col)
+                    row += 1
+                col += 1
+
+    def run_macro(self, macro):
+        """Ejecuta la macro seleccionada."""
+        try:
+            exec(open(macro).read(), globals())
+            self.add_to_recent_macros(macro)
+        except Exception as e:
+            FreeCAD.Console.PrintError(f"Error ejecutando la macro: {str(e)}\n")
+
+    def add_to_recent_macros(self, macro):
+        """Guarda la macro ejecutada en la lista de macros recientes."""
+        settings = QtCore.QSettings("FreeCAD", "MacroRunner")
+        recent_macros = settings.value("recent_macros", []) or []
+        if macro in recent_macros:
+            recent_macros.remove(macro)
+        recent_macros.insert(0, macro)
+        settings.setValue("recent_macros", recent_macros[:10])
+        self.load_recent_macros()
+
+    def load_recent_macros(self):
+        """Carga la lista de macros usadas recientemente."""
+        settings = QtCore.QSettings("FreeCAD", "MacroRunner")
+        recent_macros = settings.value("recent_macros", []) or []
+        self.recent_macros_list.clear()
+        for macro in recent_macros:
+            self.recent_macros_list.addItem(macro)
+
+    def load_window_settings(self):
+        """Carga el tamaño y posición de la ventana guardados."""
+        settings = QtCore.QSettings("FreeCAD", "MacroRunner")
+        self.resize(settings.value("window_size", QtCore.QSize(600, 400)))
+        self.move(settings.value("window_position", QtCore.QPoint(200, 200)))
+
+    def closeEvent(self, event):
+        """Guarda la posición y tamaño de la ventana al cerrarla y evita múltiples instancias."""
+        settings = QtCore.QSettings("FreeCAD", "MacroRunner")
+        settings.setValue("window_size", self.size())
+        settings.setValue("window_position", self.pos())
+        MacroRunnerDialog.instance = None
+        super().closeEvent(event)
+
+# Verifica si ya hay una instancia de la ventana abierta y la trae al frente
+if MacroRunnerDialog.instance is None:
+    MacroRunnerDialog.instance = MacroRunnerDialog()
+    MacroRunnerDialog.instance.show()
+else:
+    MacroRunnerDialog.instance.raise_()
+    MacroRunnerDialog.instance.activateWindow()

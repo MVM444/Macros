@@ -1,0 +1,74 @@
+## CopyReportLast1Min.FCMacro
+## Macro para FreeCAD que copia al portapapeles
+## las líneas de la Report View correspondientes
+## al último minuto según la hora HH:MM:SS.
+
+import FreeCAD as App
+import FreeCADGui as Gui
+from PySide import QtGui
+
+def parse_time_hms(line):
+    """
+    Extrae HH:MM:SS del inicio de la línea y la convierte
+    en segundos desde 00:00:00 (0 ≤ s < 86400). Si no puede, devuelve None.
+    """
+    if len(line) < 8 or line[2] != ':' or line[5] != ':':
+        return None
+    try:
+        h = int(line[0:2]); m = int(line[3:5]); s = int(line[6:8])
+        return h*3600 + m*60 + s
+    except:
+        return None
+
+def copy_report_last_1min():
+    # 1) Obtener widget Report View
+    mw = Gui.getMainWindow()
+    report = mw.findChild(QtGui.QTextEdit, "Report view")
+    if not report:
+        App.Console.PrintError("No se encontró la Report View (ajusta el objectName si es necesario)\n")
+        return
+
+    # 2) Leer todo el texto y partir en líneas
+    full_text = report.toPlainText()
+    if not full_text:
+        App.Console.PrintMessage("La Report View está vacía.\n")
+        return
+    lines = full_text.splitlines()
+
+    # 3) Buscar la última línea no vacía y extraer su hora
+    idx = len(lines) - 1
+    while idx >= 0 and not lines[idx].strip():
+        idx -= 1
+    if idx < 0:
+        App.Console.PrintMessage("No hay líneas en la Report View.\n")
+        return
+
+    last_line = lines[idx]
+    last_sec = parse_time_hms(last_line)
+    if last_sec is None:
+        App.Console.PrintMessage("La última línea no tiene prefijo HH:MM:SS; copiando solo esa.\n")
+        block = [last_line]
+    else:
+        # 4) Definir umbral: 1 minuto = 60 segundos
+        cutoff = last_sec - 60
+        block = []
+        # Recorrer de abajo hacia arriba
+        for i in range(idx, -1, -1):
+            sec = parse_time_hms(lines[i])
+            # Si línea con hora anterior al corte, paramos
+            if sec is not None and sec < cutoff:
+                break
+            # Si no tiene hora o está en la ventana, la incluimos
+            block.append(lines[i])
+        block.reverse()
+
+    # 5) Copiar al portapapeles
+    text_to_copy = "\n".join(block)
+    QtGui.QApplication.clipboard().setText(text_to_copy)
+
+    # 6) Mensaje de confirmación
+    App.Console.PrintMessage("[OK] Líneas del último minuto copiadas al portapapeles:\n")
+    App.Console.PrintMessage(text_to_copy + "\n")
+
+# Ejecutar al cargar la macro
+copy_report_last_1min()

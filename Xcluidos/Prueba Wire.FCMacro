@@ -1,0 +1,27 @@
+# -*- coding: utf-8 -*-
+
+# Macro Begin: C:\Users\marco\OneDrive - Caja Costarricense de Seguro Social\Documentos\FreeCAD\Macros\Prueba Wire.FCMacro +++++++++++++++++++++++++++++++++++++++++++++++++
+import FreeCAD
+
+
+# Gui.runCommand('Std_DlgMacroRecord',0)
+# Gui.runCommand('Draft_Wire',0)
+pl = FreeCAD.Placement()
+pl.Rotation.Q = (0.0, 0.0, 0.0, 1.0)
+pl.Base = FreeCAD.Vector(36336.56640625, 10983.2666015625, 0.0)
+points = [FreeCAD.Vector(36336.56640625, 10983.2666015625, 0.0), FreeCAD.Vector(40630.43151255724, 11651.9970703125, 0.0), FreeCAD.Vector(44985.43151255725, 10774.288085937502, 0.0), FreeCAD.Vector(48503.59308558375, 12010.612153947928, 0.0)]
+line = Draft.make_wire(points, placement=pl, closed=False, face=False, support=None)
+# Gui.Selection.addSelection('Unnamed','Wire')
+Draft.autogroup(line)
+FreeCAD.ActiveDocument.recompute()
+# Gui.runCommand('Draft_Line',0)
+# Gui.Selection.clearSelection()
+pl = FreeCAD.Placement()
+pl.Rotation.Q = (0.0, 0.0, 0.0, 1.0)
+pl.Base = FreeCAD.Vector(38794.43151255726, 9378.8740234375, 0.0)
+points = [FreeCAD.Vector(38794.43151255726, 9378.8740234375, 0.0), FreeCAD.Vector(46725.104865217254, 9045.89951625992, 0.0)]
+line = Draft.make_wire(points, placement=pl, closed=False, face=False, support=None)
+# Gui.Selection.addSelection('Unnamed','Line')
+Draft.autogroup(line)
+FreeCAD.ActiveDocument.recompute()
+# Macro End: C:\Users\marco\OneDrive - Caja Costarricense de Seguro Social\Documentos\FreeCAD\Macros\Prueba Wire.FCMacro +++++++++++++++++++++++++++++++++++++++++++++++++

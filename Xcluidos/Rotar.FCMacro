@@ -1,0 +1,21 @@
+# -*- coding: utf-8 -*-
+
+# Macro Begin: C:\Users\mmfallas\OneDrive - Caja Costarricense de Seguro Social\Documentos\FreeCAD\Macros\Rotar.FCMacro +++++++++++++++++++++++++++++++++++++++++++++++++
+import FreeCAD
+import gui_rotate
+
+# Gui.runCommand('Std_DlgMacroRecord',0)
+# Gui.Selection.addSelection('Cuarto_El__ctrico_Quepos','Tomacorriente','Edge3',1290.35,3177.86,0)
+# Gui.runCommand('Draft_Rotate',0)
+# Gui.Selection.clearSelection()
+# Gui.Selection.addSelection('Cuarto_El__ctrico_Quepos','Shape2DView','Edge5',1246.79,3150,0)
+# Gui.Selection.clearSelection()
+# Gui.Selection.addSelection('Cuarto_El__ctrico_Quepos','Tomacorriente','Edge3',1252.18,3259.99,0)
+Draft.rotate([FreeCAD.ActiveDocument.Tomacorriente], 90.0, FreeCAD.Vector(1252.0512695000002, 3150.0, 0.0), axis=FreeCAD.Vector(-0.0, -0.0, 1.0), copy=False)
+# Gui.Selection.addSelection('Cuarto_El__ctrico_Quepos','Tomacorriente')
+FreeCAD.ActiveDocument.recompute()
+# Gui.Selection.clearSelection()
+# Gui.Selection.addSelection('Cuarto_El__ctrico_Quepos','Shape2DView','Edge5',98.0191,3150,0)
+# Gui.Selection.clearSelection()
+# Gui.Selection.addSelection('Cuarto_El__ctrico_Quepos','Tomacorriente','Edge3',1217.05,3106.7,0)
+# Macro End: C:\Users\mmfallas\OneDrive - Caja Costarricense de Seguro Social\Documentos\FreeCAD\Macros\Rotar.FCMacro +++++++++++++++++++++++++++++++++++++++++++++++++

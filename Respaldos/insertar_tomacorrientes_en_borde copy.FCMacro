@@ -1,0 +1,108 @@
+import FreeCAD
+import Part
+import os
+
+class Tomacorriente:
+    def __init__(self, obj):
+        obj.addProperty("App::PropertyLength", "Altura", "Tomacorriente", "Altura del tomacorriente 3D").Altura = 300
+        obj.Proxy = self
+
+    def execute(self, obj):
+        try:
+            directorio_macro = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Macro").GetString("MacroPath", "")
+            archivo_3d = os.path.join(directorio_macro, "Resources", "tomacorriente-3D.step")
+            archivo_2d = os.path.join(directorio_macro, "Resources", "SimboloToma.step")
+
+            if not os.path.exists(archivo_3d) or not os.path.exists(archivo_2d):
+                FreeCAD.Console.PrintError("Archivos 3D o 2D no encontrados.\n")
+                return
+
+            modelo_3d = Part.Shape()
+            modelo_3d.read(archivo_3d)
+            altura = obj.Altura.Value
+            modelo_3d.translate(FreeCAD.Vector(0, 0, altura))
+
+            modelo_2d = Part.Shape()
+            modelo_2d.read(archivo_2d)
+
+            compound = Part.Compound([modelo_3d, modelo_2d])
+            obj.Shape = compound
+        except Exception as e:
+            FreeCAD.Console.PrintError(f"Error al combinar formas: {str(e)}\n")
+
+
+class ViewProviderTomacorriente:
+    def __init__(self, obj):
+        obj.Proxy = self
+
+    def attach(self, obj):
+        self.Object = obj
+
+    def getDisplayModes(self, obj):
+        return ["Flat Lines", "Shaded"]
+
+    def getDefaultDisplayMode(self):
+        return "Flat Lines"
+
+    def updateVisual(self, obj):
+        pass
+
+    def onChanged(self, vp, prop):
+        pass
+
+    def __getstate__(self):
+        return None
+
+    def __setstate__(self, state):
+        return None
+
+
+def insertar_tomacorrientes(intervalo=1800):
+    doc = FreeCAD.ActiveDocument
+    if not doc:
+        doc = FreeCAD.newDocument("PlanoElectricos")
+
+    seleccion = FreeCADGui.Selection.getSelectionEx()
+    if not seleccion:
+        FreeCAD.Console.PrintError("No hay ninguna selección. Por favor selecciona un borde o línea.\n")
+        return
+
+    for objeto_seleccionado in seleccion:
+        for subobjeto in objeto_seleccionado.SubObjects:
+            if isinstance(subobjeto, Part.Edge):
+                longitud = subobjeto.Length
+                num_tomacorrientes = max(1, int(longitud // intervalo))
+                FreeCAD.Console.PrintMessage(f"Insertando {num_tomacorrientes} tomacorrientes en borde de longitud {longitud:.2f} mm.\n")
+
+                for i in range(num_tomacorrientes):
+                    # Corrección de cálculo de posición
+                    posicion_parametro = (i + 1) / (num_tomacorrientes + 1)
+                    punto = subobjeto.valueAt(subobjeto.FirstParameter + posicion_parametro * (subobjeto.LastParameter - subobjeto.FirstParameter))
+                    tangente = subobjeto.tangentAt(subobjeto.FirstParameter + posicion_parametro * (subobjeto.LastParameter - subobjeto.FirstParameter))
+
+                    tangente.normalize()
+                    if abs(tangente.x) > abs(tangente.y):
+                        if tangente.x > 0:
+                            rotacion = FreeCAD.Rotation(FreeCAD.Vector(0, 0, 1), 0)
+                        else:
+                            rotacion = FreeCAD.Rotation(FreeCAD.Vector(0, 0, 1), 180)
+                    else:
+                        if tangente.y > 0:
+                            rotacion = FreeCAD.Rotation(FreeCAD.Vector(0, 0, 1), -90)
+                        else:
+                            rotacion = FreeCAD.Rotation(FreeCAD.Vector(0, 0, 1), 90)
+
+                    obj = doc.addObject("Part::FeaturePython", f"Tomacorriente_{i + 1}")
+                    Tomacorriente(obj)
+                    ViewProviderTomacorriente(obj.ViewObject)
+
+                    obj.Placement = FreeCAD.Placement(
+                        FreeCAD.Vector(punto.x, punto.y, 0), rotacion
+                    )
+
+    doc.recompute()
+    FreeCAD.Console.PrintMessage("Tomacorrientes insertados correctamente.\n")
+
+
+# Ejecutar la función
+insertar_tomacorrientes()

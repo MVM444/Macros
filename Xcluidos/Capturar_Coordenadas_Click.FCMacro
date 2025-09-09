@@ -1,0 +1,45 @@
+# Macro: Capturar_Coordenadas_Click
+# Descripcion: Captura una vez las coordenadas en 3D al hacer clic en la vista de FreeCAD.
+# Fecha: 03-03-2025
+# Autor: ChatGPT
+# --------------------------------------
+
+import FreeCADGui as Gui
+import FreeCAD as App
+import pivy.coin as coin
+
+class CapturaCoordenadas:
+    def __init__(self):
+        # Obtener la vista activa
+        self.view = Gui.ActiveDocument.ActiveView
+        # Crear un nodo de callback para eventos
+        self.event_callback = coin.SoEventCallback()
+        # Asignar la función de manejo de clics del mouse
+        self.event_callback.addEventCallback(coin.SoMouseButtonEvent.getClassTypeId(), self.mouseClick)
+        # Añadir el nodo de callback a la escena
+        self.view.getSceneGraph().addChild(self.event_callback)
+        App.Console.PrintMessage("Macro activada: Haz clic una vez en la vista 3D para obtener coordenadas.\n")
+
+    def mouseClick(self, event_callback, callback_data):
+        # Obtener el evento
+        event = event_callback.getEvent()
+        # Verificar si el botón izquierdo del mouse está presionado
+        if isinstance(event, coin.SoMouseButtonEvent) and event.getState() == coin.SoButtonEvent.DOWN and event.getButton() == coin.SoMouseButtonEvent.BUTTON1:
+            # Obtener la posición del cursor
+            position = event.getPosition()
+            # Obtener las coordenadas 3D correspondientes
+            point = self.view.getPoint(position[0], position[1])
+            # Imprimir las coordenadas en la consola
+            App.Console.PrintMessage(f"Coordenadas: X={point[0]}, Y={point[1]}, Z={point[2]}\n")
+            # Detener la macro después de capturar las coordenadas
+            self.stop()
+
+    def stop(self):
+        # Eliminar el nodo de callback de la escena
+        if self.event_callback:
+            self.view.getSceneGraph().removeChild(self.event_callback)
+            self.event_callback = None
+            App.Console.PrintMessage("Macro detenida.\n")
+
+# Crear instancia de la macro
+captura = CapturaCoordenadas()

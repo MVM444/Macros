@@ -1,0 +1,30 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log
+*.bak
+*.tmp
+*~
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyd
+*.pyo
+*.egg-info/
+.venv/
+env/
+venv/
+__pypackages__/
+
+# Local tools and caches
+.tools/
+.env
+.macro_*.json
+pyflow.lock
+
+# Node/other
+node_modules/
+

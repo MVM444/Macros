@@ -1,0 +1,214 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# ========================================================================
+# Macro: Etiquetas vinculadas mediante aliases con depuración y log
+# Archivo: Etiquetas_Vinculadas_Depuracion_Logging.FCMacro
+# ========================================================================
+__Name__    = "Etiquetas vinculadas con depuración y log de aliases"
+__Comment__ = ("Macro para generar etiquetas vinculadas a una hoja de cálculo usando alias, "
+               "mostrando mensajes de depuración y guardándolos en un archivo de log.\n"
+               "Utiliza la sintaxis: SpreadsheetName.[Alias] para referenciar celdas.")
+__Author__  = "ChatGPT"
+__Title__   = "Etiquetas vinculadas con alias y log"
+__Date__    = "2025/03/10"
+__Version__ = __Date__
+__License__ = "Apache-2.0"
+__Wiki__    = "https://wiki.freecad.org/"
+
+import FreeCAD
+import FreeCADGui
+import Draft
+import unicodedata
+import os
+from PySide2.QtWidgets import QInputDialog
+
+# Configurar archivo de log en el mismo directorio que la macro
+try:
+    macro_dir = os.path.dirname(__file__)
+except NameError:
+    macro_dir = os.getcwd()
+log_path = os.path.join(macro_dir, "log_Etiquetas.txt")
+log_file = open(log_path, "a", encoding="utf-8")
+
+def log_message(msg):
+    FreeCAD.Console.PrintMessage(msg)
+    log_file.write(msg)
+    log_file.flush()
+
+def log_error(msg):
+    FreeCAD.Console.PrintError(msg)
+    log_file.write(msg)
+    log_file.flush()
+
+# Función para limpiar alias: conservar solo letras, números y guión bajo
+def clean_alias(text):
+    cleaned = ""
+    for ch in text:
+        if ch.isalnum() or ch == "_":
+            cleaned += ch
+        else:
+            cleaned += "_"  # reemplaza caracteres no permitidos
+    if cleaned == "":
+        cleaned = "Alias"
+    if not cleaned[0].isalpha():
+        cleaned = "A" + cleaned
+    return cleaned
+
+def remove_leading_apostrophe(txt):
+    return txt[1:].strip() if txt.startswith("'") else txt
+
+def remove_accents(txt):
+    s_norm = unicodedata.normalize("NFD", txt)
+    return "".join(c for c in s_norm if unicodedata.category(c) != "Mn")
+
+def get_last_filled_row(sheet, col="A"):
+    """Encuentra la última fila con datos en la columna especificada."""
+    last_row = 1
+    for i in range(1, 1000):  # límite de seguridad
+        try:
+            if sheet.get(f"{col}{i}"):
+                last_row = i
+        except:
+            break
+    return last_row
+
+def get_parent_group(obj):
+    return next((p for p in obj.InList if hasattr(p, "Group")), None) if hasattr(obj, "InList") and obj.InList else None
+
+doc = FreeCAD.ActiveDocument
+if not doc:
+    log_error("Error: No hay documento activo.\n")
+    raise Exception("No hay documento activo.")
+
+# --- Seleccionar la hoja de cálculo ---
+hojas = [obj for obj in doc.Objects if obj.TypeId == "Spreadsheet::Sheet"]
+if not hojas:
+    log_error("Error: No hay hojas de cálculo en el documento.\n")
+    raise Exception("No hay hojas de cálculo en el documento.")
+
+nombres_hojas = [h.Label for h in hojas]
+nombre_hoja, ok = QInputDialog.getItem(None, "Seleccionar Hoja de Cálculo",
+                                         "Seleccione la hoja de cálculo:",
+                                         nombres_hojas, 0, False)
+if not ok:
+    log_error("Selección cancelada por el usuario.\n")
+    raise Exception("Selección cancelada por el usuario.")
+
+spreadsheet = next((h for h in hojas if h.Label == nombre_hoja), None)
+if not spreadsheet:
+    log_error(f"Error: La hoja '{nombre_hoja}' no existe en este documento.\n")
+    raise Exception(f"La hoja '{nombre_hoja}' no existe en este documento.")
+
+log_message(f"Hoja seleccionada: {spreadsheet.Label}\n")
+
+# --- Determinar la última fila con datos en la columna A ---
+num_filas = get_last_filled_row(spreadsheet, "A")
+log_message(f"Última fila con datos detectada: {num_filas}\n")
+
+# --- Asignar alias a las celdas de interés (A, B, H, O) ---
+# Se asocia el nombre normalizado con (fila, alias_base)
+info_por_recinto = {}
+for i in range(2, num_filas + 1):
+    try:
+        valor = spreadsheet.get(f"A{i}")
+        if valor is None or str(valor).strip() == "":
+            log_message(f"La celda A{i} está vacía. Se omite.\n")
+            continue
+        raw_alias = str(valor).strip()
+        alias_base = clean_alias(raw_alias)
+        log_message(f"A{i}: '{raw_alias}' -> alias base: '{alias_base}'\n")
+        # Asignar alias a las celdas
+        spreadsheet.setAlias(f"A{i}", alias_base)
+        spreadsheet.setAlias(f"B{i}", f"{alias_base}_area")
+        spreadsheet.setAlias(f"H{i}", f"{alias_base}_desc")
+        spreadsheet.setAlias(f"O{i}", f"{alias_base}_ilum")
+        log_message(f"A{i} -> {alias_base}\nB{i} -> {alias_base}_area\nH{i} -> {alias_base}_desc\nO{i} -> {alias_base}_ilum\n")
+        # Guardar en el diccionario usando el nombre normalizado
+        nombre_norm = remove_accents(remove_leading_apostrophe(raw_alias))
+        info_por_recinto[nombre_norm] = (i, alias_base)
+    except Exception as e:
+        log_error(f"Error asignando alias en fila {i}: {e}\n")
+
+doc.recompute()
+log_message("Se han registrado los alias y se ha forzado recálculo.\n")
+
+# --- Mostrar asociación de recintos ---
+for i in range(2, num_filas + 1):
+    try:
+        rec = str(spreadsheet.get(f"A{i}") or "").strip()
+        if rec:
+            rec_norm = remove_accents(remove_leading_apostrophe(rec))
+            log_message(f"Fila {i}: {rec} asociada.\n")
+    except Exception as e:
+        log_error(f"Error al leer fila {i}: {e}\n")
+        break
+
+log_message(f"Se leyeron datos de {len(info_por_recinto)} recintos.\n")
+
+# --- Seleccionar grupo (o su padre) en el modelo 3D ---
+sel = FreeCADGui.Selection.getSelection()
+if not sel:
+    log_error("Error: No hay objetos seleccionados.\n")
+    raise Exception("No hay objetos seleccionados.")
+
+grupo = next((obj for obj in sel if hasattr(obj, "Group")), get_parent_group(sel[0]))
+if not grupo or not hasattr(grupo, "Group"):
+    log_error("Error: No se encontró un grupo válido en la selección.\n")
+    raise Exception("No se encontró un grupo válido en la selección.")
+
+log_message(f"Grupo identificado: {grupo.Label}\n")
+
+# --- Crear subgrupo "Etiquetas" ---
+subgrupo_label = "Etiquetas"
+subgrupo = next((item for item in grupo.Group if item.Label == subgrupo_label and hasattr(item, "Group")), None)
+if not subgrupo:
+    subgrupo = doc.addObject("App::DocumentObjectGroup", subgrupo_label)
+    grupo.addObject(subgrupo)
+    log_message(f"Se creó subgrupo '{subgrupo_label}' en '{grupo.Label}'\n")
+
+# --- Crear etiquetas vinculadas mediante expresiones (usando los alias asignados) ---
+for rect in grupo.Group or []:
+    if rect == subgrupo:
+        continue
+
+    rect_label = rect.Label.strip()
+    rect_norm = remove_accents(remove_leading_apostrophe(rect_label))
+    if rect_norm in info_por_recinto:
+        fila, alias_base = info_por_recinto[rect_norm]
+        centro = rect.Shape.BoundBox.Center if hasattr(rect, "Shape") and rect.Shape else rect.Placement.Base
+        posicion = centro.add(FreeCAD.Vector(100, 100, 0))
+
+        etiqueta = Draft.make_label()
+        etiqueta.Label = f"Etiqueta_{rect_label}"
+        etiqueta.LabelType = "Custom"
+        etiqueta.CustomText = ["", "", "", ""]
+        etiqueta.Placement.Base = posicion
+        etiqueta.ViewObject.FontSize = "200 mm"
+        etiqueta.TargetPoint = centro
+
+        # Construir expresiones usando corchetes para referenciar el alias:
+        try:
+            expr0 = f"{spreadsheet.Name}.[{alias_base}]"
+            expr1 = f"{spreadsheet.Name}.[{alias_base}_area]"
+            expr2 = f"{spreadsheet.Name}.[{alias_base}_desc]"
+            expr3 = f"{spreadsheet.Name}.[{alias_base}_ilum]"
+            log_message(f"Para {rect_label} (fila {fila}):\n"
+                        f"  CustomText[0] = {expr0}\n"
+                        f"  CustomText[1] = {expr1}\n"
+                        f"  CustomText[2] = {expr2}\n"
+                        f"  CustomText[3] = {expr3}\n")
+            etiqueta.setExpression("CustomText[0]", expr0)
+            etiqueta.setExpression("CustomText[1]", expr1)
+            etiqueta.setExpression("CustomText[2]", expr2)
+            etiqueta.setExpression("CustomText[3]", expr3)
+        except Exception as e:
+            log_error(f"Error al vincular expresiones para '{rect_label}': {e}\n")
+
+        subgrupo.addObject(etiqueta)
+        log_message(f"Etiqueta vinculada creada para '{rect_label}' usando alias base de fila {fila}.\n")
+    else:
+        log_message(f"No se encontraron datos en la tabla para '{rect_label}'. Se omite.\n")
+
+doc.recompute()
+log_message("Proceso completado: etiquetas vinculadas con alias y depuración.\n")
+log_file.close()

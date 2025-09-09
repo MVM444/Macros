@@ -1,0 +1,79 @@
+import FreeCAD
+import FreeCADGui
+import Part
+import math
+
+def conectar_objetos_en_eSe():
+    doc = FreeCAD.ActiveDocument
+    selected_objects = FreeCADGui.Selection.getSelectionEx()
+
+    if len(selected_objects) != 2:
+        FreeCAD.Console.PrintError("Debe seleccionar exactamente dos aristas.\n")
+        return
+
+    FreeCAD.Console.PrintMessage(f"Objetos seleccionados: {selected_objects[0].Object.Name}, {selected_objects[1].Object.Name}\n")
+
+    def obtener_punto_medio_arista(selection_detail):
+        if selection_detail.HasSubObjects:
+            for sub_obj in selection_detail.SubObjects:
+                if isinstance(sub_obj, Part.Edge):
+                    punto_medio = sub_obj.CenterOfMass
+                    return punto_medio
+        return None
+
+    punto1 = obtener_punto_medio_arista(selected_objects[0])
+    punto2 = obtener_punto_medio_arista(selected_objects[1])
+
+    if punto1 is None or punto2 is None:
+        FreeCAD.Console.PrintError("Error: Seleccione aristas válidas.\n")
+        return
+
+    distancia_x = abs(punto1.x - punto2.x)
+    distancia_y = abs(punto1.y - punto2.y)
+    distancia_z = abs(punto1.z - punto2.z)
+
+    punto_intermedio1 = FreeCAD.Vector(punto1.x, punto1.y, punto1.z)
+    punto_intermedio2 = FreeCAD.Vector(punto2.x, punto1.y, punto1.z)
+
+    if distancia_x > distancia_y:
+        punto_intermedio1.x = (punto1.x + punto2.x) / 2
+        punto_intermedio2.x = punto_intermedio1.x
+        punto_intermedio2.y = punto2.y
+    else:
+        punto_intermedio1.y = (punto1.y + punto2.y) / 2
+        punto_intermedio2.y = punto_intermedio1.y
+        punto_intermedio2.x = punto2.x
+
+    distancia_central = max(distancia_x, distancia_y, distancia_z) / 2
+    radio_fillet = math.floor(distancia_central / 8 / 5) * 5
+
+    FreeCAD.Console.PrintMessage("\nPuntos generados para la conexión:\n")
+    FreeCAD.Console.PrintMessage(f"  - Punto 1 (Inicio - Centro de la arista): {punto1}\n")
+    FreeCAD.Console.PrintMessage(f"  - Punto Intermedio 1: {punto_intermedio1}\n")
+    FreeCAD.Console.PrintMessage(f"  - Punto Intermedio 2: {punto_intermedio2}\n")
+    FreeCAD.Console.PrintMessage(f"  - Punto 4 (Final - Centro de la arista): {punto2}\n")
+    FreeCAD.Console.PrintMessage(f"  - Radio de Fillet: {radio_fillet}\n")
+
+    puntos = [punto1, punto_intermedio1, punto_intermedio2, punto2]
+    try:
+        wire_shape = Part.makePolygon(puntos)
+        wire = doc.addObject("Part::Feature", f'Conexion_eSe_{selected_objects[0].Object.Name}_{selected_objects[1].Object.Name}')
+        wire.Shape = wire_shape
+    except Exception as e:
+        FreeCAD.Console.PrintError(f"Error al crear el Wire: {str(e)}\n")
+        return
+
+    if radio_fillet > 0:
+        try:
+            fillet = doc.addObject("Part::Fillet", f'Conexion_eSe_Fillet_{selected_objects[0].Object.Name}_{selected_objects[1].Object.Name}')
+            fillet.Base = wire
+            edges = [i+1 for i in range(len(wire.Shape.Edges))]
+            fillet.Edges = edges
+            fillet.Radius = radio_fillet
+        except Exception as e:
+            FreeCAD.Console.PrintError(f"Error al aplicar Fillet: {str(e)}\n")
+            return
+
+    doc.recompute()
+
+conectar_objetos_en_eSe()

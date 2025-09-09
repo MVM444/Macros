@@ -1,0 +1,42 @@
+import FreeCAD
+import FreeCADGui
+from PySide import QtGui, QtCore
+
+class MyCustomDialog(QtGui.QDialog):
+    def __init__(self):
+        super(MyCustomDialog, self).__init__()
+        self.setWindowTitle("Interfaz Personalizada para FreeCAD")
+
+        # Crear un layout vertical para el diálogo
+        layout = QtGui.QVBoxLayout()
+
+        # Campo de texto y un botón
+        self.label = QtGui.QLabel("Ingrese un valor:")
+        self.input_field = QtGui.QLineEdit()
+        self.ok_button = QtGui.QPushButton("Agregar al documento")
+
+        # Añadir elementos al layout
+        layout.addWidget(self.label)
+        layout.addWidget(self.input_field)
+        layout.addWidget(self.ok_button)
+
+        # Configurar la acción del botón
+        self.ok_button.clicked.connect(self.agregar_al_documento)
+
+        # Definir el layout del diálogo
+        self.setLayout(layout)
+
+    def agregar_al_documento(self):
+        valor = self.input_field.text()
+        doc = FreeCAD.ActiveDocument
+        if not doc:
+            doc = FreeCAD.newDocument()
+        
+        # Crear un objeto con el valor ingresado
+        caja = doc.addObject("Part::Box", f"MiCaja_{valor}")
+        caja.Label = f"Caja con valor {valor}"
+        doc.recompute()
+
+# Crear y mostrar el diálogo
+dialog = MyCustomDialog()
+dialog.exec_()

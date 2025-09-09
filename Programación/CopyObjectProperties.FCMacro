@@ -1,0 +1,77 @@
+# Macro: CopyObjectProperties.FCMacro
+# Descripcion: Extrae propiedades de objetos seleccionados y copia JSON al portapapeles
+# Date: 2025-07-05 11:00
+# Version: 1.1
+
+import FreeCAD
+import FreeCADGui
+from FreeCAD import Units
+import json
+from PySide2.QtWidgets import QApplication
+
+# Función para serializar valores no JSON-serializables
+def serialize_value(val):
+    # Quantities: convertir a float
+    try:
+        if isinstance(val, Units.Quantity):
+            return val.Value
+    except Exception:
+        pass
+    # Vectores: convertir a lista
+    if hasattr(val, 'x') and hasattr(val, 'y'):
+        return [val.x, val.y, getattr(val, 'z', 0)]
+    # Otros tipos básicos
+    if isinstance(val, (str, int, float, bool)):
+        return val
+    # Para tuplas o listas, serializar recursivamente
+    if isinstance(val, (list, tuple)):
+        return [serialize_value(v) for v in val]
+    # Valor por defecto: convertir a string
+    return str(val)
+
+# Función para obtener propiedades de un objeto
+def get_obj_properties(obj):
+    props = {}
+    props['Name'] = obj.Name
+    props['Label'] = obj.Label
+    props['TypeId'] = obj.TypeId
+    # Placement (posición y rotación)
+    try:
+        plc = obj.Placement
+        props['Placement'] = {
+            'Position': serialize_value(plc.Base),
+            'Rotation': serialize_value([
+                plc.Rotation.Axis.x,
+                plc.Rotation.Axis.y,
+                plc.Rotation.Axis.z,
+                plc.Rotation.Angle
+            ])
+        }
+    except Exception:
+        FreeCAD.Console.PrintMessage(f"No Placement for {obj.Name}\n")
+    # Otras propiedades disponibles
+    for p in obj.PropertiesList:
+        if p in ['Placement', 'Name', 'Label', 'TypeId']:
+            continue
+        try:
+            val = obj.getPropertyByName(p)
+            props[p] = serialize_value(val)
+        except Exception:
+            FreeCAD.Console.PrintMessage(f"Unable to read property {p} of {obj.Name}\n")
+    return props
+
+# Obtener selección
+targets = FreeCADGui.Selection.getSelection()
+if not targets:
+    FreeCAD.Console.PrintError("Select one or more objects first.\n")
+else:
+    data = []
+    for obj in targets:
+        FreeCAD.Console.PrintMessage(f"Reading properties of {obj.Name}\n")
+        data.append(get_obj_properties(obj))
+    # Convertir a JSON
+    json_data = json.dumps(data, indent=2, ensure_ascii=False)
+    # Copiar al portapapeles
+    clipboard = QApplication.clipboard()
+    clipboard.setText(json_data)
+    FreeCAD.Console.PrintMessage("Properties copied to clipboard as JSON.\n")

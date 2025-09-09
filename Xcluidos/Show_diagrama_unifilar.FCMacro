@@ -1,0 +1,65 @@
+import FreeCAD
+import FreeCADGui
+from PySide2 import QtWidgets, QtCore, QtUiTools
+import os
+
+class DiagramaUnifilarApp(QtWidgets.QWidget):
+    def __init__(self):
+        super(DiagramaUnifilarApp, self).__init__()
+
+        # Ruta al archivo .ui
+        ui_file_path = "C:\\Users\\mmfallas\\OneDrive - Caja Costarricense de Seguro Social\\Documentos\\FreeCAD\\Macros\\diagrama_unifilar_ejemplo.ui"
+
+        if not os.path.exists(ui_file_path):
+            FreeCAD.Console.PrintError("El archivo UI no se encontró en la ruta especificada.\n")
+            return
+
+        # Cargar la UI usando QUiLoader
+        try:
+            loader = QtUiTools.QUiLoader()
+            ui_file = QtCore.QFile(ui_file_path)
+            if not ui_file.open(QtCore.QFile.ReadOnly):
+                FreeCAD.Console.PrintError("No se pudo abrir el archivo UI.\n")
+                return
+            
+            # Cargar el diseño en el widget actual
+            self.ui = loader.load(ui_file, self)
+            ui_file.close()
+
+            # Configurar la ventana principal
+            self.setWindowTitle("Diagrama Unifilar")
+            self.resize(800, 600)
+
+            # Conectar los botones o widgets
+            self.setup_connections()
+        
+        except Exception as e:
+            FreeCAD.Console.PrintError(f"Error al cargar la interfaz: {str(e)}\n")
+            return
+
+    def setup_connections(self):
+        """
+        Configura las conexiones entre los elementos de la UI y las funciones de la clase.
+        """
+        try:
+            # Ejemplo: Conexión de un botón (reemplazar 'btnEjemplo' por el objeto de tu UI)
+            if hasattr(self.ui, "btnEjemplo"):
+                self.ui.btnEjemplo.clicked.connect(self.on_btnEjemplo_clicked)
+            else:
+                FreeCAD.Console.PrintWarning("El botón 'btnEjemplo' no se encontró en la UI.\n")
+        except Exception as e:
+            FreeCAD.Console.PrintError(f"Error al configurar conexiones: {str(e)}\n")
+
+    def on_btnEjemplo_clicked(self):
+        """
+        Ejemplo de función que responde al clic de un botón.
+        """
+        FreeCAD.Console.PrintMessage("¡Botón clickeado!\n")
+
+# Comprobar si la aplicación se ejecuta dentro de FreeCAD
+if FreeCADGui:
+    try:
+        app = DiagramaUnifilarApp()
+        app.show()
+    except Exception as e:
+        FreeCAD.Console.PrintError(f"Error al inicializar la aplicación: {str(e)}\n")

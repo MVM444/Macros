@@ -1,0 +1,24 @@
+# -*- coding: utf-8 -*-
+
+# Macro Begin: C:\Users\marco\OneDrive - Caja Costarricense de Seguro Social\Documentos\FreeCAD\Macros\Prueba conectar.FCMacro +++++++++++++++++++++++++++++++++++++++++++++++++
+import FreeCAD
+import gui_lines
+
+# Gui.runCommand('Std_DlgMacroRecord',0)
+# Gui.runCommand('Draft_Wire',0)
+# Gui.Selection.addSelection('Unnamed','Clone042','Edge12',59995.3,17338.5,10)
+# Gui.Selection.clearSelection()
+# Gui.Selection.addSelection('Unnamed','Clone002','Face6',58291.1,17715.4,10)
+pl = FreeCAD.Placement()
+pl.Rotation.Q = (0.0, 0.0, 0.0, 1.0)
+pl.Base = FreeCAD.Vector(59995.297331878144, 17332.59438648284, 10.0)
+points = [FreeCAD.Vector(59995.297331878144, 17332.59438648284, 10.0), FreeCAD.Vector(59198.25281014364, 17327.301600491726, 0.0), FreeCAD.Vector(59198.25281014364, 17632.59375, 0.0), FreeCAD.Vector(58295.29733188894, 17708.094386482826, 10.0)]
+line = Draft.make_wire(points, placement=pl, closed=False, face=False, support=None)
+# Gui.Selection.addSelection('Unnamed','Wire028')
+Draft.autogroup(line)
+FreeCAD.ActiveDocument.recompute()
+# Gui.Selection.clearSelection()
+# Gui.Selection.addSelection('Unnamed','Wire028','Vertex3',59198.3,17632.6,0)
+# Gui.Selection.clearSelection()
+# Gui.Selection.addSelection('Unnamed','Wire028','',59198.3,17632.6,0)
+# Macro End: C:\Users\marco\OneDrive - Caja Costarricense de Seguro Social\Documentos\FreeCAD\Macros\Prueba conectar.FCMacro +++++++++++++++++++++++++++++++++++++++++++++++++

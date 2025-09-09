@@ -1,0 +1,110 @@
+import FreeCAD
+from PySide2 import QtWidgets, QtGui
+
+doc = FreeCAD.ActiveDocument
+
+if doc is None:
+    doc = FreeCAD.newDocument("Iluminacion")
+
+# Obtener todas las tablas disponibles en el documento con sus etiquetas
+available_tables = {obj.Label: obj.Name for obj in doc.Objects if obj.TypeId == "Spreadsheet::Sheet"}
+if not available_tables:
+    QtWidgets.QMessageBox.warning(None, "Error", "No hay tablas disponibles en el documento.")
+    exit()
+
+# Diálogo para seleccionar la tabla de origen mostrando el Label
+selected_label, ok = QtWidgets.QInputDialog.getItem(None, "Seleccionar tabla", "Elige la tabla de la cual extraer datos:", list(available_tables.keys()), 0, False)
+if not ok:
+    exit()
+
+selected_table = available_tables[selected_label]
+source_spreadsheet = doc.getObject(selected_table)
+
+# Crear nueva hoja de cálculo
+spreadsheet_name = "Tabla Iluminacion"
+if spreadsheet_name in available_tables.values():
+    response = QtWidgets.QMessageBox.question(None, "Hoja existente",
+                                              f"La hoja '{spreadsheet_name}' ya existe. ¿Deseas sobrescribirla?",
+                                              QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+    if response == QtWidgets.QMessageBox.No:
+        exit()
+    else:
+        dest_spreadsheet = doc.getObject(spreadsheet_name)
+else:
+    dest_spreadsheet = doc.addObject("Spreadsheet::Sheet", spreadsheet_name)
+
+# Definir encabezados correctamente
+encabezados = ["Recinto", "Area (m2)", "Largo (m)", "Ancho (m)", "Altura (m)", "Filas", "Columnas", "Descripcion", 
+                "Cantidad Seleccionada", "Luminaria (Lm)", "Iluminancia Media Deseada (Lux)", "Flujo Luminoso Total (Lumens)", 
+               "Numero Luminarias", "E Final (Lux)", "% Iluminacion Recomendada"]
+for col_index, header in enumerate(encabezados):
+    cell = chr(65 + col_index) + "1"
+    dest_spreadsheet.set(cell, header)
+
+# Tabla de iluminancia recomendada
+iluminancia_recomendada = {
+    "Oficina": 500,
+    "Pasillo": 50,
+    "Servicio Sanitario": 100,
+    "Sala de Reuniones": 300,
+    "Bodega": 70,
+    "Cocina": 300,
+    "Caja": 500,
+    "Plataforma": 500,
+    "Sala de Espera": 200,
+    "Archivo": 400,
+    "Cochera": 50,
+    "Parqueo": 20,
+    "Exteriores": 20,
+    "Trabajo Minucioso": 750,
+    "Taller": 200,
+    "Dormitorio": 200
+}
+
+# Factores de iluminación
+factor_utilizacion = 0.8
+factor_mantenimiento = 0.7
+
+# Extraer datos de la tabla seleccionada y calcular iluminación
+data_range = ["A", "B", "C", "D", "E", "F", "G", "H"]  # Columnas base incluyendo descripcion
+row = 2  # Comenzar desde la segunda fila
+
+while source_spreadsheet.get("A" + str(row)):
+    fila_vacia = all(source_spreadsheet.get(col + str(row)) in [None, ""] for col in data_range)
+    if fila_vacia:
+        break  # Detener si la fila esta completamente vacia
+    
+    for col_index, col_letter in enumerate(data_range):
+        source_cell = col_letter + str(row)
+        dest_cell = col_letter + str(row)
+        valor = source_spreadsheet.get(source_cell) if source_spreadsheet.get(source_cell) not in [None, ""] else ""
+        try:
+            dest_spreadsheet.set(dest_cell, str(valor))
+        except Exception as e:
+            print(f"Error al procesar la celda {source_cell}: {e}")
+
+    # Verificación de valores antes de usarlos en las fórmulas
+    filas = int(source_spreadsheet.get("F" + str(row)) or 1)
+    columnas = int(source_spreadsheet.get("G" + str(row)) or 1)
+    descripcion = source_spreadsheet.get("H" + str(row)) or "Desconocido"
+    
+    # Escribir fórmulas en cada fila con comentarios detallados
+    dest_spreadsheet.set("I" + str(row), f"=F{row}*G{row}")  # Cantidad seleccionada de luminarias (Filas * Columnas)
+    dest_spreadsheet.set("J" + str(row), "4000")  # Flujo luminoso de cada lámpara (4000 lm por defecto)
+    
+    # Asignar iluminancia media deseada basada en la descripción
+    iluminancia = iluminancia_recomendada.get(descripcion, 300)  # 300 como valor por defecto
+    dest_spreadsheet.set("K" + str(row), str(iluminancia))  # Iluminancia recomendada según tipo de recinto
+    
+    dest_spreadsheet.set("L" + str(row), f"=B{row}*K{row}")  # Flujo luminoso total necesario (Superficie * Iluminancia deseada)
+    dest_spreadsheet.set("M" + str(row), f"=L{row}/J{row}")  # Número de luminarias necesarias (Flujo total / Flujo de cada lámpara)
+    dest_spreadsheet.set("N" + str(row), f"=(I{row}*J{row}/B{row})*{factor_utilizacion}*{factor_mantenimiento}")  # Iluminancia final obtenida con factores
+    dest_spreadsheet.set("O" + str(row), f"=(N{row}/K{row})*100")  # % de iluminación recomendada alcanzada
+    
+    row += 1
+
+# Recalcular y actualizar FreeCAD
+dest_spreadsheet.recompute()
+doc.recompute()
+
+print(f"Datos extraídos de '{selected_table}' y cálculos aplicados en '{spreadsheet_name}' correctamente.")

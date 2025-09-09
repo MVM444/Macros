@@ -1,0 +1,122 @@
+# -*- coding: utf-8 -*-
+
+import FreeCAD
+import FreeCADGui
+import Part
+import Draft
+import math
+from PySide import QtGui
+
+def conectar_objetos_en_C():
+    """
+    Conecta dos objetos seleccionados (aristas o caras) con una trayectoria en 'C'.
+    Usa Draft.make_wire(), organiza las conexiones en un grupo dentro del grupo de los objetos seleccionados.
+    """
+    doc = FreeCAD.ActiveDocument
+    selected_objects = FreeCADGui.Selection.getSelectionEx()
+
+    # Verificar que hay exactamente 2 objetos seleccionados
+    if len(selected_objects) != 2:
+        FreeCAD.Console.PrintError("Debe seleccionar exactamente dos aristas o caras antes de ejecutar la macro.\n")
+        return
+
+    FreeCAD.Console.PrintMessage(f"Objetos seleccionados: {[obj.Object.Label for obj in selected_objects]}\n")
+
+    def obtener_punto_central(selection_detail):
+        """
+        Obtiene el punto central de una arista o cara seleccionada.
+        """
+        if hasattr(selection_detail, "SubObjects") and selection_detail.SubObjects:
+            for sub_obj in selection_detail.SubObjects:
+                if isinstance(sub_obj, Part.Edge):
+                    return sub_obj.CenterOfMass
+                elif isinstance(sub_obj, Part.Face):
+                    return sub_obj.CenterOfMass
+        return None
+
+    # Obtener puntos centrales de las aristas o caras seleccionadas
+    punto1 = obtener_punto_central(selected_objects[0])
+    punto2 = obtener_punto_central(selected_objects[1])
+
+    if punto1 is None or punto2 is None:
+        FreeCAD.Console.PrintError("Error al obtener los puntos centrales de las aristas o caras seleccionadas.\n")
+        return
+
+    # Solicitar dirección de la conexión
+    direccion, ok = QtGui.QInputDialog.getItem(None, "Direccion de la conexion", 
+                                               "Seleccione la direccion de la conexion en 'C':", 
+                                               ["Arriba", "Abajo", "Izquierda", "Derecha"], 0, False)
+    if not ok:
+        FreeCAD.Console.PrintError("No se selecciono una direccion valida.\n")
+        return
+
+    # Definir dirección en FreeCAD.Vector
+    direcciones = {
+        "Arriba": FreeCAD.Vector(0, 1, 0),
+        "Abajo": FreeCAD.Vector(0, -1, 0),
+        "Izquierda": FreeCAD.Vector(-1, 0, 0),
+        "Derecha": FreeCAD.Vector(1, 0, 0)
+    }
+
+    vector_direccion = direcciones.get(direccion)
+    if vector_direccion is None:
+        FreeCAD.Console.PrintError("Direccion no valida seleccionada.\n")
+        return
+
+    # Solicitar distancia de conexión
+    distancia, ok = QtGui.QInputDialog.getDouble(None, "Distancia de la conexion", 
+                                                 "Ingrese la distancia en milimetros:", 
+                                                 100.0, 0.0, 10000.0, 2)
+    if not ok or distancia <= 0:
+        FreeCAD.Console.PrintError("No se ingreso una distancia valida.\n")
+        return
+
+    # Ajustar distancia inicial con 200mm adicionales
+    distancia_redondeada = round(distancia / 100) * 100 + 200
+
+    # Generar puntos intermedios ortogonales
+    punto_intermedio1 = punto1 + (vector_direccion * distancia_redondeada)
+
+    if direccion in ["Arriba", "Abajo"]:
+        punto_intermedio2 = FreeCAD.Vector(punto_intermedio1.x, punto_intermedio1.y, punto2.z)
+    else:
+        punto_intermedio2 = FreeCAD.Vector(punto_intermedio1.x, punto2.y, punto_intermedio1.z)
+
+    # Fillet de 1/20 de la distancia (mínimo 10mm)
+    radio_fillet = max(10, distancia_redondeada / 20)
+
+    # Agrupar la conexión dentro del grupo de los objetos seleccionados
+    grupo_padre = None
+    for obj in doc.Objects:
+        if obj.TypeId == 'App::DocumentObjectGroup' and all(sel.Object in obj.Group for sel in selected_objects):
+            grupo_padre = obj
+            break
+
+    if not grupo_padre:
+        FreeCAD.Console.PrintError("Los objetos seleccionados no pertenecen al mismo grupo.\n")
+        return
+
+    grupo_direcciones = None
+    for obj in grupo_padre.Group:
+        if obj.TypeId == 'App::DocumentObjectGroup' and obj.Name == "Direcciones":
+            grupo_direcciones = obj
+            break
+
+    if not grupo_direcciones:
+        grupo_direcciones = doc.addObject("App::DocumentObjectGroup", "Direcciones")
+        grupo_padre.addObject(grupo_direcciones)
+
+    # Crear la conexión con Draft Wire
+    puntos = [punto1, punto_intermedio1, punto_intermedio2, punto2]
+    wire = Draft.make_wire(puntos, closed=False)
+    wire.Label = f'Conexion_C_{selected_objects[0].Object.Label}_{selected_objects[1].Object.Label}'
+    wire.FilletRadius = radio_fillet  # Aplicar fillet directamente en el Wire
+
+    # Agregar la conexión al grupo de Direcciones
+    grupo_direcciones.addObject(wire)
+
+    # Recalcular el documento
+    doc.recompute()
+
+# Ejecutar la función
+conectar_objetos_en_C()

@@ -1,0 +1,193 @@
+# -*- coding: utf-8 -*-
+# FreeCAD 1.0 – CVT plato-trinquete con transmisión a 90° (prototipo)
+# Crea geometría básica y un contenedor de Assembly nativo (si existe).
+# Autor: ChatGPT (para Marco V. Mora)
+import FreeCAD as App
+import FreeCADGui as Gui
+import Part, Draft
+
+DOC = App.newDocument("CVT_Plato_Trinquete_90deg")
+
+# ------------------------
+# Parámetros de prototipo
+# ------------------------
+p = {
+    "EJE_IN_D"      : 14.0,     # Ø eje entrada [mm]
+    "EJE_OUT_D"     : 16.0,     # Ø eje salida vertical [mm]
+    "BEVEL_RM"      : 25.0,     # radio medio de engranajes cónicos ref [mm]
+    "BEVEL_FACE"    : 18.0,     # ancho de cara (ref) [mm]
+    "PLATO_D"       : 160.0,    # Ø plato [mm]
+    "PLATO_E"       : 8.0,      # espesor plato [mm]
+    "RODILLO_D"     : 18.0,     # Ø rodillo trinquete [mm]
+    "RODILLO_L"     : 28.0,     # largo rodillo [mm]
+    "N_RODILLOS"    : 8,        # cantidad de rodillos
+    "CARTER_LWH"    : (260.0, 220.0, 240.0),  # carcasa (LxWxH) [mm]
+    "SEP_EJES"      : 2*25.0,   # distancia aproximada entre vértices cónicos [mm]
+    "OFFSET_PLATO"  : 60.0      # altura del plato sobre el engrane [mm]
+}
+
+# Utilidad: crea cilindro nombrado
+def make_cyl(name, d, h, color=(0.8,0.8,0.8), alpha=0.0):
+    obj = DOC.addObject("Part::Cylinder", name)
+    obj.Radius = d/2.0
+    obj.Height = h
+    obj.ViewObject.ShapeColor = color
+    obj.ViewObject.Transparency = int(alpha*100)
+    return obj
+
+# Utilidad: crea cubo
+def make_box(name, L, W, H, color=(0.7,0.7,0.7), alpha=70):
+    b = DOC.addObject("Part::Box", name)
+    b.Length = L; b.Width = W; b.Height = H
+    b.ViewObject.ShapeColor = color
+    b.ViewObject.Transparency = alpha
+    return b
+
+# Utilidad: crea cono de referencia para bevel (sin dientes)
+def make_bevel_ref(name, r_base, r_top, h, color=(0.6,0.8,1.0)):
+    c = DOC.addObject("Part::Cone", name)
+    c.Radius1 = r_base
+    c.Radius2 = r_top
+    c.Height  = h
+    c.ViewObject.ShapeColor = color
+    c.ViewObject.DisplayMode = "Shaded"
+    return c
+
+# ------------------------
+# Carcasa de referencia
+# ------------------------
+L,W,H = p["CARTER_LWH"]
+carter = make_box("Carter_REF", L, W, H, color=(0.6,0.6,0.6), alpha=85)
+# Centrar en origen para trabajar cómodo
+carter.Placement.Base = App.Vector(-L/2.0, -W/2.0, -H/2.0)
+
+# ------------------------
+# Eje horizontal de entrada + bevel cónico (ref)
+# ------------------------
+eje_in = make_cyl("Eje_IN", p["EJE_IN_D"], 120.0, color=(0.9,0.7,0.5))
+# Colocar horizontal sobre eje X, centrado
+eje_in.Placement = App.Placement(App.Vector(-60, 0, 0), App.Rotation(App.Vector(0,1,0), 90))
+
+# Bevel de entrada (cono ref)
+bevel_in = make_bevel_ref("Bevel_IN_REF", p["BEVEL_RM"]+p["BEVEL_FACE"]/2.0,
+                          p["BEVEL_RM"]-p["BEVEL_FACE"]/2.0,
+                          p["BEVEL_FACE"])
+# Lo ponemos con el vértice en el cruce de ejes (0,0,0) y abriendo hacia +X
+bevel_in.Placement = App.Placement(App.Vector(0,0,0),
+                                   App.Rotation(App.Vector(0,1,0), 90))
+
+# Aro de “mate” para joint (más fácil seleccionar cara/aro)
+aro_in = make_cyl("Bevel_IN_Mate", 2*p["BEVEL_RM"], 2.0, color=(0.2,0.6,1.0))
+aro_in.Placement = App.Placement(App.Vector(p["BEVEL_RM"], 0, 0),
+                                 App.Rotation(App.Vector(0,1,0), 90))
+aro_in.ViewObject.Transparency = 60
+
+# ------------------------
+# Eje vertical de salida + bevel cónico (ref)
+# ------------------------
+eje_out = make_cyl("Eje_OUT", p["EJE_OUT_D"], 160.0, color=(0.9,0.7,0.5))
+# Vertical sobre Z
+eje_out.Placement = App.Placement(App.Vector(0,0,0), App.Rotation())
+
+bevel_out = make_bevel_ref("Bevel_OUT_REF", p["BEVEL_RM"]+p["BEVEL_FACE"]/2.0,
+                           p["BEVEL_RM"]-p["BEVEL_FACE"]/2.0,
+                           p["BEVEL_FACE"])
+# Abrir hacia +Z
+bevel_out.Placement = App.Placement(App.Vector(0,0,0),
+                                    App.Rotation(App.Vector(1,0,0), 90))
+
+aro_out = make_cyl("Bevel_OUT_Mate", 2*p["BEVEL_RM"], 2.0, color=(0.2,1.0,0.6))
+aro_out.Placement = App.Placement(App.Vector(0, 0, p["BEVEL_RM"]),
+                                  App.Rotation())
+
+# ------------------------
+# Plato inclinable (disco) + rótula simple de referencia
+# ------------------------
+plato = make_cyl("Plato_CVT", p["PLATO_D"], p["PLATO_E"], color=(0.8,0.8,0.2))
+plato.Placement = App.Placement(App.Vector(0,0,p["OFFSET_PLATO"]), App.Rotation())
+# Aro “mate” en la cara superior del plato (para Revolute/Fixed según preferencia)
+aro_plato = make_cyl("Plato_Mate", p["PLATO_D"]-20.0, 1.5, color=(1.0,0.4,0.2))
+aro_plato.Placement = App.Placement(App.Vector(0,0,p["OFFSET_PLATO"]+p["PLATO_E"]),
+                                    App.Rotation())
+aro_plato.ViewObject.Transparency = 60
+
+# Rótula (representación: esfera pequeña)
+rotula = DOC.addObject("Part::Sphere", "Rotula_REF")
+rotula.Radius = 6.0
+rotula.ViewObject.ShapeColor = (1.0, 0.5, 0.2)
+rotula.Placement = App.Placement(App.Vector(0,0,p["OFFSET_PLATO"]), App.Rotation())
+
+# ------------------------
+# Rodillos / Trinquetes (bloques cilíndricos alrededor del plato)
+# ------------------------
+import math
+rodillos = []
+R = (p["PLATO_D"]/2.0) - 20.0
+for i in range(p["N_RODILLOS"]):
+    ang = 2.0*math.pi * (i/float(p["N_RODILLOS"]))
+    x = R*math.cos(ang); y = R*math.sin(ang); z = p["OFFSET_PLATO"] + p["PLATO_E"]/2.0
+    rd = make_cyl(f"Rodillo_{i:02d}", p["RODILLO_D"], p["RODILLO_L"], color=(0.7,0.9,0.9))
+    # Orientar el rodillo radialmente (eje del cilindro apunta “arriba”; rotamos para tumbarlo y después azimutal)
+    rot = App.Rotation(App.Vector(0,1,0), 90) * App.Rotation(App.Vector(0,0,1), math.degrees(ang))
+    rd.Placement = App.Placement(App.Vector(x, y, z - p["RODILLO_L"]/2.0), rot)
+    rodillos.append(rd)
+    # pequeño anillo “mate” para cada rodillo (para joints locales)
+    aro = make_cyl(f"Rodillo_{i:02d}_Mate", p["RODILLO_D"]+6.0, 1.0, color=(0.1,0.8,0.8))
+    aro.Placement = App.Placement(App.Vector(x, y, z + p["RODILLO_L"]/2.0),
+                                  App.Rotation(App.Vector(1,0,0), 90))
+    aro.ViewObject.Transparency = 70
+
+# ------------------------
+# Soporte superior (disco anular) como “sumador” de ramas (ref)
+# ------------------------
+sum_ring = DOC.addObject("Part::Torus", "Sumador_Anillo_REF")
+sum_ring.Radius1 = (p["PLATO_D"]/2.0) - 8.0   # radio mayor
+sum_ring.Radius2 = 4.0                        # radio del tubo
+sum_ring.ViewObject.ShapeColor = (0.9, 0.9, 0.9)
+sum_ring.Placement = App.Placement(App.Vector(0,0,p["OFFSET_PLATO"]+p["PLATO_E"]+10.0),
+                                   App.Rotation(App.Vector(1,0,0), 90))
+
+# ------------------------
+# Contenedor de Assembly nativo (si existe) y agrupación
+# ------------------------
+asm = None
+try:
+    asm = DOC.addObject("Asm::Assembly", "ASM_CVT")
+except Exception:
+    # Fallback: Std Part (aun así podrás crear joints cuando actives el Assembly WB)
+    asm = DOC.addObject("App::Part", "ASM_CVT")
+
+# Mover objetos dentro del assembly
+for obj in [eje_in, bevel_in, aro_in, eje_out, bevel_out, aro_out,
+            plato, aro_plato, rotula, sum_ring] + rodillos:
+    obj.adjustRelativeLinks = False
+    obj.removeObjectsFromDocument = False
+    asm.addObject(obj)
+
+# Marcar eje de salida como “pieza base” (ground) mediante App::Link si está disponible
+try:
+    # Ground visual con “Fixed” se hace desde el WB; aquí dejamos hint en Label
+    eje_out.Label = "Eje_OUT (Ground candidate)"
+except Exception:
+    pass
+
+# Vistas y guardado
+Gui.ActiveDocument.ActiveView.setAxisCross(True)
+DOC.recompute()
+Gui.SendMsgToActiveView("ViewFit")
+Gui.activeDocument().resetEdit()
+
+# Notas para el usuario (se muestran en la consola Python de FreeCAD)
+msg = """
+[Instrucciones Assembly WB]
+1) Cambia al Workbench 'Assembly'.
+2) Activa el objeto 'ASM_CVT' (doble clic). Verás la carpeta 'Joints' dentro.
+3) Joint recomendado:
+   • Entre 'Bevel_IN_Mate' y 'Bevel_OUT_Mate' → 'Gear Joint' (o Fixed + orientación) si solo deseas inmovilizar.
+   • Fija (Ground) el 'Eje_OUT' o aplica 'Fixed Joint' al aro/cono vertical para anclar el conjunto.
+   • Opcional: 'Revolute Joint' entre 'Plato_Mate' y el extremo del eje (cara superior del eje OUT),
+     para simular inclinación/rotación controlada (si usas rótula real, usa 'Ball Joint' y un 'Slider' axial).
+4) Los anillos '*_Mate' están pensados para seleccionar cómodamente aristas/caras para los joints.
+5) Guarda el archivo y prueba a mover la parte no fijada arrastrando en la vista (Assembly permite manipulación directa).
+"""
+print(msg)

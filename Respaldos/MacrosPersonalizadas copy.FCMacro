@@ -1,0 +1,63 @@
+import FreeCAD
+import FreeCADGui
+import os
+from PySide2 import QtWidgets
+from functools import partial
+
+def run_macro(macro_path):
+    """Ejecuta la macro seleccionada con manejo de errores."""
+    try:
+        with open(macro_path, "r", encoding="utf-8") as file:  # Forzar lectura en UTF-8
+            exec(file.read(), globals())
+        FreeCAD.Console.PrintMessage(f"Macro ejecutada: {macro_path}\n")
+    except ModuleNotFoundError as e:
+        FreeCAD.Console.PrintError(f"Error: Falta el módulo {str(e).split()[-1]}.\n")
+        FreeCAD.Console.PrintMessage("Instala el módulo ejecutando en la consola de Python:\n")
+        FreeCAD.Console.PrintMessage(f"    import pip; pip.main(['install', '{str(e).split()[-1]}'])\n")
+    except UnicodeDecodeError:
+        FreeCAD.Console.PrintError(f"Error de codificación en {macro_path}. Guarda la macro en UTF-8 sin BOM.\n")
+    except Exception as e:
+        FreeCAD.Console.PrintError(f"Error ejecutando la macro: {str(e)}\n")
+
+def create_macro_menu():
+    """Crea un menú en FreeCAD con las macros disponibles en el directorio de macros."""
+    mw = FreeCADGui.getMainWindow()
+    menu_bar = mw.menuBar()
+    
+    # Eliminar el menú si ya existe para evitar duplicados
+    for menu in menu_bar.findChildren(QtWidgets.QMenu):
+        if menu.title() == "Macros Personalizadas":
+            menu_bar.removeAction(menu.menuAction())
+
+    # Crear el nuevo menú
+    macro_menu = menu_bar.addMenu("Macros Personalizadas")
+
+    # Obtener el directorio de macros
+    macro_dir = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Macro").GetString("MacroPath", "")
+    if not os.path.exists(macro_dir):
+        FreeCAD.Console.PrintError("El directorio de macros no existe.\n")
+        return
+
+    # Recorrer el directorio y agregar macros al menú
+    macros_by_category = {}
+    for root, dirs, files in os.walk(macro_dir):
+        category = os.path.relpath(root, macro_dir)
+        macros_by_category[category] = []
+        for file in sorted(files):
+            if file.endswith(".FCMacro"):
+                macros_by_category[category].append(os.path.join(root, file))
+
+    # Agregar macros agrupadas por subdirectorio
+    for category, macros in macros_by_category.items():
+        if macros:
+            category_menu = macro_menu.addMenu(category)  # Submenú para cada categoría
+            for macro in macros:
+                macro_name = os.path.splitext(os.path.basename(macro))[0]
+                action = category_menu.addAction(macro_name)
+                action.triggered.connect(partial(run_macro, macro))
+
+    FreeCAD.Console.PrintMessage("Menú de macros creado correctamente.\n")
+
+# Crear el menú al iniciar FreeCAD
+if FreeCAD.GuiUp:
+    create_macro_menu()

@@ -1,0 +1,102 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# ========================================================================
+# Macro: Debug Alias Assignment for Spreadsheet Cells
+# Archivo: Debug_Alias_Assignment.FCMacro
+# ------------------------------------------------------------------------
+# RESUMEN:
+# Esta macro asigna alias automáticos a las celdas de una hoja de cálculo
+# de FreeCAD, tomando los valores de una columna (por defecto la columna A,
+# filas 2 a 36) y generando un alias válido para cada celda no vacía.
+# El alias se limpia para que solo contenga caracteres alfanuméricos y guiones bajos,
+# y siempre comienza con una letra. El proceso muestra mensajes de depuración
+# en la consola de FreeCAD, indicando los alias propuestos y cualquier error.
+# Al finalizar, fuerza el recálculo del documento para registrar los cambios.
+# Está pensado para hojas con el nombre "Tabla_Iluminacion", pero puedes
+# modificar el nombre o el rango según tus necesidades.
+# ------------------------------------------------------------------------
+#  ========================================================================
+__Name__    = "Debug Alias Assignment"
+__Comment__ = "Macro para asignar alias a celdas de una hoja de cálculo y mostrar la depuración"
+__Author__  = "ChatGPT"
+__Title__   = "Debug Alias Assignment"
+__Date__    = "2025/03/10"
+__Version__ = __Date__
+__License__ = "Apache-2.0"
+__Wiki__    = "https://wiki.freecad.org/Macro_Debug_Alias_Assignment"
+
+import FreeCAD
+import FreeCADGui
+
+def clean_alias(text):
+    """
+    Limpia el texto para generar un alias válido.
+    Conserva solo caracteres alfanuméricos y guiones bajos.
+    Reemplaza cualquier carácter inválido por '_' y
+    se asegura de que el alias comience con una letra.
+    """
+    cleaned = ""
+    for ch in text:
+        if ch.isalnum() or ch == "_":
+            cleaned += ch
+        else:
+            cleaned += "_"  # reemplaza caracteres inválidos por guión bajo
+    if cleaned == "":
+        cleaned = "Alias"
+    if not cleaned[0].isalpha():
+        cleaned = "A" + cleaned
+    return cleaned
+
+def debug_assign_aliases(spreadsheet, col, row_start, row_end):
+    """
+    Recorre la columna 'col' desde row_start hasta row_end en la hoja de cálculo,
+    genera un alias a partir del contenido de cada celda (limpiando caracteres especiales),
+    e intenta asignarlo usando setAlias(). Imprime en consola la información de depuración.
+    """
+    for r in range(row_start, row_end + 1):
+        cell_spec = f"{col}{r}"
+        try:
+            value = spreadsheet.get(cell_spec)
+        except Exception as e:
+            FreeCAD.Console.PrintError(f"Error leyendo {cell_spec}: {e}\n")
+            continue
+        if value is None or str(value).strip() == "":
+            FreeCAD.Console.PrintMessage(f"La celda {cell_spec} está vacía. Se omite.\n")
+            continue
+        raw_alias = str(value).strip()
+        alias_name = clean_alias(raw_alias)
+        FreeCAD.Console.PrintMessage(f"Celda {cell_spec}: valor '{raw_alias}' -> alias propuesto: '{alias_name}'\n")
+        try:
+            spreadsheet.setAlias(cell_spec, alias_name)
+            FreeCAD.Console.PrintMessage(f"Alias asignado para {cell_spec}: '{alias_name}'\n")
+        except Exception as e:
+            FreeCAD.Console.PrintError(f"Error asignando alias para {cell_spec} ('{alias_name}'): {e}\n")
+    
+    # Forzar el recálculo para que se registren los alias
+    FreeCAD.ActiveDocument.recompute()
+
+def main():
+    doc = FreeCAD.ActiveDocument
+    if doc is None:
+        FreeCAD.Console.PrintError("No hay documento activo.\n")
+        return
+    
+    # Buscar la hoja de cálculo con nombre "Tabla_Iluminacion"
+    sheet = None
+    for obj in doc.Objects:
+        if obj.TypeId == "Spreadsheet::Sheet" and obj.Label == "Tabla_Iluminacion":
+            sheet = obj
+            break
+    if sheet is None:
+        FreeCAD.Console.PrintError("No se encontró la hoja 'Tabla_Iluminacion'.\n")
+        return
+    
+    FreeCAD.Console.PrintMessage(f"Hoja seleccionada: {sheet.Label}\n")
+    
+    # Asignar alias a la columna A desde la fila 2 hasta la 36
+    debug_assign_aliases(sheet, "A", 2, 36)
+    
+    FreeCAD.Console.PrintMessage("Proceso de asignación de alias completado.\n")
+
+if __name__ == '__main__':
+    main()

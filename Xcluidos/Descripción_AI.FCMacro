@@ -1,0 +1,62 @@
+import FreeCAD
+import FreeCADGui
+import os
+import openai
+import sys
+
+# Configuracion de la API de OpenAI (usar variable de entorno)
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+
+# Crear cliente OpenAI (si hay API key)
+client = openai.OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
+
+def describir_objeto(obj):
+    """
+    Genera una descripcion automatica de un objeto en FreeCAD usando OpenAI.
+    """
+    try:
+        if client is None:
+            raise RuntimeError("Falta OPENAI_API_KEY en variables de entorno")
+        nombre = obj.Name
+        tipo = obj.TypeId
+        volumen = "No tiene volumen" if not hasattr(obj, "Shape") else round(obj.Shape.Volume, 2)
+
+        prompt = f"""
+        Eres un asistente tecnico para FreeCAD. Describe este objeto:
+        - Nombre: {nombre}
+        - Tipo: {tipo}
+        - Volumen: {volumen} mm3
+        Da una descripcion breve y tecnica.
+        """
+
+        respuesta = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[{"role": "user", "content": prompt}]
+        )
+
+        descripcion = respuesta.choices[0].message.content
+        return descripcion
+    except Exception as e:
+        FreeCAD.Console.PrintError(f"Error en OpenAI: {str(e)}\n")
+        return "Error al generar la descripcion."
+
+def analizar_seleccion():
+    """
+    Analiza los objetos seleccionados y genera una descripcion para cada uno.
+    """
+    doc = FreeCAD.ActiveDocument
+    if not doc:
+        FreeCAD.Console.PrintError("No hay un documento activo en FreeCAD.\n")
+        return
+
+    seleccion = FreeCADGui.Selection.getSelection()
+    if not seleccion:
+        FreeCAD.Console.PrintError("No hay objetos seleccionados.\n")
+        return
+
+    for obj in seleccion:
+        descripcion = describir_objeto(obj)
+        FreeCAD.Console.PrintMessage(f"\nDescripcion para {obj.Name}: {descripcion}\n")
+
+# Ejecutar analisis
+analizar_seleccion()

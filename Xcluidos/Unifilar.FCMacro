@@ -1,0 +1,28 @@
+import FreeCAD
+import FreeCADGui
+from PySide import QtGui
+
+def agregar_simbolo(nombre, posicion):
+    # Crear un objeto básico de caja que represente un símbolo eléctrico
+    doc = FreeCAD.ActiveDocument
+    simbolo = doc.addObject("Part::Box", nombre)
+    simbolo.Label = nombre
+    simbolo.Placement.Base = posicion
+    return simbolo
+
+# Crear una lista de posiciones para agregar los símbolos
+posiciones = [FreeCAD.Vector(i*1000, 0, 0) for i in range(5)]
+
+# Añadir símbolos al diagrama
+for i, pos in enumerate(posiciones):
+    agregar_simbolo(f"Simbolo_{i}", pos)
+
+# Crear líneas entre los símbolos para simular conexiones
+doc = FreeCAD.ActiveDocument
+for i in range(len(posiciones) - 1):
+    puntos = [posiciones[i], posiciones[i + 1]]
+    linea = Part.makePolygon(puntos)
+    linea_obj = doc.addObject("Part::Feature", f'Conexion_{i}')
+    linea_obj.Shape = linea
+
+doc.recompute()

@@ -1,0 +1,39 @@
+import FreeCAD
+import FreeCADGui
+import Part
+
+def agregar_propiedades_tomacorriente(tomacorriente):
+    if not hasattr(tomacorriente, 'PosicionVertical'):
+        tomacorriente.addProperty("App::PropertyBool", "PosicionVertical", "Propiedades", "Indica si el tomacorriente está en posición vertical")
+    if not hasattr(tomacorriente, 'PosicionHorizontal'):
+        tomacorriente.addProperty("App::PropertyBool", "PosicionHorizontal", "Propiedades", "Indica si el tomacorriente está en posición horizontal")
+    if not hasattr(tomacorriente, 'HaciaArriba'):
+        tomacorriente.addProperty("App::PropertyBool", "HaciaArriba", "Propiedades", "Indica si el tomacorriente está orientado hacia arriba")
+    if not hasattr(tomacorriente, 'HaciaAbajo'):
+        tomacorriente.addProperty("App::PropertyBool", "HaciaAbajo", "Propiedades", "Indica si el tomacorriente está orientado hacia abajo")
+    if not hasattr(tomacorriente, 'GFCI'):
+        tomacorriente.addProperty("App::PropertyBool", "GFCI", "Propiedades", "Indica si el tomacorriente es un GFCI")
+    if not hasattr(tomacorriente, 'TVSS'):
+        tomacorriente.addProperty("App::PropertyBool", "TVSS", "Propiedades", "Indica si el tomacorriente tiene TVSS")
+    if not hasattr(tomacorriente, 'Normal'):
+        tomacorriente.addProperty("App::PropertyBool", "Normal", "Propiedades", "Indica si el tomacorriente es normal")
+    if not hasattr(tomacorriente, 'Computo'):
+        tomacorriente.addProperty("App::PropertyBool", "Computo", "Propiedades", "Indica si el tomacorriente es para cómputo")
+    if not hasattr(tomacorriente, 'Altura'):
+        tomacorriente.addProperty("App::PropertyLength", "Altura", "Propiedades", "Altura del tomacorriente")
+    
+    # Asignar valores por defecto si es necesario
+    tomacorriente.PosicionVertical = True
+    tomacorriente.PosicionHorizontal = False
+    tomacorriente.HaciaArriba = False
+    tomacorriente.HaciaAbajo = True
+    tomacorriente.GFCI = False
+    tomacorriente.TVSS = False
+    tomacorriente.Normal = True
+    tomacorriente.Computo = False
+    tomacorriente.Altura = 1000  # Ejemplo de altura en mm
+
+# Ejemplo de uso para agregar propiedades a todos los tomacorrientes en el documento
+for obj in FreeCAD.ActiveDocument.Objects:
+    if "Tomacorriente" in obj.Label:
+        agregar_propiedades_tomacorriente(obj)

@@ -1,0 +1,78 @@
+import FreeCAD
+import FreeCADGui
+import Part
+import os
+
+def insertar_tomacorriente():
+    doc = FreeCAD.ActiveDocument
+
+    # Ruta al archivo STEP del tomacorriente en el subdirectorio "Resources"
+    archivo_tomacorriente = "C:\\Users\\mmfallas\\OneDrive - Caja Costarricense de Seguro Social\\Documentos\\FreeCAD\\Macros\\Resources\\SimboloToma.step"
+    
+    # Verifica si el archivo existe
+    if os.path.exists(archivo_tomacorriente):
+        # Importa el archivo STEP
+        imported_part = Part.read(archivo_tomacorriente)
+        part_feature = doc.addObject("Part::Feature", "Tomacorriente")
+        part_feature.Shape = imported_part
+        
+        # Obtener la selección actual del usuario
+        selection = FreeCADGui.Selection.getSelectionEx()
+        if not selection:
+            FreeCAD.Console.PrintError("No hay ninguna selección. Por favor seleccione una cara o un borde.\n")
+            return
+        
+        selected_object = selection[0]
+        
+        if selected_object.HasSubObjects:
+            sub_object = selected_object.SubObjects[0]
+            placement = FreeCAD.Placement()
+            
+            if isinstance(sub_object, Part.Face):
+                face = sub_object
+                normal = face.normalAt(0.5, 0.5)
+                center = face.CenterOfMass
+                
+                # Ajustar la colocación para que el tomacorriente esté perpendicular a la cara
+                z_direction = FreeCAD.Vector(0, 0, 1)
+                angle = normal.getAngle(z_direction)
+                
+                # Determina la dirección de la rotación en el eje Z
+                rotation = FreeCAD.Rotation(z_direction.cross(normal), angle)
+                
+                placement.Rotation = rotation
+                placement.Base = center
+                
+            elif isinstance(sub_object, Part.Edge):
+                edge = sub_object
+                direction = edge.tangentAt(0.5)
+                center = edge.CenterOfMass
+                
+                # Ajustar el vector normal para la orientación
+                normal = direction.cross(FreeCAD.Vector(0, 0, 1))
+                
+                # Ajustar la colocación para que el tomacorriente esté perpendicular al borde
+                z_direction = FreeCAD.Vector(0, 0, 1)
+                angle = normal.getAngle(z_direction)
+                
+                # Crear la rotación en el eje Z
+                rotation = FreeCAD.Rotation(z_direction.cross(normal), angle)
+                
+                placement.Rotation = rotation
+                placement.Base = center
+            
+            # Ajustar la colocación
+            part_feature.Placement = placement
+            
+            # Hacer visible el objeto importado
+            part_feature.ViewObject.Visibility = True
+            
+            # Refrescar el documento
+            doc.recompute()
+        else:
+            FreeCAD.Console.PrintError("El objeto seleccionado no es una cara ni un borde.\n")
+    else:
+        FreeCAD.Console.PrintError("El archivo SímboloToma.step no existe en la ruta especificada.")
+
+# Ejecuta la función para insertar el tomacorriente
+insertar_tomacorriente()

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Visor X3DOM dinámico</title>
+    <script src="https://www.x3dom.org/download/x3dom.js"></script>
+    <link rel="stylesheet" href="https://www.x3dom.org/download/x3dom.css"/>
+</head>
+<body>
+    <h2>Seleccioná un archivo .x3d</h2>
+
+    <input type="file" id="fileInput" accept=".x3d"/>
+    <br/><br/>
+
+    <x3d id="x3dElement" width="800px" height="600px">
+        <scene id="x3dScene">
+            <!-- Aquí se insertará el modelo -->
+        </scene>
+    </x3d>
+
+    <script>
+        document.getElementById('fileInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const parser = new DOMParser();
+                const x3dDoc = parser.parseFromString(e.target.result, "application/xml");
+
+                const importedScene = x3dDoc.getElementsByTagName("Scene")[0];
+                if (importedScene) {
+                    const displayScene = document.getElementById("x3dScene");
+                    displayScene.innerHTML = "";
+                    while (importedScene.firstChild) {
+                        displayScene.appendChild(importedScene.firstChild);
+                    }
+                } else {
+                    alert("No se encontró una etiqueta <Scene> válida en el archivo.");
+                }
+            };
+            reader.readAsText(file);
+        });
+    </script>
+
+    <!-- Ejemplo de escena X3DOM con modo WALK -->
+    <h2>Ejemplo de escena X3DOM con modo WALK</h2>
+
+    <x3d>
+        <scene>
+            <!-- Activa modo WALK -->
+            <NavigationInfo type='"WALK"' speed='5' headlight='true' avatarSize='[1.6 0.5 0.1]'/>
+            
+            <!-- Cargar archivo externo -->
+            <inline url="modelo_con_luces.x3d"></inline>
+
+            <!-- Fondo -->
+            <Background skyColor='0.9 0.9 1'/>
+        </scene>
+    </x3d>
+
+</body>
+</html>

@@ -1,0 +1,93 @@
+import os
+import FreeCAD as App
+import FreeCADGui as Gui
+from PySide import QtGui
+
+class InsertOutletCommand:
+    def GetResources(self):
+        return {'Pixmap': 'path/to/your/icon.png',  # Ruta al icono del comando
+                'MenuText': 'Insertar Tomacorrientes',
+                'ToolTip': 'Inserta un tomacorrientes en el modelo'}
+
+    def Activated(self):
+        # Lógica para insertar el tomacorrientes
+        doc = App.ActiveDocument
+        if doc is None:
+            doc = App.newDocument()
+        
+        # Crear un objeto de tomacorrientes (por simplicidad, aquí solo un cilindro)
+        outlet = doc.addObject("Part::Cylinder", "Tomacorriente")
+        outlet.Radius = 5
+        outlet.Height = 2
+        
+        # Posicionar el tomacorriente en la vista (por ahora en el origen)
+        outlet.Placement.Base = App.Vector(0, 0, 0)
+        
+        doc.recompute()
+        
+    def IsActive(self):
+        return True
+
+Gui.addCommand('Insert_Outlet', InsertOutletCommand())
+
+class ElectricWorkbench(Gui.Workbench):
+    "Workbench personalizado Eléctrico-CR"
+    
+    MenuText = "Eléctrico"
+    ToolTip = "Un workbench personalizado para diseñar instalaciones eléctricas"
+    Icon = "Rayo.png"  # Especifica el icono para tu workbench aquí
+
+    def Initialize(self):
+        # Lista de comandos Arch
+        arch_commands = [
+            "Arch_Axis",
+            "Arch_AxisSystem",
+            "Arch_Building",
+            "Arch_BuildingPart",
+            "Arch_CloneComponent",
+            "Arch_Component",
+            "Arch_CutPlane",
+            "Arch_Equipment",
+            "Arch_Floor",
+            "Arch_Frame",
+            "Arch_Grid",
+            "Arch_IfcExplorer",
+            "Arch_Material",
+            "Arch_MaterialTools",
+            "Arch_MergeWalls",
+            "Arch_MultiMaterial",
+            "Arch_Nesting",
+            "Arch_Panel",
+            "Arch_PanelCut",
+            "Arch_PanelSheet",
+            "Arch_Rebar",
+            "Arch_Reference",
+            "Arch_RemoveShape",
+            "Arch_Roof",
+            "Arch_Schedule",
+            "Arch_SectionPlane",
+            "Arch_SelectNonSolidMeshes",
+            "Arch_Site",
+            "Arch_Space",
+            "Arch_Stairs",
+            "Arch_Structure",
+            "Arch_Survey",
+            "Arch_Wall",
+            "Arch_Window"
+        ]
+
+        # Comando personalizado
+        custom_commands = ["Insert_Outlet"]
+
+        # Añadir comandos Arch a la barra de herramientas "Herramientas Arch"
+        self.appendToolbar("Herramientas Arch", arch_commands)
+        self.appendMenu("Herramientas Arch", arch_commands)
+
+        # Añadir comandos personalizados a la nueva barra de herramientas "Herramientas Electric" y menú "Electric"
+        self.appendToolbar("Herramientas Electric", custom_commands)
+        self.appendMenu("Electric", custom_commands)
+    
+    def GetClassName(self):
+        return "Gui::PythonWorkbench"
+
+Gui.addWorkbench(ElectricWorkbench())

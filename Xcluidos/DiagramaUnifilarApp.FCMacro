@@ -1,0 +1,105 @@
+# ------------------------------------------------------------------------
+# RESUMEN:
+# Esta clase crea una ventana principal en FreeCAD cargando una interfaz .ui
+# diseñada en Qt Designer, usando PySide2 y QUiLoader.
+# - Busca el archivo .ui en el directorio de macros de FreeCAD.
+# - Si el archivo existe, lo carga y conecta los botones a métodos de la clase.
+# - Los métodos muestran mensajes en la consola de FreeCAD al hacer clic.
+# - Si el archivo .ui no existe, muestra un error en la consola.
+# ------------------------------------------------------------------------import FreeCAD
+import FreeCADGui
+from PySide2 import QtWidgets, QtCore, QtUiTools
+import os
+
+class DiagramaUnifilarApp(QtWidgets.QMainWindow):
+    def __init__(self):
+        super(DiagramaUnifilarApp, self).__init__()
+
+        # Usar el directorio donde está este archivo
+        macro_dir = os.path.dirname(__file__)
+
+        if not os.path.exists(macro_dir):
+            FreeCAD.Console.PrintError("El directorio de macros de FreeCAD no existe.\n")
+            return
+
+        # Definir la ruta del archivo UI
+        ui_file_path = os.path.join(macro_dir, "diagrama_unifilar_ejemplo.ui")
+
+        # Verificar si el archivo UI existe
+        if not os.path.exists(ui_file_path):
+            FreeCAD.Console.PrintError(f"El archivo UI no se encontró en: {ui_file_path}\n")
+            return
+
+        # Cargar el archivo UI
+        self.load_ui(ui_file_path)
+
+        # Configurar la ventana
+        self.setWindowTitle("Diagrama Unifilar")
+        self.resize(800, 600)
+
+        # Conectar los botones o widgets
+        self.setup_connections()
+
+    def load_ui(self, ui_file_path):
+        """
+        Carga la interfaz directamente desde el archivo .ui sin necesidad de conversión.
+        """
+        try:
+            loader = QtUiTools.QUiLoader()
+            ui_file = QtCore.QFile(ui_file_path)
+            ui_file.open(QtCore.QFile.ReadOnly)
+
+            loaded_ui = loader.load(ui_file, self)
+            ui_file.close()
+
+            if loaded_ui:
+                self.setCentralWidget(loaded_ui.findChild(QtWidgets.QWidget, "centralwidget"))  # Asigna el centralwidget
+                self.ui = loaded_ui
+
+                # Depuración: Imprimir los objetos cargados
+                for obj in self.ui.children():
+                    FreeCAD.Console.PrintMessage(f"Objeto cargado: {obj.objectName()}\n")
+
+                # Forzar actualización de la ventana
+                self.update()
+                self.repaint()
+            else:
+                FreeCAD.Console.PrintError("No se pudo cargar la UI.\n")
+
+        except Exception as e:
+            FreeCAD.Console.PrintError(f"Error al cargar la interfaz UI: {str(e)}\n")
+
+    def setup_connections(self):
+        """
+        Configura las conexiones entre los elementos de la UI y las funciones de la clase.
+        """
+        try:
+            if hasattr(self.ui, "pushButton"):
+                self.ui.pushButton.clicked.connect(self.on_pushButton_clicked)
+
+            if hasattr(self.ui, "btnAgregarComponente"):
+                self.ui.btnAgregarComponente.clicked.connect(self.on_btnAgregarComponente_clicked)
+
+            if hasattr(self.ui, "btnDibujarConexion"):
+                self.ui.btnDibujarConexion.clicked.connect(self.on_btnDibujarConexion_clicked)
+
+        except Exception as e:
+            FreeCAD.Console.PrintError(f"Error al configurar conexiones: {str(e)}\n")
+
+    # Métodos para cada botón
+    def on_pushButton_clicked(self):
+        FreeCAD.Console.PrintMessage("¡Botón 'PushButton' clickeado!\n")
+
+    def on_btnAgregarComponente_clicked(self):
+        FreeCAD.Console.PrintMessage("¡Botón 'Agregar Componente' clickeado!\n")
+
+    def on_btnDibujarConexion_clicked(self):
+        FreeCAD.Console.PrintMessage("¡Botón 'Dibujar Conexión' clickeado!\n")
+
+# Comprobar si la aplicación se ejecuta dentro de FreeCAD
+if FreeCADGui:
+    try:
+        app = DiagramaUnifilarApp()
+        app.show()
+    except Exception as e:
+        FreeCAD.Console.PrintError(f"Error al inicializar la aplicación: {str(e)}\n")

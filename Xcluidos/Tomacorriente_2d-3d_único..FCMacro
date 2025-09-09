@@ -1,0 +1,81 @@
+import FreeCAD
+import Part
+import os
+
+class Tomacorriente:
+    def __init__(self, obj):
+        try:
+            obj.addProperty("App::PropertyLength", "Altura", "Tomacorriente", "Altura del tomacorriente 3D").Altura = 300
+            obj.Proxy = self
+        except Exception as e:
+            FreeCAD.Console.PrintError(f"Error al inicializar propiedades: {str(e)}\n")
+
+    def execute(self, obj):
+        # Directorio base de las macros
+        directorio_macro = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Macro").GetString("MacroPath", "")
+        archivo_3d = os.path.join(directorio_macro, "Resources", "tomacorriente-3D.step")
+        archivo_2d = os.path.join(directorio_macro, "Resources", "SimboloToma.step")
+
+        # Verificar existencia de los archivos
+        if not os.path.exists(archivo_3d) or not os.path.exists(archivo_2d):
+            FreeCAD.Console.PrintError("Archivos 3D o 2D no encontrados en la ruta especificada.\n")
+            return
+
+        try:
+            # Cargar el modelo 3D
+            modelo_3d = Part.Shape()
+            modelo_3d.read(archivo_3d)
+            altura = obj.Altura.Value
+            modelo_3d.translate(FreeCAD.Vector(0, 0, altura))
+
+            # Cargar el modelo 2D
+            modelo_2d = Part.Shape()
+            modelo_2d.read(archivo_2d)
+            modelo_2d.translate(FreeCAD.Vector(0, 0, 0))
+
+            # Combinar ambos modelos
+            compound = Part.Compound([modelo_3d, modelo_2d])
+            obj.Shape = compound
+        except Exception as e:
+            FreeCAD.Console.PrintError(f"Error al combinar formas 3D y 2D: {str(e)}\n")
+
+
+class ViewProviderTomacorriente:
+    def __init__(self, obj):
+        obj.Proxy = self
+
+    def attach(self, obj):
+        self.Object = obj
+
+    def getDisplayModes(self, obj):
+        return ["Shaded", "Wireframe"]
+
+    def getDefaultDisplayMode(self):
+        return "Shaded"
+
+
+def crear_tomacorriente():
+    doc = FreeCAD.ActiveDocument
+    if not doc:
+        doc = FreeCAD.newDocument("PlanoElectricos")
+
+    try:
+        # Crear objeto Tomacorriente
+        obj = doc.addObject("Part::FeaturePython", "Tomacorriente")
+        Tomacorriente(obj)
+        ViewProviderTomacorriente(obj.ViewObject)
+
+        # Posicionar en un lugar inicial (opcional)
+        obj.Placement = FreeCAD.Placement(
+            FreeCAD.Vector(1000, 1000, 0),  # Posición inicial
+            FreeCAD.Rotation(FreeCAD.Vector(0, 0, 1), 0)  # Sin rotación
+        )
+
+        doc.recompute()
+        FreeCAD.Console.PrintMessage("Tomacorriente creado exitosamente.\n")
+    except Exception as e:
+        FreeCAD.Console.PrintError(f"Error al crear el tomacorriente: {str(e)}\n")
+
+
+# Llamar a la función para crear un tomacorriente
+crear_tomacorriente()

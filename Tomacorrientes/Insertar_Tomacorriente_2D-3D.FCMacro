@@ -1,0 +1,94 @@
+import FreeCAD
+import Part
+import os
+
+class Tomacorriente:
+    def __init__(self, obj):
+        # Configurar propiedades del objeto
+        obj.addProperty("App::PropertyLength", "Altura", "Tomacorriente", "Altura del tomacorriente 3D").Altura = 300
+        obj.Proxy = self
+
+    def execute(self, obj):
+        # Directorio base de las macros
+        directorio_macro = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Macro").GetString("MacroPath", "")
+        
+        # Rutas de los archivos STEP
+        archivo_3d = os.path.join(directorio_macro, "Resources", "tomacorriente-3D.step")
+        archivo_2d = os.path.join(directorio_macro, "Resources", "SimboloToma.step")
+        
+        # Verificar existencia de los archivos
+        if not os.path.exists(archivo_3d) or not os.path.exists(archivo_2d):
+            FreeCAD.Console.PrintError("Los archivos 3D o 2D no existen en la ruta especificada.\n")
+            return
+
+        # Cargar el modelo 3D
+        modelo_3d = Part.Shape()
+        modelo_3d.read(archivo_3d)
+
+        # Ajustar la altura del modelo 3D
+        altura = obj.Altura.Value  # Obtener el valor de la propiedad Altura
+        modelo_3d.translate(FreeCAD.Vector(0, 0, altura))
+
+        # Cargar el modelo 2D
+        modelo_2d = Part.Shape()
+        modelo_2d.read(archivo_2d)
+
+        # Mantener el modelo 2D en el nivel del piso
+        modelo_2d.translate(FreeCAD.Vector(0, 0, 0))
+
+        # Combinar ambos modelos en un solo objeto
+        compound = Part.Compound([modelo_3d, modelo_2d])
+        obj.Shape = compound
+
+
+# Clase para manejar la vista (opcional, puede personalizarse más)
+class ViewProviderTomacorriente:
+    def __init__(self, obj):
+        obj.Proxy = self
+
+    def attach(self, obj):
+        self.Object = obj
+
+    def updateData(self, obj, prop):
+        pass
+
+    def getDisplayModes(self, obj):
+        return []
+
+    def getDefaultDisplayMode(self):
+        return "Flat Lines"
+
+    def setDisplayMode(self, mode):
+        pass
+
+    def onChanged(self, vp, prop):
+        pass
+
+    def getIcon(self):
+        return """
+            /* Un ícono personalizado puede ir aquí */
+        """
+
+    def __getstate__(self):
+        return None
+
+    def __setstate__(self, state):
+        return None
+
+
+# Función para crear el objeto Tomacorriente
+def crear_tomacorriente():
+    doc = FreeCAD.ActiveDocument
+    if not doc:
+        doc = FreeCAD.newDocument("PlanoElectricos")
+
+    obj = doc.addObject("Part::FeaturePython", "Tomacorriente")
+    Tomacorriente(obj)
+    ViewProviderTomacorriente(obj.ViewObject)
+
+    # Recomputa el documento
+    doc.recompute()
+    FreeCAD.Console.PrintMessage("Tomacorriente creado exitosamente.\n")
+
+# Crear el tomacorriente
+crear_tomacorriente()

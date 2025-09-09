@@ -1,0 +1,112 @@
+## CopyLastMinuteLogWithEnable.FCMacro
+## Macro FreeCAD que copia las líneas del último minuto del log,
+## y si el log no existe, ofrece activarlo automáticamente.
+
+import FreeCAD as App
+import FreeCADGui as Gui
+from PySide import QtGui, QtCore
+import os
+
+def enable_log_file():
+    """Activa la opción 'WriteLogFile' en las preferencias de FreeCAD."""
+    pg = App.ParamGet("User parameter:BaseApp/Preferences/General")
+    pg.SetBool("WriteLogFile", True)
+    # Ajusta ruta por defecto si es Windows y no existe LogFileName
+    default = pg.GetString("LogFileName", "")
+    if not default:
+        appdata = os.getenv('APPDATA')
+        if appdata:
+            path = os.path.join(appdata, 'FreeCAD', 'FreeCAD.log')
+            pg.SetString("LogFileName", path)
+    App.Console.PrintMessage("[Info] Escritura de log activada. Reinicia FreeCAD para que surta efecto.\n")
+
+def find_log_file(auto_enable=True):
+    """
+    Intenta encontrar FreeCAD.log:
+    1) API App.getLogFileName()
+    2) %APPDATA%/FreeCAD/FreeCAD.log (Windows)
+    Si no está y auto_enable=True, pide al usuario activarlo.
+    """
+    # 1) Prueba API
+    try:
+        p = App.getLogFileName()
+        if os.path.isfile(p):
+            return p
+    except Exception:
+        pass
+    # 2) Fallback Windows
+    appdata = os.getenv('APPDATA')
+    if appdata:
+        p2 = os.path.join(appdata, 'FreeCAD', 'FreeCAD.log')
+        if os.path.isfile(p2):
+            return p2
+
+    # 3) Si no existe, y está permitido, preguntar al usuario
+    if auto_enable:
+        reply = QtGui.QMessageBox.question(
+            Gui.getMainWindow(),
+            "FreeCAD.log no encontrado",
+            "No se encontró FreeCAD.log. ¿Quieres activar la escritura de log ahora?\n"
+            "(Requiere reiniciar FreeCAD para comenzar a generar el log.)",
+            QtGui.QMessageBox.Yes | QtGui.QMessageBox.No
+        )
+        if reply == QtGui.QMessageBox.Yes:
+            enable_log_file()
+        else:
+            App.Console.PrintError("[Error] No se generará el log; la macro no puede continuar.\n")
+        return None
+
+    return None
+
+def parse_time(line):
+    """Extrae HH:MM:SS del inicio y devuelve segundos desde 00:00:00, o None."""
+    if len(line) < 8 or line[2] != ':' or line[5] != ':':
+        return None
+    try:
+        h = int(line[0:2]); m = int(line[3:5]); s = int(line[6:8])
+        return h*3600 + m*60 + s
+    except:
+        return None
+
+def copy_last_minute():
+    # Buscamos el log; si no existe, puede activar y luego salir
+    log = find_log_file(auto_enable=True)
+    if not log or not os.path.isfile(log):
+        return  # ya informamos o activamos, pero no seguimos
+
+    # Leemos líneas
+    with open(log, 'r', encoding='utf-8', errors='replace') as f:
+        lines = f.read().splitlines()
+
+    # Encontrar última línea con contenido
+    idx = len(lines) - 1
+    while idx >= 0 and not lines[idx].strip():
+        idx -= 1
+    if idx < 0:
+        App.Console.PrintMessage("[Info] El log está vacío.\n")
+        return
+
+    last = lines[idx]
+    last_sec = parse_time(last)
+    # Si no hay marca de tiempo, copiamos solo la última
+    if last_sec is None:
+        App.Console.PrintMessage("[Info] Última línea sin HH:MM:SS; copiando solo esa.\n")
+        block = [last]
+    else:
+        cutoff = last_sec - 60
+        block = []
+        for i in range(idx, -1, -1):
+            t = parse_time(lines[i])
+            if t is not None and t < cutoff:
+                break
+            block.append(lines[i])
+        block.reverse()
+
+    # Copiar al portapapeles
+    text = "\n".join(block)
+    QtGui.QApplication.clipboard().setText(text)
+    App.Console.PrintMessage("[OK] Líneas del último minuto copiadas al portapapeles:\n")
+    App.Console.PrintMessage(text + "\n")
+
+# Ejecutamos
+copy_last_minute()

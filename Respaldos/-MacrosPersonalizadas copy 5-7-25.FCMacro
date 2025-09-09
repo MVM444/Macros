@@ -1,0 +1,125 @@
+"""
+Macro: MenuMacrosPersonalizadas
+Descripcion: Crea un menu de macros personalizadas y otro de las 5 macros mas usadas.
+Autor: ChatGPT
+Fecha: 2025-06-23 09:00
+"""
+
+import FreeCAD
+import FreeCADGui
+import os
+import json
+from PySide2 import QtWidgets
+from functools import partial
+
+# Ruta del directorio de macros y del archivo de conteo de uso
+MACRO_DIR = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Macro")\
+               .GetString("MacroPath", "")
+USAGE_FILE = os.path.join(MACRO_DIR, ".macro_usage.json")
+
+def load_usage_data():
+    """Carga los conteos de uso desde el archivo JSON"""
+    if os.path.exists(USAGE_FILE):
+        try:
+            with open(USAGE_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            FreeCAD.Console.PrintMessage("Datos de uso cargados.\n")
+            return data
+        except Exception:
+            FreeCAD.Console.PrintError(
+                "No se pudo leer .macro_usage.json, iniciando datos vacios.\n")
+    return {}
+
+
+def save_usage_data(data):
+    """Guarda los conteos de uso en el archivo JSON"""
+    try:
+        with open(USAGE_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+        FreeCAD.Console.PrintMessage("Datos de uso guardados.\n")
+    except Exception as e:
+        FreeCAD.Console.PrintError(
+            f"Error guardando .macro_usage.json: {str(e)}\n")
+
+
+def run_macro(macro_path):
+    """Ejecuta la macro y actualiza su contador de usos"""
+    # Carga y actualiza el contador de uso
+    usage = load_usage_data()
+    usage[macro_path] = usage.get(macro_path, 0) + 1
+    save_usage_data(usage)
+
+    # Reconstruye los menus para reflejar el nuevo conteo
+    create_macro_menu()
+
+    # Ejecuta la macro con manejo de errores
+    try:
+        with open(macro_path, "r", encoding="utf-8") as file:
+            exec(file.read(), globals())
+        FreeCAD.Console.PrintMessage(f"Macro ejecutada: {macro_path}\n")
+    except ModuleNotFoundError as e:
+        mod = str(e).split()[-1]
+        FreeCAD.Console.PrintError(f"Error: Falta el modulo {mod}.\n")
+        FreeCAD.Console.PrintMessage(
+            "Instalar con:\n    import pip; pip.main(['install', "
+            f"'{mod}'])\n")
+    except UnicodeDecodeError:
+        FreeCAD.Console.PrintError(
+            f"Error de codificacion en {macro_path}. Guardar en UTF-8 sin BOM.\n")
+    except Exception as e:
+        FreeCAD.Console.PrintError(f"Error ejecutando la macro: {str(e)}\n")
+
+
+def create_macro_menu():
+    """Crea los menus de macros personalizadas y frecuentes"""
+    mw = FreeCADGui.getMainWindow()
+    menu_bar = mw.menuBar()
+
+    # Eliminar menus existentes para evitar duplicados
+    for title in ("Macros Frecuentes", "Macros Personalizadas"):
+        for menu in menu_bar.findChildren(QtWidgets.QMenu):
+            if menu.title() == title:
+                menu_bar.removeAction(menu.menuAction())
+                FreeCAD.Console.PrintMessage(f"Menu removido: {title}\n")
+
+    # Menu de macros frecuentes
+    freq_menu = menu_bar.addMenu("Macros Frecuentes")
+    usage = load_usage_data()
+    # Ordena macros por conteo descendente y toma las 5 primeras
+    top5 = sorted(usage.items(), key=lambda x: x[1], reverse=True)[:5]
+    # Orden alfabetico por nombre de macro
+    top5_sorted = sorted([path for path, cnt in top5],
+                         key=lambda p: os.path.splitext(os.path.basename(p))[0])
+    for macro in top5_sorted:
+        name = os.path.splitext(os.path.basename(macro))[0]
+        action = freq_menu.addAction(name)
+        action.triggered.connect(partial(run_macro, macro))
+    FreeCAD.Console.PrintMessage("Menu 'Macros Frecuentes' creado.\n")
+
+    # Menu de macros personalizadas completo
+    custom_menu = menu_bar.addMenu("Macros Personalizadas")
+    if not os.path.exists(MACRO_DIR):
+        FreeCAD.Console.PrintError("El directorio de macros no existe.\n")
+        return
+
+    macros_by_cat = {}
+    for root, dirs, files in os.walk(MACRO_DIR):
+        cat = os.path.relpath(root, MACRO_DIR)
+        macros_by_cat.setdefault(cat, [])
+        for f in sorted(files):
+            if f.endswith(".FCMacro"):
+                macros_by_cat[cat].append(os.path.join(root, f))
+
+    for cat, macros in macros_by_cat.items():
+        if macros:
+            submenu = custom_menu.addMenu(cat)
+            for m in macros:
+                name = os.path.splitext(os.path.basename(m))[0]
+                act = submenu.addAction(name)
+                act.triggered.connect(partial(run_macro, m))
+
+    FreeCAD.Console.PrintMessage("Menu 'Macros Personalizadas' creado.\n")
+
+# Crear el menu al iniciar FreeCAD
+if FreeCAD.GuiUp:
+    create_macro_menu()

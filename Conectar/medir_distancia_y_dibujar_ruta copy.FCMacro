@@ -1,0 +1,141 @@
+# ------------------------------------------------------------------------
+# RESUMEN:
+# Esta macro automatiza el cálculo de la distancia y el dibujo de la ruta
+# ortogonal entre un objeto inicial (por ejemplo, breaker) y el tomacorriente
+# más lejano de cada grupo o subgrupo en FreeCAD.
+# - El usuario selecciona primero el objeto inicial y luego el grupo de tomacorrientes.
+# - Solicita la altura de las rutas al usuario.
+# - Calcula la distancia al tomacorriente más lejano y la registra en una hoja de cálculo.
+# - Dibuja una ruta ortogonal en 3D hacia ese tomacorriente, intentando suavizar las esquinas.
+# - Organiza las rutas en un subgrupo "Conexiones".
+# - Recomputa el documento para mostrar los cambios.
+# ------------------------------------------------------------------------import FreeCAD
+import FreeCADGui
+import Part
+from PySide import QtGui
+
+def medir_distancia_y_dibujar_ruta():
+    doc = FreeCAD.ActiveDocument
+    selection = FreeCADGui.Selection.getSelection()
+
+    # Verificar selección
+    if len(selection) < 2:
+        FreeCAD.Console.PrintError("Debe seleccionar un objeto inicial y un grupo con los tomacorrientes.\n")
+        return
+
+    # Objeto inicial
+    objeto_inicial = selection[0]
+
+    # Grupo de tomacorrientes
+    grupo_tomacorrientes = selection[1]
+    if not hasattr(grupo_tomacorrientes, "Group"):
+        FreeCAD.Console.PrintError("Debe seleccionar un grupo como segundo objeto.\n")
+        return
+
+    # Crear o seleccionar la hoja de cálculo para resultados
+    if not hasattr(doc, 'ResultadosRutaCritica'):
+        hoja = doc.addObject('Spreadsheet::Sheet', 'ResultadosRutaCritica')
+        hoja.set("A1", "Circuito")
+        hoja.set("B1", "Tomacorriente más lejano")
+        hoja.set("C1", "Distancia (mm)")
+    else:
+        hoja = doc.ResultadosRutaCritica
+
+    # Obtener la altura desde el usuario
+    dialog = QtGui.QInputDialog()
+    altura, ok = dialog.getDouble(None, "Altura", "Ingrese la altura (mm):", 3000, -10000, 10000, 2)
+
+    if not ok:
+        return
+
+    fila = 2
+
+    # Obtener todos los tomacorrientes del grupo, ya sea si están en subgrupos o directamente
+    grupos_a_evaluar = []
+    if all(hasattr(obj, 'Group') for obj in grupo_tomacorrientes.Group):
+        grupos_a_evaluar = grupo_tomacorrientes.Group
+    else:
+        grupos_a_evaluar = [grupo_tomacorrientes]
+
+    # Iterar sobre cada subgrupo o sobre el grupo directo de tomacorrientes
+    for subgrupo in grupos_a_evaluar:
+        if hasattr(subgrupo, 'Group'):
+            tomacorrientes = [obj for obj in subgrupo.Group if hasattr(obj, "Placement")]
+            grupo_nombre = subgrupo.Label
+        else:
+            tomacorrientes = [obj for obj in grupo_tomacorrientes.Group if hasattr(obj, "Placement")]
+            grupo_nombre = grupo_tomacorrientes.Label
+
+        if not tomacorrientes:
+            continue
+
+        # Buscar el tomacorriente más lejano
+        max_distancia = 0
+        tomacorriente_mas_lejano = None
+
+        for toma in tomacorrientes:
+            distancia = objeto_inicial.Placement.Base.distanceToPoint(toma.Placement.Base)
+            if distancia > max_distancia:
+                max_distancia = distancia
+                tomacorriente_mas_lejano = toma
+
+        if tomacorriente_mas_lejano:
+            FreeCAD.Console.PrintMessage(f"Tomacorriente más lejano: {grupo_nombre} {tomacorriente_mas_lejano.Label}, Distancia: {max_distancia} mm\n")
+
+            # Escribir resultados en la hoja de cálculo
+            hoja.set(f"A{fila}", grupo_nombre)
+            hoja.set(f"B{fila}", tomacorriente_mas_lejano.Label)
+            hoja.set(f"C{fila}", str(round(max_distancia, 2)))
+            fila += 1
+
+            # Dibujar la ruta ortogonal hacia el tomacorriente más lejano
+            puntos = []
+            puntos.append(objeto_inicial.Placement.Base)
+            puntos.append(FreeCAD.Vector(objeto_inicial.Placement.Base.x, objeto_inicial.Placement.Base.y, altura))
+            puntos.append(FreeCAD.Vector(tomacorriente_mas_lejano.Placement.Base.x, objeto_inicial.Placement.Base.y, altura))
+            puntos.append(FreeCAD.Vector(tomacorriente_mas_lejano.Placement.Base.x, tomacorriente_mas_lejano.Placement.Base.y, altura))
+            puntos.append(tomacorriente_mas_lejano.Placement.Base)
+
+            # Crear la polilínea con segmentos horizontales y verticales
+            edges = []
+            for i in range(len(puntos) - 1):
+                edges.append(Part.LineSegment(puntos[i], puntos[i + 1]).toShape())
+
+            wire = Part.Wire(edges)
+
+            # Intentar aplicar redondeo en las esquinas
+            try:
+                rounded_wire = wire.makeFillet(500, wire.Edges)
+                ruta_final = rounded_wire
+            except Part.OCCError:
+                FreeCAD.Console.PrintWarning("No hay aristas adecuadas para redondeo.\n")
+                ruta_final = wire
+
+            # Mostrar el wire y asignar nombre a la conexión
+            Part.show(ruta_final)
+
+            # Crear un subgrupo para las conexiones, si no existe
+            grupo_conexiones = None
+            for obj in (subgrupo.Group if hasattr(subgrupo, "Group") else grupo_tomacorrientes.Group):
+                if obj.TypeId == 'App::DocumentObjectGroup' and obj.Name.startswith("Conexiones"):
+                    grupo_conexiones = obj
+                    break
+
+            if not grupo_conexiones:
+                grupo_conexiones = doc.addObject("App::DocumentObjectGroup", "Conexiones")
+                if hasattr(subgrupo, "Group"):
+                    subgrupo.addObject(grupo_conexiones)
+                else:
+                    grupo_tomacorrientes.addObject(grupo_conexiones)
+
+            # Añadir la conexión al subgrupo de conexiones y asignar un nombre
+            conexion = doc.addObject("Part::Feature", f'Ruta_Critica_{tomacorriente_mas_lejano.Label}')
+            conexion.Label = f'Ruta Critica hacia {tomacorriente_mas_lejano.Label}'
+            conexion.Shape = ruta_final
+            grupo_conexiones.addObject(conexion)
+
+    # Recomputa el documento para aplicar los cambios
+    doc.recompute()
+
+# Ejecutar la macro
+medir_distancia_y_dibujar_ruta()

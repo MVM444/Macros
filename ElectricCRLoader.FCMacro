@@ -1,0 +1,22 @@
+# -*- coding: utf-8 -*-
+
+import os
+import sys
+import FreeCAD as App
+import FreeCADGui as Gui
+
+
+def ensure_path_and_load():
+    base_dir = os.path.dirname(__file__)
+    if base_dir not in sys.path:
+        sys.path.append(base_dir)
+
+    try:
+        import ElectricCR.InitGui  # noqa: F401 - registra el workbench al importar
+        App.Console.PrintMessage("ElectricCR: Workbench cargado desde Macros\\ElectricCR\n")
+    except Exception as err:
+        App.Console.PrintError("ElectricCR: Error cargando el workbench: {}\n".format(err))
+
+
+ensure_path_and_load()
+

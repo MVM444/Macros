@@ -1,0 +1,126 @@
+# Macro: insertar_tomacorrientes
+# Descripcion: Inserta tomacorrientes en bordes seleccionados con intervalo, altura y offset perpendicular fijo de 60 mm.
+# La direccion (Adelante/Atras) se elige mediante botones.
+# El tomacorriente gira 90 grados respecto a la normal de la linea.
+# Instrucciones: No usar tildes ni caracteres especiales. Mostrar mensajes de depuracion en la consola.
+# Fecha y hora de version: 2025-06-23 17:30:00
+
+import FreeCAD
+import FreeCADGui
+import Part
+import os
+import datetime
+import math
+
+# Importar Qt widgets segun PySide2 o PySide
+try:
+    from PySide2.QtWidgets import QInputDialog, QMessageBox
+except ImportError:
+    from PySide.QtGui import QInputDialog, QMessageBox
+
+class Tomacorriente:
+    def __init__(self, obj, altura_mm):
+        # Propiedad Altura en mm
+        obj.addProperty("App::PropertyLength", "Altura", "Tomacorriente", "Altura tomacorriente mm").Altura = altura_mm
+        obj.Proxy = self
+
+    def execute(self, obj):
+        try:
+            # Cargar recursos 3D y 2D
+            macro_dir = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Macro").GetString("MacroPath", "")
+            path3d = os.path.join(macro_dir, "Resources", "tomacorriente-3D.step")
+            path2d = os.path.join(macro_dir, "Resources", "SimboloToma.step")
+            if not os.path.exists(path3d) or not os.path.exists(path2d):
+                FreeCAD.Console.PrintError("Archivos 3D o 2D no encontrados.\n")
+                return
+            # Modelo 3D desplazado en Z
+            shape3d = Part.Shape(); shape3d.read(path3d)
+            shape3d.translate(FreeCAD.Vector(0, 0, obj.Altura))
+            # Modelo 2D
+            shape2d = Part.Shape(); shape2d.read(path2d)
+            obj.Shape = Part.Compound([shape3d, shape2d])
+        except Exception as e:
+            FreeCAD.Console.PrintError(f"Error combinar formas: {e}\n")
+
+class ViewProviderTomacorriente:
+    def __init__(self, obj): obj.Proxy = self
+    def attach(self, obj): self.Object = obj
+    def getDisplayModes(self, obj): return ["Flat Lines", "Shaded"]
+    def getDefaultDisplayMode(self): return "Flat Lines"
+    def updateVisual(self, obj): pass
+    def onChanged(self, vp, prop): pass
+    def __getstate__(self): return None
+    def __setstate__(self, state): return None
+
+
+def insertar_tomacorrientes():
+    # Mensaje de inicio con fecha y hora
+    ahora = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    FreeCAD.Console.PrintMessage(f"Ejecutando insertar_tomacorrientes: {ahora}\n")
+
+    # Solicitar intervalo en mm
+    intervalo_mm, ok = QInputDialog.getInt(None, "Intervalo", "Distancia entre tomacorrientes (mm):", 1800, 1, 100000)
+    if not ok:
+        FreeCAD.Console.PrintError("Operacion cancelada: sin intervalo.\n")
+        return
+    # Solicitar altura en mm
+    altura_mm, ok = QInputDialog.getInt(None, "Altura", "Altura tomacorriente (mm):", 300, 0, 5000)
+    if not ok:
+        FreeCAD.Console.PrintError("Operacion cancelada: sin altura.\n")
+        return
+
+    # Seleccionar direccion con botones
+    msg = QMessageBox()
+    msg.setWindowTitle("Direccion")
+    msg.setText("Selecciona direccion del offset perpendicular:")
+    btnA = msg.addButton("Adelante", QMessageBox.AcceptRole)
+    btnB = msg.addButton("Atras", QMessageBox.RejectRole)
+    msg.exec_()
+    adelante = (msg.clickedButton() == btnA)
+
+    # Offset fijo de 60 mm invertido para corregir direccion
+    despl_mm = 60
+    off = -despl_mm if adelante else despl_mm
+
+    # Documento activo
+    doc = FreeCAD.ActiveDocument or FreeCAD.newDocument("PlanoElectricos")
+    sel = FreeCADGui.Selection.getSelectionEx()
+    if not sel:
+        FreeCAD.Console.PrintError("Selecciona un borde o linea.\n")
+        return
+
+    for item in sel:
+        for edge in item.SubObjects:
+            if isinstance(edge, Part.Edge):
+                L = edge.Length
+                count = max(1, int(L // intervalo_mm))
+                FreeCAD.Console.PrintMessage(f"Insertando {count} tomacorrientes en arista {L:.2f} mm.\n")
+                for i in range(count):
+                    # Calculo parametro y punto
+                    t = (i + 1) / (count + 1)
+                    param = edge.FirstParameter + t * (edge.LastParameter - edge.FirstParameter)
+                    p = edge.valueAt(param)
+                    # Tangente y normal 2D
+                    tg = edge.tangentAt(param); tg.normalize()
+                    normal = FreeCAD.Vector(tg.y, -tg.x, 0); normal.normalize()
+
+                    # Calcular posicion con offset perpendicular
+                    pos = FreeCAD.Vector(p.x + normal.x * off, p.y + normal.y * off, 0)
+
+                    # Calcular rotacion: normal +90° y +180° si atras
+                    base_angle = math.degrees(math.atan2(normal.y, normal.x))
+                    angle = (base_angle + 90 + (0 if adelante else 180)) % 360
+                    rot = FreeCAD.Rotation(FreeCAD.Vector(0, 0, 1), angle)
+
+                    # Crear tomacorriente
+                    name = f"Tomacorriente_{i+1}"
+                    obj = doc.addObject("Part::FeaturePython", name)
+                    Tomacorriente(obj, altura_mm)
+                    ViewProviderTomacorriente(obj.ViewObject)
+                    obj.Placement = FreeCAD.Placement(pos, rot)
+
+    doc.recompute()
+    FreeCAD.Console.PrintMessage("Insercion de tomacorrientes completada.\n")
+
+# Ejecutar macro
+insertar_tomacorrientes()

@@ -1,0 +1,62 @@
+import FreeCAD, Part
+
+class CustomDoor:
+    def __init__(self, obj):
+        # Definir las propiedades del objeto
+        obj.addProperty("App::PropertyLength", "Width", "Dimensions", "Width of the door").Width = 1000
+        obj.addProperty("App::PropertyLength", "Height", "Dimensions", "Height of the door").Height = 2100
+        obj.addProperty("App::PropertyLength", "Thickness", "Dimensions", "Thickness of the door").Thickness = 100
+        obj.Proxy = self
+
+    def execute(self, obj):
+        # Crear la geometría 3D de la puerta
+        width = obj.Width
+        height = obj.Height
+        thickness = obj.Thickness
+        
+        # Crear un cubo que representa la puerta
+        base = FreeCAD.Vector(0, 0, 0)
+        door = Part.makeBox(width, thickness, height, base)
+        obj.Shape = door
+
+
+class ViewProviderCustomDoor:
+    def __init__(self, obj):
+        obj.Proxy = self
+
+    def attach(self, obj):
+        self.Object = obj
+
+    def updateData(self, obj, prop):
+        pass
+
+    def getDisplayModes(self, obj):
+        return ["3D", "2D"]
+
+    def setDisplayMode(self, mode):
+        if mode == "2D":
+            self.show2D(obj)
+        elif mode == "3D":
+            self.show3D(obj)
+
+    def show2D(self, obj):
+        # Representación 2D simplificada
+        print("Mostrando vista 2D (simbología simplificada)")
+
+    def show3D(self, obj):
+        # Representación 3D
+        print("Mostrando vista 3D")
+
+
+# Crear el objeto en el documento
+doc = FreeCAD.activeDocument()
+if not doc:
+    doc = FreeCAD.newDocument("CustomWorkbench")
+
+# Añadir el objeto al documento
+obj = doc.addObject("Part::FeaturePython", "CustomDoor")
+CustomDoor(obj)
+ViewProviderCustomDoor(obj.ViewObject)
+
+# Actualizar el documento para reflejar el nuevo objeto
+doc.recompute()

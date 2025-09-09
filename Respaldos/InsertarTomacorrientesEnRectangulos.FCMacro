@@ -1,0 +1,183 @@
+''' 
+Macro: InsertarTomacorrientesEnContornos.FCMacro
+Descripcion:
+Esta macro inserta tomacorrientes a lo largo del contorno exterior de uno o varios objetos cerrados seleccionados (rectangulos o poligonos).
+
+- Detecta automaticamente si es un poligono simple o un conjunto de celdas.
+- Usa directamente el wire cerrado si solo hay uno.
+- Si hay muchos wires del mismo tamanio, crea un contorno exterior tipo bounding box.
+- Inserta tomacorrientes cada 180cm (minimo uno por lado), en puntos intermedios del borde.
+- Opcion de orientarlos hacia adentro o hacia afuera mediante un cuadro de dialogo (por defecto: hacia adentro).
+- Soporta selecciones de grupos y subgrupos.
+
+Fecha de creacion: 2025-06-23
+'''
+
+import FreeCAD
+import FreeCADGui
+import Part
+import math
+import os
+from PySide2 import QtWidgets
+
+DISTANCIA_ENTRE_TOMAS = 1800  # en mm
+INSERTAR_3D = True
+
+respuesta = QtWidgets.QMessageBox.question(None, "Direccion de tomacorrientes", "¿Desea orientar los tomacorrientes hacia adentro del contorno?", QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+MIRAR_HACIA_ADENTRO = respuesta == QtWidgets.QMessageBox.Yes
+
+FreeCAD.Console.PrintMessage(f"Modo activo: {'3D+2D' if INSERTAR_3D else 'Solo 2D'}\n")
+FreeCAD.Console.PrintMessage(f"Orientacion: {'hacia adentro' if MIRAR_HACIA_ADENTRO else 'hacia afuera'}\n")
+
+class Tomacorriente:
+    def __init__(self, obj):
+        obj.addProperty("App::PropertyLength", "Altura", "Tomacorriente", "Altura del tomacorriente 3D").Altura = 300
+        obj.Proxy = self
+
+    def execute(self, obj):
+        try:
+            directorio_macro = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Macro").GetString("MacroPath", "")
+            archivo_3d = os.path.join(directorio_macro, "Resources", "tomacorriente-3D.step")
+            archivo_2d = os.path.join(directorio_macro, "Resources", "SimboloToma.step")
+
+            if not os.path.exists(archivo_2d):
+                FreeCAD.Console.PrintError("Archivo 2D no encontrado.\n")
+                return
+
+            modelo_2d = Part.Shape()
+            modelo_2d.read(archivo_2d)
+
+            if INSERTAR_3D:
+                if not os.path.exists(archivo_3d):
+                    FreeCAD.Console.PrintError("Archivo 3D no encontrado.\n")
+                    return
+
+                modelo_3d = Part.Shape()
+                modelo_3d.read(archivo_3d)
+                altura = obj.Altura.Value
+                modelo_3d.translate(FreeCAD.Vector(0, 0, altura))
+                compound = Part.Compound([modelo_2d, modelo_3d])
+            else:
+                compound = modelo_2d
+
+            obj.Shape = compound
+        except Exception as e:
+            FreeCAD.Console.PrintError(f"Error al combinar formas: {str(e)}\n")
+
+class ViewProviderTomacorriente:
+    def __init__(self, obj):
+        obj.Proxy = self
+
+    def attach(self, obj):
+        self.Object = obj
+
+    def getDisplayModes(self, obj):
+        return ["Flat Lines", "Shaded"]
+
+    def getDefaultDisplayMode(self):
+        return "Flat Lines"
+
+    def updateVisual(self, obj):
+        pass
+
+    def onChanged(self, vp, prop):
+        pass
+
+    def __getstate__(self):
+        return None
+
+    def __setstate__(self, state):
+        return None
+
+def insertar_tomacorriente_en(pos, direccion, indice):
+    direccion.normalize()
+    normal = FreeCAD.Vector(-direccion.y, direccion.x, 0).normalize()
+    direccion_final = normal if MIRAR_HACIA_ADENTRO else normal.multiply(-1)
+    angulo = math.degrees(math.atan2(direccion_final.y, direccion_final.x)) - 90
+
+    desplazamiento_mm = 60
+    desplazamiento_vector = direccion_final.multiply(desplazamiento_mm)
+    nueva_pos = pos.add(desplazamiento_vector)
+
+    obj = FreeCAD.ActiveDocument.addObject("Part::FeaturePython", f"Tomacorriente_{indice}")
+    Tomacorriente(obj)
+    ViewProviderTomacorriente(obj.ViewObject)
+    obj.Placement = FreeCAD.Placement(nueva_pos, FreeCAD.Rotation(FreeCAD.Vector(0, 0, 1), angulo))
+
+def insertar_tomas_en_wire(wire, indice_base):
+    contador = indice_base
+    for edge in wire.Edges:
+        largo = edge.Length
+        cantidad = max(1, int(largo // DISTANCIA_ENTRE_TOMAS))
+        for i in range(cantidad):
+            t = (i + 1) / (cantidad + 1)
+            param = edge.FirstParameter + t * (edge.LastParameter - edge.FirstParameter)
+            pos = edge.valueAt(param)
+            direccion = edge.tangentAt(param)
+            insertar_tomacorriente_en(pos, direccion, contador)
+            contador += 1
+
+def recolectar_todos_los_wires(obj):
+    wires = []
+    def _recolectar(subobj):
+        if hasattr(subobj, "Group"):
+            for s in subobj.Group:
+                _recolectar(s)
+        elif hasattr(subobj, "Shape"):
+            for w in subobj.Shape.Wires:
+                if w.isClosed():
+                    wires.append(w)
+    _recolectar(obj)
+    return wires
+
+def construir_wire_bounding_box_de_wires(wires):
+    puntos = []
+    for w in wires:
+        for v in w.Vertexes:
+            puntos.append(v.Point)
+    if not puntos:
+        return None
+    xs = [p.x for p in puntos]
+    ys = [p.y for p in puntos]
+    z = puntos[0].z
+    p1 = FreeCAD.Vector(min(xs), min(ys), z)
+    p2 = FreeCAD.Vector(max(xs), min(ys), z)
+    p3 = FreeCAD.Vector(max(xs), max(ys), z)
+    p4 = FreeCAD.Vector(min(xs), max(ys), z)
+    return Part.makePolygon([p1, p2, p3, p4, p1])
+
+def procesar_objetos():
+    seleccion = FreeCADGui.Selection.getSelection()
+    if not seleccion:
+        FreeCAD.Console.PrintError("No hay seleccion activa.\n")
+        return
+
+    contador = 1
+
+    for obj in seleccion:
+        wires = recolectar_todos_los_wires(obj)
+
+        if len(wires) == 1:
+            insertar_tomas_en_wire(wires[0], contador)
+            contador += 100
+        elif len(wires) > 1:
+            try:
+                areas = [round(Part.Face(w).Area, 5) for w in wires]
+                if len(set(areas)) == 1:
+                    wire_bb = construir_wire_bounding_box_de_wires(wires)
+                    if wire_bb:
+                        insertar_tomas_en_wire(wire_bb, contador)
+                        contador += 100
+                else:
+                    wire_mayor = wires[areas.index(max(areas))]
+                    insertar_tomas_en_wire(wire_mayor, contador)
+                    contador += 100
+            except Exception as e:
+                FreeCAD.Console.PrintError(f"Error evaluando areas: {str(e)}\n")
+
+    FreeCAD.ActiveDocument.recompute()
+
+# --- Ejecucion ---
+FreeCAD.Console.PrintMessage("Procesando objetos...\n")
+procesar_objetos()
+FreeCAD.Console.PrintMessage("Proceso completado.\n")

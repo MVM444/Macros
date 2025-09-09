@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>DiagramaUnifilar</class>
+ <widget class="QMainWindow" name="DiagramaUnifilar">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>817</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Diagrama Unifilar</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <widget class="QLabel" name="label">
+      <property name="text">
+       <string>Bienvenido al Diagrama Unifilar</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>16</pointsize>
+        <bold>true</bold>
+       </font>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QWidget" name="widget" native="true"/>
+    </item>
+    <item>
+     <widget class="QPushButton" name="pushButton">
+      <property name="text">
+       <string>Presionar</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QGraphicsView" name="graphicsView">
+      <property name="minimumSize">
+       <size>
+        <width>600</width>
+        <height>400</height>
+       </size>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="QPushButton" name="btnAgregarComponente">
+        <property name="text">
+         <string>Agregar Componente</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btnEliminarComponente">
+        <property name="text">
+         <string>Eliminar Componente</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btnGuardar">
+        <property name="text">
+         <string>Guardar</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btnCargar">
+        <property name="text">
+         <string>Cargar</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar"/>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

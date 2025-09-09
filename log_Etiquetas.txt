@@ -1,0 +1,1855 @@
+Hoja seleccionada: Tabla_Iluminacion
+Última fila con datos detectada: 36
+A2: 'S.S. Funcionarios' -> alias base: 'S_S__Funcionarios'
+A2 -> S_S__Funcionarios
+B2 -> S_S__Funcionarios_area
+H2 -> S_S__Funcionarios_desc
+O2 -> S_S__Funcionarios_ilum
+A3: 'S.S. Accesible' -> alias base: 'S_S__Accesible'
+A3 -> S_S__Accesible
+B3 -> S_S__Accesible_area
+H3 -> S_S__Accesible_desc
+O3 -> S_S__Accesible_ilum
+A4: 'S.S. Accesible 2do Piso' -> alias base: 'S_S__Accesible_2do_Piso'
+A4 -> S_S__Accesible_2do_Piso
+B4 -> S_S__Accesible_2do_Piso_area
+H4 -> S_S__Accesible_2do_Piso_desc
+O4 -> S_S__Accesible_2do_Piso_ilum
+A5: 'S.S. 1' -> alias base: 'S_S__1'
+A5 -> S_S__1
+B5 -> S_S__1_area
+H5 -> S_S__1_desc
+O5 -> S_S__1_ilum
+A6: 'Entrada' -> alias base: 'Entrada'
+A6 -> Entrada
+B6 -> Entrada_area
+H6 -> Entrada_desc
+O6 -> Entrada_ilum
+A7: 'Almacenaje' -> alias base: 'Almacenaje'
+A7 -> Almacenaje
+B7 -> Almacenaje_area
+H7 -> Almacenaje_desc
+O7 -> Almacenaje_ilum
+A8: 'Almacenaje001' -> alias base: 'Almacenaje001'
+A8 -> Almacenaje001
+B8 -> Almacenaje001_area
+H8 -> Almacenaje001_desc
+O8 -> Almacenaje001_ilum
+A9: 'Archivo Base' -> alias base: 'Archivo_Base'
+A9 -> Archivo_Base
+B9 -> Archivo_Base_area
+H9 -> Archivo_Base_desc
+O9 -> Archivo_Base_ilum
+A10: 'Bodega' -> alias base: 'Bodega'
+A10 -> Bodega
+B10 -> Bodega_area
+H10 -> Bodega_desc
+O10 -> Bodega_ilum
+A11: 'Plataforma Publico' -> alias base: 'Plataforma_Publico'
+A11 -> Plataforma_Publico
+B11 -> Plataforma_Publico_area
+H11 -> Plataforma_Publico_desc
+O11 -> Plataforma_Publico_ilum
+A12: 'Servidor' -> alias base: 'Servidor'
+A12 -> Servidor
+B12 -> Servidor_area
+H12 -> Servidor_desc
+O12 -> Servidor_ilum
+A13: 'Pasillo' -> alias base: 'Pasillo'
+A13 -> Pasillo
+B13 -> Pasillo_area
+H13 -> Pasillo_desc
+O13 -> Pasillo_ilum
+A14: 'Pasillo entrada Oficinas' -> alias base: 'Pasillo_entrada_Oficinas'
+A14 -> Pasillo_entrada_Oficinas
+B14 -> Pasillo_entrada_Oficinas_area
+H14 -> Pasillo_entrada_Oficinas_desc
+O14 -> Pasillo_entrada_Oficinas_ilum
+A15: 'Pasillo002' -> alias base: 'Pasillo002'
+A15 -> Pasillo002
+B15 -> Pasillo002_area
+H15 -> Pasillo002_desc
+O15 -> Pasillo002_ilum
+A16: 'Pasillo Entrada 2do Piso' -> alias base: 'Pasillo_Entrada_2do_Piso'
+A16 -> Pasillo_Entrada_2do_Piso
+B16 -> Pasillo_Entrada_2do_Piso_area
+H16 -> Pasillo_Entrada_2do_Piso_desc
+O16 -> Pasillo_Entrada_2do_Piso_ilum
+A17: 'Gradas 2do Piso' -> alias base: 'Gradas_2do_Piso'
+A17 -> Gradas_2do_Piso
+B17 -> Gradas_2do_Piso_area
+H17 -> Gradas_2do_Piso_desc
+O17 -> Gradas_2do_Piso_ilum
+A18: 'Jefatura' -> alias base: 'Jefatura'
+A18 -> Jefatura
+B18 -> Jefatura_area
+H18 -> Jefatura_desc
+O18 -> Jefatura_ilum
+A19: 'Sala de Lactancia' -> alias base: 'Sala_de_Lactancia'
+A19 -> Sala_de_Lactancia
+B19 -> Sala_de_Lactancia_area
+H19 -> Sala_de_Lactancia_desc
+O19 -> Sala_de_Lactancia_ilum
+A20: 'Boveda' -> alias base: 'Boveda'
+A20 -> Boveda
+B20 -> Boveda_area
+H20 -> Boveda_desc
+O20 -> Boveda_ilum
+A21: 'S.S. Funcionarias' -> alias base: 'S_S__Funcionarias'
+A21 -> S_S__Funcionarias
+B21 -> S_S__Funcionarias_area
+H21 -> S_S__Funcionarias_desc
+O21 -> S_S__Funcionarias_ilum
+A22: 'Sala de Espera' -> alias base: 'Sala_de_Espera'
+A22 -> Sala_de_Espera
+B22 -> Sala_de_Espera_area
+H22 -> Sala_de_Espera_desc
+O22 -> Sala_de_Espera_ilum
+A23: 'Pasillo Sala de Lactancia' -> alias base: 'Pasillo_Sala_de_Lactancia'
+A23 -> Pasillo_Sala_de_Lactancia
+B23 -> Pasillo_Sala_de_Lactancia_area
+H23 -> Pasillo_Sala_de_Lactancia_desc
+O23 -> Pasillo_Sala_de_Lactancia_ilum
+A24: 'Pasillo001' -> alias base: 'Pasillo001'
+A24 -> Pasillo001
+B24 -> Pasillo001_area
+H24 -> Pasillo001_desc
+O24 -> Pasillo001_ilum
+A25: 'Escalera' -> alias base: 'Escalera'
+A25 -> Escalera
+B25 -> Escalera_area
+H25 -> Escalera_desc
+O25 -> Escalera_ilum
+A26: 'Pasillo hacia Escalera' -> alias base: 'Pasillo_hacia_Escalera'
+A26 -> Pasillo_hacia_Escalera
+B26 -> Pasillo_hacia_Escalera_area
+H26 -> Pasillo_hacia_Escalera_desc
+O26 -> Pasillo_hacia_Escalera_ilum
+A27: 'Comedor' -> alias base: 'Comedor'
+A27 -> Comedor
+B27 -> Comedor_area
+H27 -> Comedor_desc
+O27 -> Comedor_ilum
+A28: 'Cuarto Electrico' -> alias base: 'Cuarto_Electrico'
+A28 -> Cuarto_Electrico
+B28 -> Cuarto_Electrico_area
+H28 -> Cuarto_Electrico_desc
+O28 -> Cuarto_Electrico_ilum
+A29: 'Bodega de Aseo' -> alias base: 'Bodega_de_Aseo'
+A29 -> Bodega_de_Aseo
+B29 -> Bodega_de_Aseo_area
+H29 -> Bodega_de_Aseo_desc
+O29 -> Bodega_de_Aseo_ilum
+A30: 'Oficina002' -> alias base: 'Oficina002'
+A30 -> Oficina002
+B30 -> Oficina002_area
+H30 -> Oficina002_desc
+O30 -> Oficina002_ilum
+A31: 'Oficina001' -> alias base: 'Oficina001'
+A31 -> Oficina001
+B31 -> Oficina001_area
+H31 -> Oficina001_desc
+O31 -> Oficina001_ilum
+A32: 'Oficina' -> alias base: 'Oficina'
+A32 -> Oficina
+B32 -> Oficina_area
+H32 -> Oficina_desc
+O32 -> Oficina_ilum
+A33: 'Pasillo hacia Comedor' -> alias base: 'Pasillo_hacia_Comedor'
+A33 -> Pasillo_hacia_Comedor
+B33 -> Pasillo_hacia_Comedor_area
+H33 -> Pasillo_hacia_Comedor_desc
+O33 -> Pasillo_hacia_Comedor_ilum
+A34: 'Caja' -> alias base: 'Caja'
+A34 -> Caja
+B34 -> Caja_area
+H34 -> Caja_desc
+O34 -> Caja_ilum
+A35: 'Plataforma 1' -> alias base: 'Plataforma_1'
+A35 -> Plataforma_1
+B35 -> Plataforma_1_area
+H35 -> Plataforma_1_desc
+O35 -> Plataforma_1_ilum
+A36: 'Plataforma 2' -> alias base: 'Plataforma_2'
+A36 -> Plataforma_2
+B36 -> Plataforma_2_area
+H36 -> Plataforma_2_desc
+O36 -> Plataforma_2_ilum
+Se han registrado los alias y se ha forzado recálculo.
+Fila 2: S.S. Funcionarios asociada.
+Fila 3: S.S. Accesible asociada.
+Fila 4: S.S. Accesible 2do Piso asociada.
+Fila 5: S.S. 1 asociada.
+Fila 6: Entrada asociada.
+Fila 7: Almacenaje asociada.
+Fila 8: Almacenaje001 asociada.
+Fila 9: Archivo Base asociada.
+Fila 10: Bodega asociada.
+Fila 11: Plataforma Publico asociada.
+Fila 12: Servidor asociada.
+Fila 13: Pasillo asociada.
+Fila 14: Pasillo entrada Oficinas asociada.
+Fila 15: Pasillo002 asociada.
+Fila 16: Pasillo Entrada 2do Piso asociada.
+Fila 17: Gradas 2do Piso asociada.
+Fila 18: Jefatura asociada.
+Fila 19: Sala de Lactancia asociada.
+Fila 20: Boveda asociada.
+Fila 21: S.S. Funcionarias asociada.
+Fila 22: Sala de Espera asociada.
+Fila 23: Pasillo Sala de Lactancia asociada.
+Fila 24: Pasillo001 asociada.
+Fila 25: Escalera asociada.
+Fila 26: Pasillo hacia Escalera asociada.
+Fila 27: Comedor asociada.
+Fila 28: Cuarto Electrico asociada.
+Fila 29: Bodega de Aseo asociada.
+Fila 30: Oficina002 asociada.
+Fila 31: Oficina001 asociada.
+Fila 32: Oficina asociada.
+Fila 33: Pasillo hacia Comedor asociada.
+Fila 34: Caja asociada.
+Fila 35: Plataforma 1 asociada.
+Fila 36: Plataforma 2 asociada.
+Se leyeron datos de 35 recintos.
+Grupo identificado: Areas
+Se creó subgrupo 'Etiquetas' en 'Areas'
+Para S.S. Funcionarios (fila 2):
+  CustomText[0] = Tabla_Iluminacion.'S_S__Funcionarios'
+  CustomText[1] = Tabla_Iluminacion.'S_S__Funcionarios_area'
+  CustomText[2] = Tabla_Iluminacion.'S_S__Funcionarios_desc'
+  CustomText[3] = Tabla_Iluminacion.'S_S__Funcionarios_ilum'
+Error al vincular expresiones para 'S.S. Funcionarios': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'S.S. Funcionarios' usando alias base de fila 2.
+Para S.S. Accesible (fila 3):
+  CustomText[0] = Tabla_Iluminacion.'S_S__Accesible'
+  CustomText[1] = Tabla_Iluminacion.'S_S__Accesible_area'
+  CustomText[2] = Tabla_Iluminacion.'S_S__Accesible_desc'
+  CustomText[3] = Tabla_Iluminacion.'S_S__Accesible_ilum'
+Error al vincular expresiones para 'S.S. Accesible': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'S.S. Accesible' usando alias base de fila 3.
+Para S.S. Accesible 2do Piso (fila 4):
+  CustomText[0] = Tabla_Iluminacion.'S_S__Accesible_2do_Piso'
+  CustomText[1] = Tabla_Iluminacion.'S_S__Accesible_2do_Piso_area'
+  CustomText[2] = Tabla_Iluminacion.'S_S__Accesible_2do_Piso_desc'
+  CustomText[3] = Tabla_Iluminacion.'S_S__Accesible_2do_Piso_ilum'
+Error al vincular expresiones para 'S.S. Accesible 2do Piso': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'S.S. Accesible 2do Piso' usando alias base de fila 4.
+Para S.S. 1 (fila 5):
+  CustomText[0] = Tabla_Iluminacion.'S_S__1'
+  CustomText[1] = Tabla_Iluminacion.'S_S__1_area'
+  CustomText[2] = Tabla_Iluminacion.'S_S__1_desc'
+  CustomText[3] = Tabla_Iluminacion.'S_S__1_ilum'
+Error al vincular expresiones para 'S.S. 1': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'S.S. 1' usando alias base de fila 5.
+Para Entrada (fila 6):
+  CustomText[0] = Tabla_Iluminacion.'Entrada'
+  CustomText[1] = Tabla_Iluminacion.'Entrada_area'
+  CustomText[2] = Tabla_Iluminacion.'Entrada_desc'
+  CustomText[3] = Tabla_Iluminacion.'Entrada_ilum'
+Error al vincular expresiones para 'Entrada': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Entrada' usando alias base de fila 6.
+Para Almacenaje (fila 7):
+  CustomText[0] = Tabla_Iluminacion.'Almacenaje'
+  CustomText[1] = Tabla_Iluminacion.'Almacenaje_area'
+  CustomText[2] = Tabla_Iluminacion.'Almacenaje_desc'
+  CustomText[3] = Tabla_Iluminacion.'Almacenaje_ilum'
+Error al vincular expresiones para 'Almacenaje': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Almacenaje' usando alias base de fila 7.
+Para Almacenaje001 (fila 8):
+  CustomText[0] = Tabla_Iluminacion.'Almacenaje001'
+  CustomText[1] = Tabla_Iluminacion.'Almacenaje001_area'
+  CustomText[2] = Tabla_Iluminacion.'Almacenaje001_desc'
+  CustomText[3] = Tabla_Iluminacion.'Almacenaje001_ilum'
+Error al vincular expresiones para 'Almacenaje001': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Almacenaje001' usando alias base de fila 8.
+Para Archivo Base (fila 9):
+  CustomText[0] = Tabla_Iluminacion.'Archivo_Base'
+  CustomText[1] = Tabla_Iluminacion.'Archivo_Base_area'
+  CustomText[2] = Tabla_Iluminacion.'Archivo_Base_desc'
+  CustomText[3] = Tabla_Iluminacion.'Archivo_Base_ilum'
+Error al vincular expresiones para 'Archivo Base': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Archivo Base' usando alias base de fila 9.
+Para Bodega (fila 10):
+  CustomText[0] = Tabla_Iluminacion.'Bodega'
+  CustomText[1] = Tabla_Iluminacion.'Bodega_area'
+  CustomText[2] = Tabla_Iluminacion.'Bodega_desc'
+  CustomText[3] = Tabla_Iluminacion.'Bodega_ilum'
+Error al vincular expresiones para 'Bodega': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Bodega' usando alias base de fila 10.
+Para Plataforma Público (fila 11):
+  CustomText[0] = Tabla_Iluminacion.'Plataforma_Publico'
+  CustomText[1] = Tabla_Iluminacion.'Plataforma_Publico_area'
+  CustomText[2] = Tabla_Iluminacion.'Plataforma_Publico_desc'
+  CustomText[3] = Tabla_Iluminacion.'Plataforma_Publico_ilum'
+Error al vincular expresiones para 'Plataforma Público': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Plataforma Público' usando alias base de fila 11.
+Para Servidor (fila 12):
+  CustomText[0] = Tabla_Iluminacion.'Servidor'
+  CustomText[1] = Tabla_Iluminacion.'Servidor_area'
+  CustomText[2] = Tabla_Iluminacion.'Servidor_desc'
+  CustomText[3] = Tabla_Iluminacion.'Servidor_ilum'
+Error al vincular expresiones para 'Servidor': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Servidor' usando alias base de fila 12.
+Para Pasillo (fila 13):
+  CustomText[0] = Tabla_Iluminacion.'Pasillo'
+  CustomText[1] = Tabla_Iluminacion.'Pasillo_area'
+  CustomText[2] = Tabla_Iluminacion.'Pasillo_desc'
+  CustomText[3] = Tabla_Iluminacion.'Pasillo_ilum'
+Error al vincular expresiones para 'Pasillo': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Pasillo' usando alias base de fila 13.
+Para Pasillo entrada Oficinas (fila 14):
+  CustomText[0] = Tabla_Iluminacion.'Pasillo_entrada_Oficinas'
+  CustomText[1] = Tabla_Iluminacion.'Pasillo_entrada_Oficinas_area'
+  CustomText[2] = Tabla_Iluminacion.'Pasillo_entrada_Oficinas_desc'
+  CustomText[3] = Tabla_Iluminacion.'Pasillo_entrada_Oficinas_ilum'
+Error al vincular expresiones para 'Pasillo entrada Oficinas': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Pasillo entrada Oficinas' usando alias base de fila 14.
+Para Pasillo002 (fila 15):
+  CustomText[0] = Tabla_Iluminacion.'Pasillo002'
+  CustomText[1] = Tabla_Iluminacion.'Pasillo002_area'
+  CustomText[2] = Tabla_Iluminacion.'Pasillo002_desc'
+  CustomText[3] = Tabla_Iluminacion.'Pasillo002_ilum'
+Error al vincular expresiones para 'Pasillo002': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Pasillo002' usando alias base de fila 15.
+Para Pasillo Entrada 2do Piso (fila 16):
+  CustomText[0] = Tabla_Iluminacion.'Pasillo_Entrada_2do_Piso'
+  CustomText[1] = Tabla_Iluminacion.'Pasillo_Entrada_2do_Piso_area'
+  CustomText[2] = Tabla_Iluminacion.'Pasillo_Entrada_2do_Piso_desc'
+  CustomText[3] = Tabla_Iluminacion.'Pasillo_Entrada_2do_Piso_ilum'
+Error al vincular expresiones para 'Pasillo Entrada 2do Piso': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Pasillo Entrada 2do Piso' usando alias base de fila 16.
+Para Gradas 2do Piso (fila 17):
+  CustomText[0] = Tabla_Iluminacion.'Gradas_2do_Piso'
+  CustomText[1] = Tabla_Iluminacion.'Gradas_2do_Piso_area'
+  CustomText[2] = Tabla_Iluminacion.'Gradas_2do_Piso_desc'
+  CustomText[3] = Tabla_Iluminacion.'Gradas_2do_Piso_ilum'
+Error al vincular expresiones para 'Gradas 2do Piso': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Gradas 2do Piso' usando alias base de fila 17.
+Para Jefatura (fila 18):
+  CustomText[0] = Tabla_Iluminacion.'Jefatura'
+  CustomText[1] = Tabla_Iluminacion.'Jefatura_area'
+  CustomText[2] = Tabla_Iluminacion.'Jefatura_desc'
+  CustomText[3] = Tabla_Iluminacion.'Jefatura_ilum'
+Error al vincular expresiones para 'Jefatura': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Jefatura' usando alias base de fila 18.
+Para Sala de Lactancia (fila 19):
+  CustomText[0] = Tabla_Iluminacion.'Sala_de_Lactancia'
+  CustomText[1] = Tabla_Iluminacion.'Sala_de_Lactancia_area'
+  CustomText[2] = Tabla_Iluminacion.'Sala_de_Lactancia_desc'
+  CustomText[3] = Tabla_Iluminacion.'Sala_de_Lactancia_ilum'
+Error al vincular expresiones para 'Sala de Lactancia': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Sala de Lactancia' usando alias base de fila 19.
+Para Boveda (fila 20):
+  CustomText[0] = Tabla_Iluminacion.'Boveda'
+  CustomText[1] = Tabla_Iluminacion.'Boveda_area'
+  CustomText[2] = Tabla_Iluminacion.'Boveda_desc'
+  CustomText[3] = Tabla_Iluminacion.'Boveda_ilum'
+Error al vincular expresiones para 'Boveda': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Boveda' usando alias base de fila 20.
+Para S.S. Funcionarias (fila 21):
+  CustomText[0] = Tabla_Iluminacion.'S_S__Funcionarias'
+  CustomText[1] = Tabla_Iluminacion.'S_S__Funcionarias_area'
+  CustomText[2] = Tabla_Iluminacion.'S_S__Funcionarias_desc'
+  CustomText[3] = Tabla_Iluminacion.'S_S__Funcionarias_ilum'
+Error al vincular expresiones para 'S.S. Funcionarias': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'S.S. Funcionarias' usando alias base de fila 21.
+Para Sala de Espera (fila 22):
+  CustomText[0] = Tabla_Iluminacion.'Sala_de_Espera'
+  CustomText[1] = Tabla_Iluminacion.'Sala_de_Espera_area'
+  CustomText[2] = Tabla_Iluminacion.'Sala_de_Espera_desc'
+  CustomText[3] = Tabla_Iluminacion.'Sala_de_Espera_ilum'
+Error al vincular expresiones para 'Sala de Espera': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Sala de Espera' usando alias base de fila 22.
+Para Pasillo Sala de Lactancia (fila 23):
+  CustomText[0] = Tabla_Iluminacion.'Pasillo_Sala_de_Lactancia'
+  CustomText[1] = Tabla_Iluminacion.'Pasillo_Sala_de_Lactancia_area'
+  CustomText[2] = Tabla_Iluminacion.'Pasillo_Sala_de_Lactancia_desc'
+  CustomText[3] = Tabla_Iluminacion.'Pasillo_Sala_de_Lactancia_ilum'
+Error al vincular expresiones para 'Pasillo Sala de Lactancia': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Pasillo Sala de Lactancia' usando alias base de fila 23.
+Para Pasillo001 (fila 24):
+  CustomText[0] = Tabla_Iluminacion.'Pasillo001'
+  CustomText[1] = Tabla_Iluminacion.'Pasillo001_area'
+  CustomText[2] = Tabla_Iluminacion.'Pasillo001_desc'
+  CustomText[3] = Tabla_Iluminacion.'Pasillo001_ilum'
+Error al vincular expresiones para 'Pasillo001': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Pasillo001' usando alias base de fila 24.
+Para Escalera (fila 25):
+  CustomText[0] = Tabla_Iluminacion.'Escalera'
+  CustomText[1] = Tabla_Iluminacion.'Escalera_area'
+  CustomText[2] = Tabla_Iluminacion.'Escalera_desc'
+  CustomText[3] = Tabla_Iluminacion.'Escalera_ilum'
+Error al vincular expresiones para 'Escalera': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Escalera' usando alias base de fila 25.
+Para Pasillo hacia Escalera (fila 26):
+  CustomText[0] = Tabla_Iluminacion.'Pasillo_hacia_Escalera'
+  CustomText[1] = Tabla_Iluminacion.'Pasillo_hacia_Escalera_area'
+  CustomText[2] = Tabla_Iluminacion.'Pasillo_hacia_Escalera_desc'
+  CustomText[3] = Tabla_Iluminacion.'Pasillo_hacia_Escalera_ilum'
+Error al vincular expresiones para 'Pasillo hacia Escalera': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Pasillo hacia Escalera' usando alias base de fila 26.
+Para Comedor (fila 27):
+  CustomText[0] = Tabla_Iluminacion.'Comedor'
+  CustomText[1] = Tabla_Iluminacion.'Comedor_area'
+  CustomText[2] = Tabla_Iluminacion.'Comedor_desc'
+  CustomText[3] = Tabla_Iluminacion.'Comedor_ilum'
+Error al vincular expresiones para 'Comedor': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Comedor' usando alias base de fila 27.
+Para Cuarto Eléctrico (fila 28):
+  CustomText[0] = Tabla_Iluminacion.'Cuarto_Electrico'
+  CustomText[1] = Tabla_Iluminacion.'Cuarto_Electrico_area'
+  CustomText[2] = Tabla_Iluminacion.'Cuarto_Electrico_desc'
+  CustomText[3] = Tabla_Iluminacion.'Cuarto_Electrico_ilum'
+Error al vincular expresiones para 'Cuarto Eléctrico': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Cuarto Eléctrico' usando alias base de fila 28.
+Para Bodega de Aseo (fila 29):
+  CustomText[0] = Tabla_Iluminacion.'Bodega_de_Aseo'
+  CustomText[1] = Tabla_Iluminacion.'Bodega_de_Aseo_area'
+  CustomText[2] = Tabla_Iluminacion.'Bodega_de_Aseo_desc'
+  CustomText[3] = Tabla_Iluminacion.'Bodega_de_Aseo_ilum'
+Error al vincular expresiones para 'Bodega de Aseo': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Bodega de Aseo' usando alias base de fila 29.
+Para Oficina002 (fila 30):
+  CustomText[0] = Tabla_Iluminacion.'Oficina002'
+  CustomText[1] = Tabla_Iluminacion.'Oficina002_area'
+  CustomText[2] = Tabla_Iluminacion.'Oficina002_desc'
+  CustomText[3] = Tabla_Iluminacion.'Oficina002_ilum'
+Error al vincular expresiones para 'Oficina002': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Oficina002' usando alias base de fila 30.
+Para Oficina001 (fila 31):
+  CustomText[0] = Tabla_Iluminacion.'Oficina001'
+  CustomText[1] = Tabla_Iluminacion.'Oficina001_area'
+  CustomText[2] = Tabla_Iluminacion.'Oficina001_desc'
+  CustomText[3] = Tabla_Iluminacion.'Oficina001_ilum'
+Error al vincular expresiones para 'Oficina001': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Oficina001' usando alias base de fila 31.
+Para Oficina (fila 32):
+  CustomText[0] = Tabla_Iluminacion.'Oficina'
+  CustomText[1] = Tabla_Iluminacion.'Oficina_area'
+  CustomText[2] = Tabla_Iluminacion.'Oficina_desc'
+  CustomText[3] = Tabla_Iluminacion.'Oficina_ilum'
+Error al vincular expresiones para 'Oficina': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Oficina' usando alias base de fila 32.
+Para Pasillo hacia Comedor (fila 33):
+  CustomText[0] = Tabla_Iluminacion.'Pasillo_hacia_Comedor'
+  CustomText[1] = Tabla_Iluminacion.'Pasillo_hacia_Comedor_area'
+  CustomText[2] = Tabla_Iluminacion.'Pasillo_hacia_Comedor_desc'
+  CustomText[3] = Tabla_Iluminacion.'Pasillo_hacia_Comedor_ilum'
+Error al vincular expresiones para 'Pasillo hacia Comedor': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Pasillo hacia Comedor' usando alias base de fila 33.
+Para Caja (fila 34):
+  CustomText[0] = Tabla_Iluminacion.'Caja'
+  CustomText[1] = Tabla_Iluminacion.'Caja_area'
+  CustomText[2] = Tabla_Iluminacion.'Caja_desc'
+  CustomText[3] = Tabla_Iluminacion.'Caja_ilum'
+Error al vincular expresiones para 'Caja': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Caja' usando alias base de fila 34.
+Para Plataforma 1 (fila 35):
+  CustomText[0] = Tabla_Iluminacion.'Plataforma_1'
+  CustomText[1] = Tabla_Iluminacion.'Plataforma_1_area'
+  CustomText[2] = Tabla_Iluminacion.'Plataforma_1_desc'
+  CustomText[3] = Tabla_Iluminacion.'Plataforma_1_ilum'
+Error al vincular expresiones para 'Plataforma 1': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Plataforma 1' usando alias base de fila 35.
+Para Plataforma 2 (fila 36):
+  CustomText[0] = Tabla_Iluminacion.'Plataforma_2'
+  CustomText[1] = Tabla_Iluminacion.'Plataforma_2_area'
+  CustomText[2] = Tabla_Iluminacion.'Plataforma_2_desc'
+  CustomText[3] = Tabla_Iluminacion.'Plataforma_2_ilum'
+Error al vincular expresiones para 'Plataforma 2': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Plataforma 2' usando alias base de fila 36.
+No se encontraron datos en la tabla para 'Etiquetas001'. Se omite.
+Proceso completado: etiquetas vinculadas con alias y depuración.
+Hoja seleccionada: Tabla_Iluminacion
+Última fila con datos detectada: 36
+A2: 'S.S. Funcionarios' -> alias base: 'S_S__Funcionarios'
+A2 -> S_S__Funcionarios
+B2 -> S_S__Funcionarios_area
+H2 -> S_S__Funcionarios_desc
+O2 -> S_S__Funcionarios_ilum
+A3: 'S.S. Accesible' -> alias base: 'S_S__Accesible'
+A3 -> S_S__Accesible
+B3 -> S_S__Accesible_area
+H3 -> S_S__Accesible_desc
+O3 -> S_S__Accesible_ilum
+A4: 'S.S. Accesible 2do Piso' -> alias base: 'S_S__Accesible_2do_Piso'
+A4 -> S_S__Accesible_2do_Piso
+B4 -> S_S__Accesible_2do_Piso_area
+H4 -> S_S__Accesible_2do_Piso_desc
+O4 -> S_S__Accesible_2do_Piso_ilum
+A5: 'S.S. 1' -> alias base: 'S_S__1'
+A5 -> S_S__1
+B5 -> S_S__1_area
+H5 -> S_S__1_desc
+O5 -> S_S__1_ilum
+A6: 'Entrada' -> alias base: 'Entrada'
+A6 -> Entrada
+B6 -> Entrada_area
+H6 -> Entrada_desc
+O6 -> Entrada_ilum
+A7: 'Almacenaje' -> alias base: 'Almacenaje'
+A7 -> Almacenaje
+B7 -> Almacenaje_area
+H7 -> Almacenaje_desc
+O7 -> Almacenaje_ilum
+A8: 'Almacenaje001' -> alias base: 'Almacenaje001'
+A8 -> Almacenaje001
+B8 -> Almacenaje001_area
+H8 -> Almacenaje001_desc
+O8 -> Almacenaje001_ilum
+A9: 'Archivo Base' -> alias base: 'Archivo_Base'
+A9 -> Archivo_Base
+B9 -> Archivo_Base_area
+H9 -> Archivo_Base_desc
+O9 -> Archivo_Base_ilum
+A10: 'Bodega' -> alias base: 'Bodega'
+A10 -> Bodega
+B10 -> Bodega_area
+H10 -> Bodega_desc
+O10 -> Bodega_ilum
+A11: 'Plataforma Publico' -> alias base: 'Plataforma_Publico'
+A11 -> Plataforma_Publico
+B11 -> Plataforma_Publico_area
+H11 -> Plataforma_Publico_desc
+O11 -> Plataforma_Publico_ilum
+A12: 'Servidor' -> alias base: 'Servidor'
+A12 -> Servidor
+B12 -> Servidor_area
+H12 -> Servidor_desc
+O12 -> Servidor_ilum
+A13: 'Pasillo' -> alias base: 'Pasillo'
+A13 -> Pasillo
+B13 -> Pasillo_area
+H13 -> Pasillo_desc
+O13 -> Pasillo_ilum
+A14: 'Pasillo entrada Oficinas' -> alias base: 'Pasillo_entrada_Oficinas'
+A14 -> Pasillo_entrada_Oficinas
+B14 -> Pasillo_entrada_Oficinas_area
+H14 -> Pasillo_entrada_Oficinas_desc
+O14 -> Pasillo_entrada_Oficinas_ilum
+A15: 'Pasillo002' -> alias base: 'Pasillo002'
+A15 -> Pasillo002
+B15 -> Pasillo002_area
+H15 -> Pasillo002_desc
+O15 -> Pasillo002_ilum
+A16: 'Pasillo Entrada 2do Piso' -> alias base: 'Pasillo_Entrada_2do_Piso'
+A16 -> Pasillo_Entrada_2do_Piso
+B16 -> Pasillo_Entrada_2do_Piso_area
+H16 -> Pasillo_Entrada_2do_Piso_desc
+O16 -> Pasillo_Entrada_2do_Piso_ilum
+A17: 'Gradas 2do Piso' -> alias base: 'Gradas_2do_Piso'
+A17 -> Gradas_2do_Piso
+B17 -> Gradas_2do_Piso_area
+H17 -> Gradas_2do_Piso_desc
+O17 -> Gradas_2do_Piso_ilum
+A18: 'Jefatura' -> alias base: 'Jefatura'
+A18 -> Jefatura
+B18 -> Jefatura_area
+H18 -> Jefatura_desc
+O18 -> Jefatura_ilum
+A19: 'Sala de Lactancia' -> alias base: 'Sala_de_Lactancia'
+A19 -> Sala_de_Lactancia
+B19 -> Sala_de_Lactancia_area
+H19 -> Sala_de_Lactancia_desc
+O19 -> Sala_de_Lactancia_ilum
+A20: 'Boveda' -> alias base: 'Boveda'
+A20 -> Boveda
+B20 -> Boveda_area
+H20 -> Boveda_desc
+O20 -> Boveda_ilum
+A21: 'S.S. Funcionarias' -> alias base: 'S_S__Funcionarias'
+A21 -> S_S__Funcionarias
+B21 -> S_S__Funcionarias_area
+H21 -> S_S__Funcionarias_desc
+O21 -> S_S__Funcionarias_ilum
+A22: 'Sala de Espera' -> alias base: 'Sala_de_Espera'
+A22 -> Sala_de_Espera
+B22 -> Sala_de_Espera_area
+H22 -> Sala_de_Espera_desc
+O22 -> Sala_de_Espera_ilum
+A23: 'Pasillo Sala de Lactancia' -> alias base: 'Pasillo_Sala_de_Lactancia'
+A23 -> Pasillo_Sala_de_Lactancia
+B23 -> Pasillo_Sala_de_Lactancia_area
+H23 -> Pasillo_Sala_de_Lactancia_desc
+O23 -> Pasillo_Sala_de_Lactancia_ilum
+A24: 'Pasillo001' -> alias base: 'Pasillo001'
+A24 -> Pasillo001
+B24 -> Pasillo001_area
+H24 -> Pasillo001_desc
+O24 -> Pasillo001_ilum
+A25: 'Escalera' -> alias base: 'Escalera'
+A25 -> Escalera
+B25 -> Escalera_area
+H25 -> Escalera_desc
+O25 -> Escalera_ilum
+A26: 'Pasillo hacia Escalera' -> alias base: 'Pasillo_hacia_Escalera'
+A26 -> Pasillo_hacia_Escalera
+B26 -> Pasillo_hacia_Escalera_area
+H26 -> Pasillo_hacia_Escalera_desc
+O26 -> Pasillo_hacia_Escalera_ilum
+A27: 'Comedor' -> alias base: 'Comedor'
+A27 -> Comedor
+B27 -> Comedor_area
+H27 -> Comedor_desc
+O27 -> Comedor_ilum
+A28: 'Cuarto Electrico' -> alias base: 'Cuarto_Electrico'
+A28 -> Cuarto_Electrico
+B28 -> Cuarto_Electrico_area
+H28 -> Cuarto_Electrico_desc
+O28 -> Cuarto_Electrico_ilum
+A29: 'Bodega de Aseo' -> alias base: 'Bodega_de_Aseo'
+A29 -> Bodega_de_Aseo
+B29 -> Bodega_de_Aseo_area
+H29 -> Bodega_de_Aseo_desc
+O29 -> Bodega_de_Aseo_ilum
+A30: 'Oficina002' -> alias base: 'Oficina002'
+A30 -> Oficina002
+B30 -> Oficina002_area
+H30 -> Oficina002_desc
+O30 -> Oficina002_ilum
+A31: 'Oficina001' -> alias base: 'Oficina001'
+A31 -> Oficina001
+B31 -> Oficina001_area
+H31 -> Oficina001_desc
+O31 -> Oficina001_ilum
+A32: 'Oficina' -> alias base: 'Oficina'
+A32 -> Oficina
+B32 -> Oficina_area
+H32 -> Oficina_desc
+O32 -> Oficina_ilum
+A33: 'Pasillo hacia Comedor' -> alias base: 'Pasillo_hacia_Comedor'
+A33 -> Pasillo_hacia_Comedor
+B33 -> Pasillo_hacia_Comedor_area
+H33 -> Pasillo_hacia_Comedor_desc
+O33 -> Pasillo_hacia_Comedor_ilum
+A34: 'Caja' -> alias base: 'Caja'
+A34 -> Caja
+B34 -> Caja_area
+H34 -> Caja_desc
+O34 -> Caja_ilum
+A35: 'Plataforma 1' -> alias base: 'Plataforma_1'
+A35 -> Plataforma_1
+B35 -> Plataforma_1_area
+H35 -> Plataforma_1_desc
+O35 -> Plataforma_1_ilum
+A36: 'Plataforma 2' -> alias base: 'Plataforma_2'
+A36 -> Plataforma_2
+B36 -> Plataforma_2_area
+H36 -> Plataforma_2_desc
+O36 -> Plataforma_2_ilum
+Se han registrado los alias y se ha forzado recálculo.
+Fila 2: S.S. Funcionarios asociada.
+Fila 3: S.S. Accesible asociada.
+Fila 4: S.S. Accesible 2do Piso asociada.
+Fila 5: S.S. 1 asociada.
+Fila 6: Entrada asociada.
+Fila 7: Almacenaje asociada.
+Fila 8: Almacenaje001 asociada.
+Fila 9: Archivo Base asociada.
+Fila 10: Bodega asociada.
+Fila 11: Plataforma Publico asociada.
+Fila 12: Servidor asociada.
+Fila 13: Pasillo asociada.
+Fila 14: Pasillo entrada Oficinas asociada.
+Fila 15: Pasillo002 asociada.
+Fila 16: Pasillo Entrada 2do Piso asociada.
+Fila 17: Gradas 2do Piso asociada.
+Fila 18: Jefatura asociada.
+Fila 19: Sala de Lactancia asociada.
+Fila 20: Boveda asociada.
+Fila 21: S.S. Funcionarias asociada.
+Fila 22: Sala de Espera asociada.
+Fila 23: Pasillo Sala de Lactancia asociada.
+Fila 24: Pasillo001 asociada.
+Fila 25: Escalera asociada.
+Fila 26: Pasillo hacia Escalera asociada.
+Fila 27: Comedor asociada.
+Fila 28: Cuarto Electrico asociada.
+Fila 29: Bodega de Aseo asociada.
+Fila 30: Oficina002 asociada.
+Fila 31: Oficina001 asociada.
+Fila 32: Oficina asociada.
+Fila 33: Pasillo hacia Comedor asociada.
+Fila 34: Caja asociada.
+Fila 35: Plataforma 1 asociada.
+Fila 36: Plataforma 2 asociada.
+Se leyeron datos de 35 recintos.
+Grupo identificado: Areas
+Se creó subgrupo 'Etiquetas' en 'Areas'
+Para S.S. Funcionarios (fila 2):
+  CustomText[0] = Tabla_Iluminacion."S_S__Funcionarios"
+  CustomText[1] = Tabla_Iluminacion."S_S__Funcionarios_area"
+  CustomText[2] = Tabla_Iluminacion."S_S__Funcionarios_desc"
+  CustomText[3] = Tabla_Iluminacion."S_S__Funcionarios_ilum"
+Error al vincular expresiones para 'S.S. Funcionarios': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'S.S. Funcionarios' usando alias base de fila 2.
+Para S.S. Accesible (fila 3):
+  CustomText[0] = Tabla_Iluminacion."S_S__Accesible"
+  CustomText[1] = Tabla_Iluminacion."S_S__Accesible_area"
+  CustomText[2] = Tabla_Iluminacion."S_S__Accesible_desc"
+  CustomText[3] = Tabla_Iluminacion."S_S__Accesible_ilum"
+Error al vincular expresiones para 'S.S. Accesible': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'S.S. Accesible' usando alias base de fila 3.
+Para S.S. Accesible 2do Piso (fila 4):
+  CustomText[0] = Tabla_Iluminacion."S_S__Accesible_2do_Piso"
+  CustomText[1] = Tabla_Iluminacion."S_S__Accesible_2do_Piso_area"
+  CustomText[2] = Tabla_Iluminacion."S_S__Accesible_2do_Piso_desc"
+  CustomText[3] = Tabla_Iluminacion."S_S__Accesible_2do_Piso_ilum"
+Error al vincular expresiones para 'S.S. Accesible 2do Piso': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'S.S. Accesible 2do Piso' usando alias base de fila 4.
+Para S.S. 1 (fila 5):
+  CustomText[0] = Tabla_Iluminacion."S_S__1"
+  CustomText[1] = Tabla_Iluminacion."S_S__1_area"
+  CustomText[2] = Tabla_Iluminacion."S_S__1_desc"
+  CustomText[3] = Tabla_Iluminacion."S_S__1_ilum"
+Error al vincular expresiones para 'S.S. 1': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'S.S. 1' usando alias base de fila 5.
+Para Entrada (fila 6):
+  CustomText[0] = Tabla_Iluminacion."Entrada"
+  CustomText[1] = Tabla_Iluminacion."Entrada_area"
+  CustomText[2] = Tabla_Iluminacion."Entrada_desc"
+  CustomText[3] = Tabla_Iluminacion."Entrada_ilum"
+Error al vincular expresiones para 'Entrada': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Entrada' usando alias base de fila 6.
+Para Almacenaje (fila 7):
+  CustomText[0] = Tabla_Iluminacion."Almacenaje"
+  CustomText[1] = Tabla_Iluminacion."Almacenaje_area"
+  CustomText[2] = Tabla_Iluminacion."Almacenaje_desc"
+  CustomText[3] = Tabla_Iluminacion."Almacenaje_ilum"
+Error al vincular expresiones para 'Almacenaje': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Almacenaje' usando alias base de fila 7.
+Para Almacenaje001 (fila 8):
+  CustomText[0] = Tabla_Iluminacion."Almacenaje001"
+  CustomText[1] = Tabla_Iluminacion."Almacenaje001_area"
+  CustomText[2] = Tabla_Iluminacion."Almacenaje001_desc"
+  CustomText[3] = Tabla_Iluminacion."Almacenaje001_ilum"
+Error al vincular expresiones para 'Almacenaje001': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Almacenaje001' usando alias base de fila 8.
+Para Archivo Base (fila 9):
+  CustomText[0] = Tabla_Iluminacion."Archivo_Base"
+  CustomText[1] = Tabla_Iluminacion."Archivo_Base_area"
+  CustomText[2] = Tabla_Iluminacion."Archivo_Base_desc"
+  CustomText[3] = Tabla_Iluminacion."Archivo_Base_ilum"
+Error al vincular expresiones para 'Archivo Base': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Archivo Base' usando alias base de fila 9.
+Para Bodega (fila 10):
+  CustomText[0] = Tabla_Iluminacion."Bodega"
+  CustomText[1] = Tabla_Iluminacion."Bodega_area"
+  CustomText[2] = Tabla_Iluminacion."Bodega_desc"
+  CustomText[3] = Tabla_Iluminacion."Bodega_ilum"
+Error al vincular expresiones para 'Bodega': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Bodega' usando alias base de fila 10.
+Para Plataforma Público (fila 11):
+  CustomText[0] = Tabla_Iluminacion."Plataforma_Publico"
+  CustomText[1] = Tabla_Iluminacion."Plataforma_Publico_area"
+  CustomText[2] = Tabla_Iluminacion."Plataforma_Publico_desc"
+  CustomText[3] = Tabla_Iluminacion."Plataforma_Publico_ilum"
+Error al vincular expresiones para 'Plataforma Público': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Plataforma Público' usando alias base de fila 11.
+Para Servidor (fila 12):
+  CustomText[0] = Tabla_Iluminacion."Servidor"
+  CustomText[1] = Tabla_Iluminacion."Servidor_area"
+  CustomText[2] = Tabla_Iluminacion."Servidor_desc"
+  CustomText[3] = Tabla_Iluminacion."Servidor_ilum"
+Error al vincular expresiones para 'Servidor': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Servidor' usando alias base de fila 12.
+Para Pasillo (fila 13):
+  CustomText[0] = Tabla_Iluminacion."Pasillo"
+  CustomText[1] = Tabla_Iluminacion."Pasillo_area"
+  CustomText[2] = Tabla_Iluminacion."Pasillo_desc"
+  CustomText[3] = Tabla_Iluminacion."Pasillo_ilum"
+Error al vincular expresiones para 'Pasillo': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Pasillo' usando alias base de fila 13.
+Para Pasillo entrada Oficinas (fila 14):
+  CustomText[0] = Tabla_Iluminacion."Pasillo_entrada_Oficinas"
+  CustomText[1] = Tabla_Iluminacion."Pasillo_entrada_Oficinas_area"
+  CustomText[2] = Tabla_Iluminacion."Pasillo_entrada_Oficinas_desc"
+  CustomText[3] = Tabla_Iluminacion."Pasillo_entrada_Oficinas_ilum"
+Error al vincular expresiones para 'Pasillo entrada Oficinas': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Pasillo entrada Oficinas' usando alias base de fila 14.
+Para Pasillo002 (fila 15):
+  CustomText[0] = Tabla_Iluminacion."Pasillo002"
+  CustomText[1] = Tabla_Iluminacion."Pasillo002_area"
+  CustomText[2] = Tabla_Iluminacion."Pasillo002_desc"
+  CustomText[3] = Tabla_Iluminacion."Pasillo002_ilum"
+Error al vincular expresiones para 'Pasillo002': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Pasillo002' usando alias base de fila 15.
+Para Pasillo Entrada 2do Piso (fila 16):
+  CustomText[0] = Tabla_Iluminacion."Pasillo_Entrada_2do_Piso"
+  CustomText[1] = Tabla_Iluminacion."Pasillo_Entrada_2do_Piso_area"
+  CustomText[2] = Tabla_Iluminacion."Pasillo_Entrada_2do_Piso_desc"
+  CustomText[3] = Tabla_Iluminacion."Pasillo_Entrada_2do_Piso_ilum"
+Error al vincular expresiones para 'Pasillo Entrada 2do Piso': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Pasillo Entrada 2do Piso' usando alias base de fila 16.
+Para Gradas 2do Piso (fila 17):
+  CustomText[0] = Tabla_Iluminacion."Gradas_2do_Piso"
+  CustomText[1] = Tabla_Iluminacion."Gradas_2do_Piso_area"
+  CustomText[2] = Tabla_Iluminacion."Gradas_2do_Piso_desc"
+  CustomText[3] = Tabla_Iluminacion."Gradas_2do_Piso_ilum"
+Error al vincular expresiones para 'Gradas 2do Piso': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Gradas 2do Piso' usando alias base de fila 17.
+Para Jefatura (fila 18):
+  CustomText[0] = Tabla_Iluminacion."Jefatura"
+  CustomText[1] = Tabla_Iluminacion."Jefatura_area"
+  CustomText[2] = Tabla_Iluminacion."Jefatura_desc"
+  CustomText[3] = Tabla_Iluminacion."Jefatura_ilum"
+Error al vincular expresiones para 'Jefatura': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Jefatura' usando alias base de fila 18.
+Para Sala de Lactancia (fila 19):
+  CustomText[0] = Tabla_Iluminacion."Sala_de_Lactancia"
+  CustomText[1] = Tabla_Iluminacion."Sala_de_Lactancia_area"
+  CustomText[2] = Tabla_Iluminacion."Sala_de_Lactancia_desc"
+  CustomText[3] = Tabla_Iluminacion."Sala_de_Lactancia_ilum"
+Error al vincular expresiones para 'Sala de Lactancia': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Sala de Lactancia' usando alias base de fila 19.
+Para Boveda (fila 20):
+  CustomText[0] = Tabla_Iluminacion."Boveda"
+  CustomText[1] = Tabla_Iluminacion."Boveda_area"
+  CustomText[2] = Tabla_Iluminacion."Boveda_desc"
+  CustomText[3] = Tabla_Iluminacion."Boveda_ilum"
+Error al vincular expresiones para 'Boveda': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Boveda' usando alias base de fila 20.
+Para S.S. Funcionarias (fila 21):
+  CustomText[0] = Tabla_Iluminacion."S_S__Funcionarias"
+  CustomText[1] = Tabla_Iluminacion."S_S__Funcionarias_area"
+  CustomText[2] = Tabla_Iluminacion."S_S__Funcionarias_desc"
+  CustomText[3] = Tabla_Iluminacion."S_S__Funcionarias_ilum"
+Error al vincular expresiones para 'S.S. Funcionarias': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'S.S. Funcionarias' usando alias base de fila 21.
+Para Sala de Espera (fila 22):
+  CustomText[0] = Tabla_Iluminacion."Sala_de_Espera"
+  CustomText[1] = Tabla_Iluminacion."Sala_de_Espera_area"
+  CustomText[2] = Tabla_Iluminacion."Sala_de_Espera_desc"
+  CustomText[3] = Tabla_Iluminacion."Sala_de_Espera_ilum"
+Error al vincular expresiones para 'Sala de Espera': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Sala de Espera' usando alias base de fila 22.
+Para Pasillo Sala de Lactancia (fila 23):
+  CustomText[0] = Tabla_Iluminacion."Pasillo_Sala_de_Lactancia"
+  CustomText[1] = Tabla_Iluminacion."Pasillo_Sala_de_Lactancia_area"
+  CustomText[2] = Tabla_Iluminacion."Pasillo_Sala_de_Lactancia_desc"
+  CustomText[3] = Tabla_Iluminacion."Pasillo_Sala_de_Lactancia_ilum"
+Error al vincular expresiones para 'Pasillo Sala de Lactancia': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Pasillo Sala de Lactancia' usando alias base de fila 23.
+Para Pasillo001 (fila 24):
+  CustomText[0] = Tabla_Iluminacion."Pasillo001"
+  CustomText[1] = Tabla_Iluminacion."Pasillo001_area"
+  CustomText[2] = Tabla_Iluminacion."Pasillo001_desc"
+  CustomText[3] = Tabla_Iluminacion."Pasillo001_ilum"
+Error al vincular expresiones para 'Pasillo001': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Pasillo001' usando alias base de fila 24.
+Para Escalera (fila 25):
+  CustomText[0] = Tabla_Iluminacion."Escalera"
+  CustomText[1] = Tabla_Iluminacion."Escalera_area"
+  CustomText[2] = Tabla_Iluminacion."Escalera_desc"
+  CustomText[3] = Tabla_Iluminacion."Escalera_ilum"
+Error al vincular expresiones para 'Escalera': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Escalera' usando alias base de fila 25.
+Para Pasillo hacia Escalera (fila 26):
+  CustomText[0] = Tabla_Iluminacion."Pasillo_hacia_Escalera"
+  CustomText[1] = Tabla_Iluminacion."Pasillo_hacia_Escalera_area"
+  CustomText[2] = Tabla_Iluminacion."Pasillo_hacia_Escalera_desc"
+  CustomText[3] = Tabla_Iluminacion."Pasillo_hacia_Escalera_ilum"
+Error al vincular expresiones para 'Pasillo hacia Escalera': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Pasillo hacia Escalera' usando alias base de fila 26.
+Para Comedor (fila 27):
+  CustomText[0] = Tabla_Iluminacion."Comedor"
+  CustomText[1] = Tabla_Iluminacion."Comedor_area"
+  CustomText[2] = Tabla_Iluminacion."Comedor_desc"
+  CustomText[3] = Tabla_Iluminacion."Comedor_ilum"
+Error al vincular expresiones para 'Comedor': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Comedor' usando alias base de fila 27.
+Para Cuarto Eléctrico (fila 28):
+  CustomText[0] = Tabla_Iluminacion."Cuarto_Electrico"
+  CustomText[1] = Tabla_Iluminacion."Cuarto_Electrico_area"
+  CustomText[2] = Tabla_Iluminacion."Cuarto_Electrico_desc"
+  CustomText[3] = Tabla_Iluminacion."Cuarto_Electrico_ilum"
+Error al vincular expresiones para 'Cuarto Eléctrico': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Cuarto Eléctrico' usando alias base de fila 28.
+Para Bodega de Aseo (fila 29):
+  CustomText[0] = Tabla_Iluminacion."Bodega_de_Aseo"
+  CustomText[1] = Tabla_Iluminacion."Bodega_de_Aseo_area"
+  CustomText[2] = Tabla_Iluminacion."Bodega_de_Aseo_desc"
+  CustomText[3] = Tabla_Iluminacion."Bodega_de_Aseo_ilum"
+Error al vincular expresiones para 'Bodega de Aseo': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Bodega de Aseo' usando alias base de fila 29.
+Para Oficina002 (fila 30):
+  CustomText[0] = Tabla_Iluminacion."Oficina002"
+  CustomText[1] = Tabla_Iluminacion."Oficina002_area"
+  CustomText[2] = Tabla_Iluminacion."Oficina002_desc"
+  CustomText[3] = Tabla_Iluminacion."Oficina002_ilum"
+Error al vincular expresiones para 'Oficina002': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Oficina002' usando alias base de fila 30.
+Para Oficina001 (fila 31):
+  CustomText[0] = Tabla_Iluminacion."Oficina001"
+  CustomText[1] = Tabla_Iluminacion."Oficina001_area"
+  CustomText[2] = Tabla_Iluminacion."Oficina001_desc"
+  CustomText[3] = Tabla_Iluminacion."Oficina001_ilum"
+Error al vincular expresiones para 'Oficina001': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Oficina001' usando alias base de fila 31.
+Para Oficina (fila 32):
+  CustomText[0] = Tabla_Iluminacion."Oficina"
+  CustomText[1] = Tabla_Iluminacion."Oficina_area"
+  CustomText[2] = Tabla_Iluminacion."Oficina_desc"
+  CustomText[3] = Tabla_Iluminacion."Oficina_ilum"
+Error al vincular expresiones para 'Oficina': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Oficina' usando alias base de fila 32.
+Para Pasillo hacia Comedor (fila 33):
+  CustomText[0] = Tabla_Iluminacion."Pasillo_hacia_Comedor"
+  CustomText[1] = Tabla_Iluminacion."Pasillo_hacia_Comedor_area"
+  CustomText[2] = Tabla_Iluminacion."Pasillo_hacia_Comedor_desc"
+  CustomText[3] = Tabla_Iluminacion."Pasillo_hacia_Comedor_ilum"
+Error al vincular expresiones para 'Pasillo hacia Comedor': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Pasillo hacia Comedor' usando alias base de fila 33.
+Para Caja (fila 34):
+  CustomText[0] = Tabla_Iluminacion."Caja"
+  CustomText[1] = Tabla_Iluminacion."Caja_area"
+  CustomText[2] = Tabla_Iluminacion."Caja_desc"
+  CustomText[3] = Tabla_Iluminacion."Caja_ilum"
+Error al vincular expresiones para 'Caja': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Caja' usando alias base de fila 34.
+Para Plataforma 1 (fila 35):
+  CustomText[0] = Tabla_Iluminacion."Plataforma_1"
+  CustomText[1] = Tabla_Iluminacion."Plataforma_1_area"
+  CustomText[2] = Tabla_Iluminacion."Plataforma_1_desc"
+  CustomText[3] = Tabla_Iluminacion."Plataforma_1_ilum"
+Error al vincular expresiones para 'Plataforma 1': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Plataforma 1' usando alias base de fila 35.
+Para Plataforma 2 (fila 36):
+  CustomText[0] = Tabla_Iluminacion."Plataforma_2"
+  CustomText[1] = Tabla_Iluminacion."Plataforma_2_area"
+  CustomText[2] = Tabla_Iluminacion."Plataforma_2_desc"
+  CustomText[3] = Tabla_Iluminacion."Plataforma_2_ilum"
+Error al vincular expresiones para 'Plataforma 2': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Plataforma 2' usando alias base de fila 36.
+No se encontraron datos en la tabla para 'Etiquetas001'. Se omite.
+No se encontraron datos en la tabla para 'Etiquetas002'. Se omite.
+Proceso completado: etiquetas vinculadas con alias y depuración.
+Hoja seleccionada: Tabla_Iluminacion
+Última fila con datos detectada: 36
+A2: 'S.S. Funcionarios' -> alias base: 'S_S__Funcionarios'
+A2 -> S_S__Funcionarios
+B2 -> S_S__Funcionarios_area
+H2 -> S_S__Funcionarios_desc
+O2 -> S_S__Funcionarios_ilum
+A3: 'S.S. Accesible' -> alias base: 'S_S__Accesible'
+A3 -> S_S__Accesible
+B3 -> S_S__Accesible_area
+H3 -> S_S__Accesible_desc
+O3 -> S_S__Accesible_ilum
+A4: 'S.S. Accesible 2do Piso' -> alias base: 'S_S__Accesible_2do_Piso'
+A4 -> S_S__Accesible_2do_Piso
+B4 -> S_S__Accesible_2do_Piso_area
+H4 -> S_S__Accesible_2do_Piso_desc
+O4 -> S_S__Accesible_2do_Piso_ilum
+A5: 'S.S. 1' -> alias base: 'S_S__1'
+A5 -> S_S__1
+B5 -> S_S__1_area
+H5 -> S_S__1_desc
+O5 -> S_S__1_ilum
+A6: 'Entrada' -> alias base: 'Entrada'
+A6 -> Entrada
+B6 -> Entrada_area
+H6 -> Entrada_desc
+O6 -> Entrada_ilum
+A7: 'Almacenaje' -> alias base: 'Almacenaje'
+A7 -> Almacenaje
+B7 -> Almacenaje_area
+H7 -> Almacenaje_desc
+O7 -> Almacenaje_ilum
+A8: 'Almacenaje001' -> alias base: 'Almacenaje001'
+A8 -> Almacenaje001
+B8 -> Almacenaje001_area
+H8 -> Almacenaje001_desc
+O8 -> Almacenaje001_ilum
+A9: 'Archivo Base' -> alias base: 'Archivo_Base'
+A9 -> Archivo_Base
+B9 -> Archivo_Base_area
+H9 -> Archivo_Base_desc
+O9 -> Archivo_Base_ilum
+A10: 'Bodega' -> alias base: 'Bodega'
+A10 -> Bodega
+B10 -> Bodega_area
+H10 -> Bodega_desc
+O10 -> Bodega_ilum
+A11: 'Plataforma Publico' -> alias base: 'Plataforma_Publico'
+A11 -> Plataforma_Publico
+B11 -> Plataforma_Publico_area
+H11 -> Plataforma_Publico_desc
+O11 -> Plataforma_Publico_ilum
+A12: 'Servidor' -> alias base: 'Servidor'
+A12 -> Servidor
+B12 -> Servidor_area
+H12 -> Servidor_desc
+O12 -> Servidor_ilum
+A13: 'Pasillo' -> alias base: 'Pasillo'
+A13 -> Pasillo
+B13 -> Pasillo_area
+H13 -> Pasillo_desc
+O13 -> Pasillo_ilum
+A14: 'Pasillo entrada Oficinas' -> alias base: 'Pasillo_entrada_Oficinas'
+A14 -> Pasillo_entrada_Oficinas
+B14 -> Pasillo_entrada_Oficinas_area
+H14 -> Pasillo_entrada_Oficinas_desc
+O14 -> Pasillo_entrada_Oficinas_ilum
+A15: 'Pasillo002' -> alias base: 'Pasillo002'
+A15 -> Pasillo002
+B15 -> Pasillo002_area
+H15 -> Pasillo002_desc
+O15 -> Pasillo002_ilum
+A16: 'Pasillo Entrada 2do Piso' -> alias base: 'Pasillo_Entrada_2do_Piso'
+A16 -> Pasillo_Entrada_2do_Piso
+B16 -> Pasillo_Entrada_2do_Piso_area
+H16 -> Pasillo_Entrada_2do_Piso_desc
+O16 -> Pasillo_Entrada_2do_Piso_ilum
+A17: 'Gradas 2do Piso' -> alias base: 'Gradas_2do_Piso'
+A17 -> Gradas_2do_Piso
+B17 -> Gradas_2do_Piso_area
+H17 -> Gradas_2do_Piso_desc
+O17 -> Gradas_2do_Piso_ilum
+A18: 'Jefatura' -> alias base: 'Jefatura'
+A18 -> Jefatura
+B18 -> Jefatura_area
+H18 -> Jefatura_desc
+O18 -> Jefatura_ilum
+A19: 'Sala de Lactancia' -> alias base: 'Sala_de_Lactancia'
+A19 -> Sala_de_Lactancia
+B19 -> Sala_de_Lactancia_area
+H19 -> Sala_de_Lactancia_desc
+O19 -> Sala_de_Lactancia_ilum
+A20: 'Boveda' -> alias base: 'Boveda'
+A20 -> Boveda
+B20 -> Boveda_area
+H20 -> Boveda_desc
+O20 -> Boveda_ilum
+A21: 'S.S. Funcionarias' -> alias base: 'S_S__Funcionarias'
+A21 -> S_S__Funcionarias
+B21 -> S_S__Funcionarias_area
+H21 -> S_S__Funcionarias_desc
+O21 -> S_S__Funcionarias_ilum
+A22: 'Sala de Espera' -> alias base: 'Sala_de_Espera'
+A22 -> Sala_de_Espera
+B22 -> Sala_de_Espera_area
+H22 -> Sala_de_Espera_desc
+O22 -> Sala_de_Espera_ilum
+A23: 'Pasillo Sala de Lactancia' -> alias base: 'Pasillo_Sala_de_Lactancia'
+A23 -> Pasillo_Sala_de_Lactancia
+B23 -> Pasillo_Sala_de_Lactancia_area
+H23 -> Pasillo_Sala_de_Lactancia_desc
+O23 -> Pasillo_Sala_de_Lactancia_ilum
+A24: 'Pasillo001' -> alias base: 'Pasillo001'
+A24 -> Pasillo001
+B24 -> Pasillo001_area
+H24 -> Pasillo001_desc
+O24 -> Pasillo001_ilum
+A25: 'Escalera' -> alias base: 'Escalera'
+A25 -> Escalera
+B25 -> Escalera_area
+H25 -> Escalera_desc
+O25 -> Escalera_ilum
+A26: 'Pasillo hacia Escalera' -> alias base: 'Pasillo_hacia_Escalera'
+A26 -> Pasillo_hacia_Escalera
+B26 -> Pasillo_hacia_Escalera_area
+H26 -> Pasillo_hacia_Escalera_desc
+O26 -> Pasillo_hacia_Escalera_ilum
+A27: 'Comedor' -> alias base: 'Comedor'
+A27 -> Comedor
+B27 -> Comedor_area
+H27 -> Comedor_desc
+O27 -> Comedor_ilum
+A28: 'Cuarto Electrico' -> alias base: 'Cuarto_Electrico'
+A28 -> Cuarto_Electrico
+B28 -> Cuarto_Electrico_area
+H28 -> Cuarto_Electrico_desc
+O28 -> Cuarto_Electrico_ilum
+A29: 'Bodega de Aseo' -> alias base: 'Bodega_de_Aseo'
+A29 -> Bodega_de_Aseo
+B29 -> Bodega_de_Aseo_area
+H29 -> Bodega_de_Aseo_desc
+O29 -> Bodega_de_Aseo_ilum
+A30: 'Oficina002' -> alias base: 'Oficina002'
+A30 -> Oficina002
+B30 -> Oficina002_area
+H30 -> Oficina002_desc
+O30 -> Oficina002_ilum
+A31: 'Oficina001' -> alias base: 'Oficina001'
+A31 -> Oficina001
+B31 -> Oficina001_area
+H31 -> Oficina001_desc
+O31 -> Oficina001_ilum
+A32: 'Oficina' -> alias base: 'Oficina'
+A32 -> Oficina
+B32 -> Oficina_area
+H32 -> Oficina_desc
+O32 -> Oficina_ilum
+A33: 'Pasillo hacia Comedor' -> alias base: 'Pasillo_hacia_Comedor'
+A33 -> Pasillo_hacia_Comedor
+B33 -> Pasillo_hacia_Comedor_area
+H33 -> Pasillo_hacia_Comedor_desc
+O33 -> Pasillo_hacia_Comedor_ilum
+A34: 'Caja' -> alias base: 'Caja'
+A34 -> Caja
+B34 -> Caja_area
+H34 -> Caja_desc
+O34 -> Caja_ilum
+A35: 'Plataforma 1' -> alias base: 'Plataforma_1'
+A35 -> Plataforma_1
+B35 -> Plataforma_1_area
+H35 -> Plataforma_1_desc
+O35 -> Plataforma_1_ilum
+A36: 'Plataforma 2' -> alias base: 'Plataforma_2'
+A36 -> Plataforma_2
+B36 -> Plataforma_2_area
+H36 -> Plataforma_2_desc
+O36 -> Plataforma_2_ilum
+Se han registrado los alias y se ha forzado recálculo.
+Fila 2: S.S. Funcionarios asociada.
+Fila 3: S.S. Accesible asociada.
+Fila 4: S.S. Accesible 2do Piso asociada.
+Fila 5: S.S. 1 asociada.
+Fila 6: Entrada asociada.
+Fila 7: Almacenaje asociada.
+Fila 8: Almacenaje001 asociada.
+Fila 9: Archivo Base asociada.
+Fila 10: Bodega asociada.
+Fila 11: Plataforma Publico asociada.
+Fila 12: Servidor asociada.
+Fila 13: Pasillo asociada.
+Fila 14: Pasillo entrada Oficinas asociada.
+Fila 15: Pasillo002 asociada.
+Fila 16: Pasillo Entrada 2do Piso asociada.
+Fila 17: Gradas 2do Piso asociada.
+Fila 18: Jefatura asociada.
+Fila 19: Sala de Lactancia asociada.
+Fila 20: Boveda asociada.
+Fila 21: S.S. Funcionarias asociada.
+Fila 22: Sala de Espera asociada.
+Fila 23: Pasillo Sala de Lactancia asociada.
+Fila 24: Pasillo001 asociada.
+Fila 25: Escalera asociada.
+Fila 26: Pasillo hacia Escalera asociada.
+Fila 27: Comedor asociada.
+Fila 28: Cuarto Electrico asociada.
+Fila 29: Bodega de Aseo asociada.
+Fila 30: Oficina002 asociada.
+Fila 31: Oficina001 asociada.
+Fila 32: Oficina asociada.
+Fila 33: Pasillo hacia Comedor asociada.
+Fila 34: Caja asociada.
+Fila 35: Plataforma 1 asociada.
+Fila 36: Plataforma 2 asociada.
+Se leyeron datos de 35 recintos.
+Grupo identificado: Areas
+Se creó subgrupo 'Etiquetas' en 'Areas'
+Para S.S. Funcionarios (fila 2):
+  CustomText[0] = Tabla_Iluminacion.[S_S__Funcionarios]
+  CustomText[1] = Tabla_Iluminacion.[S_S__Funcionarios_area]
+  CustomText[2] = Tabla_Iluminacion.[S_S__Funcionarios_desc]
+  CustomText[3] = Tabla_Iluminacion.[S_S__Funcionarios_ilum]
+Error al vincular expresiones para 'S.S. Funcionarios': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'S.S. Funcionarios' usando alias base de fila 2.
+Para S.S. Accesible (fila 3):
+  CustomText[0] = Tabla_Iluminacion.[S_S__Accesible]
+  CustomText[1] = Tabla_Iluminacion.[S_S__Accesible_area]
+  CustomText[2] = Tabla_Iluminacion.[S_S__Accesible_desc]
+  CustomText[3] = Tabla_Iluminacion.[S_S__Accesible_ilum]
+Error al vincular expresiones para 'S.S. Accesible': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'S.S. Accesible' usando alias base de fila 3.
+Para S.S. Accesible 2do Piso (fila 4):
+  CustomText[0] = Tabla_Iluminacion.[S_S__Accesible_2do_Piso]
+  CustomText[1] = Tabla_Iluminacion.[S_S__Accesible_2do_Piso_area]
+  CustomText[2] = Tabla_Iluminacion.[S_S__Accesible_2do_Piso_desc]
+  CustomText[3] = Tabla_Iluminacion.[S_S__Accesible_2do_Piso_ilum]
+Error al vincular expresiones para 'S.S. Accesible 2do Piso': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'S.S. Accesible 2do Piso' usando alias base de fila 4.
+Para S.S. 1 (fila 5):
+  CustomText[0] = Tabla_Iluminacion.[S_S__1]
+  CustomText[1] = Tabla_Iluminacion.[S_S__1_area]
+  CustomText[2] = Tabla_Iluminacion.[S_S__1_desc]
+  CustomText[3] = Tabla_Iluminacion.[S_S__1_ilum]
+Error al vincular expresiones para 'S.S. 1': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'S.S. 1' usando alias base de fila 5.
+Para Entrada (fila 6):
+  CustomText[0] = Tabla_Iluminacion.[Entrada]
+  CustomText[1] = Tabla_Iluminacion.[Entrada_area]
+  CustomText[2] = Tabla_Iluminacion.[Entrada_desc]
+  CustomText[3] = Tabla_Iluminacion.[Entrada_ilum]
+Error al vincular expresiones para 'Entrada': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Entrada' usando alias base de fila 6.
+Para Almacenaje (fila 7):
+  CustomText[0] = Tabla_Iluminacion.[Almacenaje]
+  CustomText[1] = Tabla_Iluminacion.[Almacenaje_area]
+  CustomText[2] = Tabla_Iluminacion.[Almacenaje_desc]
+  CustomText[3] = Tabla_Iluminacion.[Almacenaje_ilum]
+Error al vincular expresiones para 'Almacenaje': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Almacenaje' usando alias base de fila 7.
+Para Almacenaje001 (fila 8):
+  CustomText[0] = Tabla_Iluminacion.[Almacenaje001]
+  CustomText[1] = Tabla_Iluminacion.[Almacenaje001_area]
+  CustomText[2] = Tabla_Iluminacion.[Almacenaje001_desc]
+  CustomText[3] = Tabla_Iluminacion.[Almacenaje001_ilum]
+Error al vincular expresiones para 'Almacenaje001': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Almacenaje001' usando alias base de fila 8.
+Para Archivo Base (fila 9):
+  CustomText[0] = Tabla_Iluminacion.[Archivo_Base]
+  CustomText[1] = Tabla_Iluminacion.[Archivo_Base_area]
+  CustomText[2] = Tabla_Iluminacion.[Archivo_Base_desc]
+  CustomText[3] = Tabla_Iluminacion.[Archivo_Base_ilum]
+Error al vincular expresiones para 'Archivo Base': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Archivo Base' usando alias base de fila 9.
+Para Bodega (fila 10):
+  CustomText[0] = Tabla_Iluminacion.[Bodega]
+  CustomText[1] = Tabla_Iluminacion.[Bodega_area]
+  CustomText[2] = Tabla_Iluminacion.[Bodega_desc]
+  CustomText[3] = Tabla_Iluminacion.[Bodega_ilum]
+Error al vincular expresiones para 'Bodega': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Bodega' usando alias base de fila 10.
+Para Plataforma Público (fila 11):
+  CustomText[0] = Tabla_Iluminacion.[Plataforma_Publico]
+  CustomText[1] = Tabla_Iluminacion.[Plataforma_Publico_area]
+  CustomText[2] = Tabla_Iluminacion.[Plataforma_Publico_desc]
+  CustomText[3] = Tabla_Iluminacion.[Plataforma_Publico_ilum]
+Error al vincular expresiones para 'Plataforma Público': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Plataforma Público' usando alias base de fila 11.
+Para Servidor (fila 12):
+  CustomText[0] = Tabla_Iluminacion.[Servidor]
+  CustomText[1] = Tabla_Iluminacion.[Servidor_area]
+  CustomText[2] = Tabla_Iluminacion.[Servidor_desc]
+  CustomText[3] = Tabla_Iluminacion.[Servidor_ilum]
+Error al vincular expresiones para 'Servidor': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Servidor' usando alias base de fila 12.
+Para Pasillo (fila 13):
+  CustomText[0] = Tabla_Iluminacion.[Pasillo]
+  CustomText[1] = Tabla_Iluminacion.[Pasillo_area]
+  CustomText[2] = Tabla_Iluminacion.[Pasillo_desc]
+  CustomText[3] = Tabla_Iluminacion.[Pasillo_ilum]
+Error al vincular expresiones para 'Pasillo': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Pasillo' usando alias base de fila 13.
+Para Pasillo entrada Oficinas (fila 14):
+  CustomText[0] = Tabla_Iluminacion.[Pasillo_entrada_Oficinas]
+  CustomText[1] = Tabla_Iluminacion.[Pasillo_entrada_Oficinas_area]
+  CustomText[2] = Tabla_Iluminacion.[Pasillo_entrada_Oficinas_desc]
+  CustomText[3] = Tabla_Iluminacion.[Pasillo_entrada_Oficinas_ilum]
+Error al vincular expresiones para 'Pasillo entrada Oficinas': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Pasillo entrada Oficinas' usando alias base de fila 14.
+Para Pasillo002 (fila 15):
+  CustomText[0] = Tabla_Iluminacion.[Pasillo002]
+  CustomText[1] = Tabla_Iluminacion.[Pasillo002_area]
+  CustomText[2] = Tabla_Iluminacion.[Pasillo002_desc]
+  CustomText[3] = Tabla_Iluminacion.[Pasillo002_ilum]
+Error al vincular expresiones para 'Pasillo002': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Pasillo002' usando alias base de fila 15.
+Para Pasillo Entrada 2do Piso (fila 16):
+  CustomText[0] = Tabla_Iluminacion.[Pasillo_Entrada_2do_Piso]
+  CustomText[1] = Tabla_Iluminacion.[Pasillo_Entrada_2do_Piso_area]
+  CustomText[2] = Tabla_Iluminacion.[Pasillo_Entrada_2do_Piso_desc]
+  CustomText[3] = Tabla_Iluminacion.[Pasillo_Entrada_2do_Piso_ilum]
+Error al vincular expresiones para 'Pasillo Entrada 2do Piso': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Pasillo Entrada 2do Piso' usando alias base de fila 16.
+Para Gradas 2do Piso (fila 17):
+  CustomText[0] = Tabla_Iluminacion.[Gradas_2do_Piso]
+  CustomText[1] = Tabla_Iluminacion.[Gradas_2do_Piso_area]
+  CustomText[2] = Tabla_Iluminacion.[Gradas_2do_Piso_desc]
+  CustomText[3] = Tabla_Iluminacion.[Gradas_2do_Piso_ilum]
+Error al vincular expresiones para 'Gradas 2do Piso': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Gradas 2do Piso' usando alias base de fila 17.
+Para Jefatura (fila 18):
+  CustomText[0] = Tabla_Iluminacion.[Jefatura]
+  CustomText[1] = Tabla_Iluminacion.[Jefatura_area]
+  CustomText[2] = Tabla_Iluminacion.[Jefatura_desc]
+  CustomText[3] = Tabla_Iluminacion.[Jefatura_ilum]
+Error al vincular expresiones para 'Jefatura': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Jefatura' usando alias base de fila 18.
+Para Sala de Lactancia (fila 19):
+  CustomText[0] = Tabla_Iluminacion.[Sala_de_Lactancia]
+  CustomText[1] = Tabla_Iluminacion.[Sala_de_Lactancia_area]
+  CustomText[2] = Tabla_Iluminacion.[Sala_de_Lactancia_desc]
+  CustomText[3] = Tabla_Iluminacion.[Sala_de_Lactancia_ilum]
+Error al vincular expresiones para 'Sala de Lactancia': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Sala de Lactancia' usando alias base de fila 19.
+Para Boveda (fila 20):
+  CustomText[0] = Tabla_Iluminacion.[Boveda]
+  CustomText[1] = Tabla_Iluminacion.[Boveda_area]
+  CustomText[2] = Tabla_Iluminacion.[Boveda_desc]
+  CustomText[3] = Tabla_Iluminacion.[Boveda_ilum]
+Error al vincular expresiones para 'Boveda': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Boveda' usando alias base de fila 20.
+Para S.S. Funcionarias (fila 21):
+  CustomText[0] = Tabla_Iluminacion.[S_S__Funcionarias]
+  CustomText[1] = Tabla_Iluminacion.[S_S__Funcionarias_area]
+  CustomText[2] = Tabla_Iluminacion.[S_S__Funcionarias_desc]
+  CustomText[3] = Tabla_Iluminacion.[S_S__Funcionarias_ilum]
+Error al vincular expresiones para 'S.S. Funcionarias': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'S.S. Funcionarias' usando alias base de fila 21.
+Para Sala de Espera (fila 22):
+  CustomText[0] = Tabla_Iluminacion.[Sala_de_Espera]
+  CustomText[1] = Tabla_Iluminacion.[Sala_de_Espera_area]
+  CustomText[2] = Tabla_Iluminacion.[Sala_de_Espera_desc]
+  CustomText[3] = Tabla_Iluminacion.[Sala_de_Espera_ilum]
+Error al vincular expresiones para 'Sala de Espera': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Sala de Espera' usando alias base de fila 22.
+Para Pasillo Sala de Lactancia (fila 23):
+  CustomText[0] = Tabla_Iluminacion.[Pasillo_Sala_de_Lactancia]
+  CustomText[1] = Tabla_Iluminacion.[Pasillo_Sala_de_Lactancia_area]
+  CustomText[2] = Tabla_Iluminacion.[Pasillo_Sala_de_Lactancia_desc]
+  CustomText[3] = Tabla_Iluminacion.[Pasillo_Sala_de_Lactancia_ilum]
+Error al vincular expresiones para 'Pasillo Sala de Lactancia': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Pasillo Sala de Lactancia' usando alias base de fila 23.
+Para Pasillo001 (fila 24):
+  CustomText[0] = Tabla_Iluminacion.[Pasillo001]
+  CustomText[1] = Tabla_Iluminacion.[Pasillo001_area]
+  CustomText[2] = Tabla_Iluminacion.[Pasillo001_desc]
+  CustomText[3] = Tabla_Iluminacion.[Pasillo001_ilum]
+Error al vincular expresiones para 'Pasillo001': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Pasillo001' usando alias base de fila 24.
+Para Escalera (fila 25):
+  CustomText[0] = Tabla_Iluminacion.[Escalera]
+  CustomText[1] = Tabla_Iluminacion.[Escalera_area]
+  CustomText[2] = Tabla_Iluminacion.[Escalera_desc]
+  CustomText[3] = Tabla_Iluminacion.[Escalera_ilum]
+Error al vincular expresiones para 'Escalera': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Escalera' usando alias base de fila 25.
+Para Pasillo hacia Escalera (fila 26):
+  CustomText[0] = Tabla_Iluminacion.[Pasillo_hacia_Escalera]
+  CustomText[1] = Tabla_Iluminacion.[Pasillo_hacia_Escalera_area]
+  CustomText[2] = Tabla_Iluminacion.[Pasillo_hacia_Escalera_desc]
+  CustomText[3] = Tabla_Iluminacion.[Pasillo_hacia_Escalera_ilum]
+Error al vincular expresiones para 'Pasillo hacia Escalera': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Pasillo hacia Escalera' usando alias base de fila 26.
+Para Comedor (fila 27):
+  CustomText[0] = Tabla_Iluminacion.[Comedor]
+  CustomText[1] = Tabla_Iluminacion.[Comedor_area]
+  CustomText[2] = Tabla_Iluminacion.[Comedor_desc]
+  CustomText[3] = Tabla_Iluminacion.[Comedor_ilum]
+Error al vincular expresiones para 'Comedor': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Comedor' usando alias base de fila 27.
+Para Cuarto Eléctrico (fila 28):
+  CustomText[0] = Tabla_Iluminacion.[Cuarto_Electrico]
+  CustomText[1] = Tabla_Iluminacion.[Cuarto_Electrico_area]
+  CustomText[2] = Tabla_Iluminacion.[Cuarto_Electrico_desc]
+  CustomText[3] = Tabla_Iluminacion.[Cuarto_Electrico_ilum]
+Error al vincular expresiones para 'Cuarto Eléctrico': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Cuarto Eléctrico' usando alias base de fila 28.
+Para Bodega de Aseo (fila 29):
+  CustomText[0] = Tabla_Iluminacion.[Bodega_de_Aseo]
+  CustomText[1] = Tabla_Iluminacion.[Bodega_de_Aseo_area]
+  CustomText[2] = Tabla_Iluminacion.[Bodega_de_Aseo_desc]
+  CustomText[3] = Tabla_Iluminacion.[Bodega_de_Aseo_ilum]
+Error al vincular expresiones para 'Bodega de Aseo': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Bodega de Aseo' usando alias base de fila 29.
+Para Oficina002 (fila 30):
+  CustomText[0] = Tabla_Iluminacion.[Oficina002]
+  CustomText[1] = Tabla_Iluminacion.[Oficina002_area]
+  CustomText[2] = Tabla_Iluminacion.[Oficina002_desc]
+  CustomText[3] = Tabla_Iluminacion.[Oficina002_ilum]
+Error al vincular expresiones para 'Oficina002': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Oficina002' usando alias base de fila 30.
+Para Oficina001 (fila 31):
+  CustomText[0] = Tabla_Iluminacion.[Oficina001]
+  CustomText[1] = Tabla_Iluminacion.[Oficina001_area]
+  CustomText[2] = Tabla_Iluminacion.[Oficina001_desc]
+  CustomText[3] = Tabla_Iluminacion.[Oficina001_ilum]
+Error al vincular expresiones para 'Oficina001': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Oficina001' usando alias base de fila 31.
+Para Oficina (fila 32):
+  CustomText[0] = Tabla_Iluminacion.[Oficina]
+  CustomText[1] = Tabla_Iluminacion.[Oficina_area]
+  CustomText[2] = Tabla_Iluminacion.[Oficina_desc]
+  CustomText[3] = Tabla_Iluminacion.[Oficina_ilum]
+Error al vincular expresiones para 'Oficina': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Oficina' usando alias base de fila 32.
+Para Pasillo hacia Comedor (fila 33):
+  CustomText[0] = Tabla_Iluminacion.[Pasillo_hacia_Comedor]
+  CustomText[1] = Tabla_Iluminacion.[Pasillo_hacia_Comedor_area]
+  CustomText[2] = Tabla_Iluminacion.[Pasillo_hacia_Comedor_desc]
+  CustomText[3] = Tabla_Iluminacion.[Pasillo_hacia_Comedor_ilum]
+Error al vincular expresiones para 'Pasillo hacia Comedor': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Pasillo hacia Comedor' usando alias base de fila 33.
+Para Caja (fila 34):
+  CustomText[0] = Tabla_Iluminacion.[Caja]
+  CustomText[1] = Tabla_Iluminacion.[Caja_area]
+  CustomText[2] = Tabla_Iluminacion.[Caja_desc]
+  CustomText[3] = Tabla_Iluminacion.[Caja_ilum]
+Error al vincular expresiones para 'Caja': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Caja' usando alias base de fila 34.
+Para Plataforma 1 (fila 35):
+  CustomText[0] = Tabla_Iluminacion.[Plataforma_1]
+  CustomText[1] = Tabla_Iluminacion.[Plataforma_1_area]
+  CustomText[2] = Tabla_Iluminacion.[Plataforma_1_desc]
+  CustomText[3] = Tabla_Iluminacion.[Plataforma_1_ilum]
+Error al vincular expresiones para 'Plataforma 1': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Plataforma 1' usando alias base de fila 35.
+Para Plataforma 2 (fila 36):
+  CustomText[0] = Tabla_Iluminacion.[Plataforma_2]
+  CustomText[1] = Tabla_Iluminacion.[Plataforma_2_area]
+  CustomText[2] = Tabla_Iluminacion.[Plataforma_2_desc]
+  CustomText[3] = Tabla_Iluminacion.[Plataforma_2_ilum]
+Error al vincular expresiones para 'Plataforma 2': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Plataforma 2' usando alias base de fila 36.
+No se encontraron datos en la tabla para 'Etiquetas001'. Se omite.
+No se encontraron datos en la tabla para 'Etiquetas002'. Se omite.
+No se encontraron datos en la tabla para 'Etiquetas003'. Se omite.
+Proceso completado: etiquetas vinculadas con alias y depuración.
+Hoja seleccionada: Tabla_Iluminacion
+Última fila con datos detectada: 36
+A2: 'S.S. Funcionarios' -> alias base: 'S_S__Funcionarios'
+A2 -> S_S__Funcionarios
+B2 -> S_S__Funcionarios_area
+H2 -> S_S__Funcionarios_desc
+O2 -> S_S__Funcionarios_ilum
+A3: 'S.S. Accesible' -> alias base: 'S_S__Accesible'
+A3 -> S_S__Accesible
+B3 -> S_S__Accesible_area
+H3 -> S_S__Accesible_desc
+O3 -> S_S__Accesible_ilum
+A4: 'S.S. Accesible 2do Piso' -> alias base: 'S_S__Accesible_2do_Piso'
+A4 -> S_S__Accesible_2do_Piso
+B4 -> S_S__Accesible_2do_Piso_area
+H4 -> S_S__Accesible_2do_Piso_desc
+O4 -> S_S__Accesible_2do_Piso_ilum
+A5: 'S.S. 1' -> alias base: 'S_S__1'
+A5 -> S_S__1
+B5 -> S_S__1_area
+H5 -> S_S__1_desc
+O5 -> S_S__1_ilum
+A6: 'Entrada' -> alias base: 'Entrada'
+A6 -> Entrada
+B6 -> Entrada_area
+H6 -> Entrada_desc
+O6 -> Entrada_ilum
+A7: 'Almacenaje' -> alias base: 'Almacenaje'
+A7 -> Almacenaje
+B7 -> Almacenaje_area
+H7 -> Almacenaje_desc
+O7 -> Almacenaje_ilum
+A8: 'Almacenaje001' -> alias base: 'Almacenaje001'
+A8 -> Almacenaje001
+B8 -> Almacenaje001_area
+H8 -> Almacenaje001_desc
+O8 -> Almacenaje001_ilum
+A9: 'Archivo Base' -> alias base: 'Archivo_Base'
+A9 -> Archivo_Base
+B9 -> Archivo_Base_area
+H9 -> Archivo_Base_desc
+O9 -> Archivo_Base_ilum
+A10: 'Bodega' -> alias base: 'Bodega'
+A10 -> Bodega
+B10 -> Bodega_area
+H10 -> Bodega_desc
+O10 -> Bodega_ilum
+A11: 'Plataforma Publico' -> alias base: 'Plataforma_Publico'
+A11 -> Plataforma_Publico
+B11 -> Plataforma_Publico_area
+H11 -> Plataforma_Publico_desc
+O11 -> Plataforma_Publico_ilum
+A12: 'Servidor' -> alias base: 'Servidor'
+A12 -> Servidor
+B12 -> Servidor_area
+H12 -> Servidor_desc
+O12 -> Servidor_ilum
+A13: 'Pasillo' -> alias base: 'Pasillo'
+A13 -> Pasillo
+B13 -> Pasillo_area
+H13 -> Pasillo_desc
+O13 -> Pasillo_ilum
+A14: 'Pasillo entrada Oficinas' -> alias base: 'Pasillo_entrada_Oficinas'
+A14 -> Pasillo_entrada_Oficinas
+B14 -> Pasillo_entrada_Oficinas_area
+H14 -> Pasillo_entrada_Oficinas_desc
+O14 -> Pasillo_entrada_Oficinas_ilum
+A15: 'Pasillo002' -> alias base: 'Pasillo002'
+A15 -> Pasillo002
+B15 -> Pasillo002_area
+H15 -> Pasillo002_desc
+O15 -> Pasillo002_ilum
+A16: 'Pasillo Entrada 2do Piso' -> alias base: 'Pasillo_Entrada_2do_Piso'
+A16 -> Pasillo_Entrada_2do_Piso
+B16 -> Pasillo_Entrada_2do_Piso_area
+H16 -> Pasillo_Entrada_2do_Piso_desc
+O16 -> Pasillo_Entrada_2do_Piso_ilum
+A17: 'Gradas 2do Piso' -> alias base: 'Gradas_2do_Piso'
+A17 -> Gradas_2do_Piso
+B17 -> Gradas_2do_Piso_area
+H17 -> Gradas_2do_Piso_desc
+O17 -> Gradas_2do_Piso_ilum
+A18: 'Jefatura' -> alias base: 'Jefatura'
+A18 -> Jefatura
+B18 -> Jefatura_area
+H18 -> Jefatura_desc
+O18 -> Jefatura_ilum
+A19: 'Sala de Lactancia' -> alias base: 'Sala_de_Lactancia'
+A19 -> Sala_de_Lactancia
+B19 -> Sala_de_Lactancia_area
+H19 -> Sala_de_Lactancia_desc
+O19 -> Sala_de_Lactancia_ilum
+A20: 'Boveda' -> alias base: 'Boveda'
+A20 -> Boveda
+B20 -> Boveda_area
+H20 -> Boveda_desc
+O20 -> Boveda_ilum
+A21: 'S.S. Funcionarias' -> alias base: 'S_S__Funcionarias'
+A21 -> S_S__Funcionarias
+B21 -> S_S__Funcionarias_area
+H21 -> S_S__Funcionarias_desc
+O21 -> S_S__Funcionarias_ilum
+A22: 'Sala de Espera' -> alias base: 'Sala_de_Espera'
+A22 -> Sala_de_Espera
+B22 -> Sala_de_Espera_area
+H22 -> Sala_de_Espera_desc
+O22 -> Sala_de_Espera_ilum
+A23: 'Pasillo Sala de Lactancia' -> alias base: 'Pasillo_Sala_de_Lactancia'
+A23 -> Pasillo_Sala_de_Lactancia
+B23 -> Pasillo_Sala_de_Lactancia_area
+H23 -> Pasillo_Sala_de_Lactancia_desc
+O23 -> Pasillo_Sala_de_Lactancia_ilum
+A24: 'Pasillo001' -> alias base: 'Pasillo001'
+A24 -> Pasillo001
+B24 -> Pasillo001_area
+H24 -> Pasillo001_desc
+O24 -> Pasillo001_ilum
+A25: 'Escalera' -> alias base: 'Escalera'
+A25 -> Escalera
+B25 -> Escalera_area
+H25 -> Escalera_desc
+O25 -> Escalera_ilum
+A26: 'Pasillo hacia Escalera' -> alias base: 'Pasillo_hacia_Escalera'
+A26 -> Pasillo_hacia_Escalera
+B26 -> Pasillo_hacia_Escalera_area
+H26 -> Pasillo_hacia_Escalera_desc
+O26 -> Pasillo_hacia_Escalera_ilum
+A27: 'Comedor' -> alias base: 'Comedor'
+A27 -> Comedor
+B27 -> Comedor_area
+H27 -> Comedor_desc
+O27 -> Comedor_ilum
+A28: 'Cuarto Electrico' -> alias base: 'Cuarto_Electrico'
+A28 -> Cuarto_Electrico
+B28 -> Cuarto_Electrico_area
+H28 -> Cuarto_Electrico_desc
+O28 -> Cuarto_Electrico_ilum
+A29: 'Bodega de Aseo' -> alias base: 'Bodega_de_Aseo'
+A29 -> Bodega_de_Aseo
+B29 -> Bodega_de_Aseo_area
+H29 -> Bodega_de_Aseo_desc
+O29 -> Bodega_de_Aseo_ilum
+A30: 'Oficina002' -> alias base: 'Oficina002'
+A30 -> Oficina002
+B30 -> Oficina002_area
+H30 -> Oficina002_desc
+O30 -> Oficina002_ilum
+A31: 'Oficina001' -> alias base: 'Oficina001'
+A31 -> Oficina001
+B31 -> Oficina001_area
+H31 -> Oficina001_desc
+O31 -> Oficina001_ilum
+A32: 'Oficina' -> alias base: 'Oficina'
+A32 -> Oficina
+B32 -> Oficina_area
+H32 -> Oficina_desc
+O32 -> Oficina_ilum
+A33: 'Pasillo hacia Comedor' -> alias base: 'Pasillo_hacia_Comedor'
+A33 -> Pasillo_hacia_Comedor
+B33 -> Pasillo_hacia_Comedor_area
+H33 -> Pasillo_hacia_Comedor_desc
+O33 -> Pasillo_hacia_Comedor_ilum
+A34: 'Caja' -> alias base: 'Caja'
+A34 -> Caja
+B34 -> Caja_area
+H34 -> Caja_desc
+O34 -> Caja_ilum
+A35: 'Plataforma 1' -> alias base: 'Plataforma_1'
+A35 -> Plataforma_1
+B35 -> Plataforma_1_area
+H35 -> Plataforma_1_desc
+O35 -> Plataforma_1_ilum
+A36: 'Plataforma 2' -> alias base: 'Plataforma_2'
+A36 -> Plataforma_2
+B36 -> Plataforma_2_area
+H36 -> Plataforma_2_desc
+O36 -> Plataforma_2_ilum
+Se han registrado los alias y se ha forzado recálculo.
+Fila 2: S.S. Funcionarios asociada.
+Fila 3: S.S. Accesible asociada.
+Fila 4: S.S. Accesible 2do Piso asociada.
+Fila 5: S.S. 1 asociada.
+Fila 6: Entrada asociada.
+Fila 7: Almacenaje asociada.
+Fila 8: Almacenaje001 asociada.
+Fila 9: Archivo Base asociada.
+Fila 10: Bodega asociada.
+Fila 11: Plataforma Publico asociada.
+Fila 12: Servidor asociada.
+Fila 13: Pasillo asociada.
+Fila 14: Pasillo entrada Oficinas asociada.
+Fila 15: Pasillo002 asociada.
+Fila 16: Pasillo Entrada 2do Piso asociada.
+Fila 17: Gradas 2do Piso asociada.
+Fila 18: Jefatura asociada.
+Fila 19: Sala de Lactancia asociada.
+Fila 20: Boveda asociada.
+Fila 21: S.S. Funcionarias asociada.
+Fila 22: Sala de Espera asociada.
+Fila 23: Pasillo Sala de Lactancia asociada.
+Fila 24: Pasillo001 asociada.
+Fila 25: Escalera asociada.
+Fila 26: Pasillo hacia Escalera asociada.
+Fila 27: Comedor asociada.
+Fila 28: Cuarto Electrico asociada.
+Fila 29: Bodega de Aseo asociada.
+Fila 30: Oficina002 asociada.
+Fila 31: Oficina001 asociada.
+Fila 32: Oficina asociada.
+Fila 33: Pasillo hacia Comedor asociada.
+Fila 34: Caja asociada.
+Fila 35: Plataforma 1 asociada.
+Fila 36: Plataforma 2 asociada.
+Se leyeron datos de 35 recintos.
+Grupo identificado: Areas
+Se creó subgrupo 'Etiquetas' en 'Areas'
+Para S.S. Funcionarios (fila 2):
+  CustomText[0] = Tabla_Iluminacion.[S_S__Funcionarios]
+  CustomText[1] = Tabla_Iluminacion.[S_S__Funcionarios_area]
+  CustomText[2] = Tabla_Iluminacion.[S_S__Funcionarios_desc]
+  CustomText[3] = Tabla_Iluminacion.[S_S__Funcionarios_ilum]
+Error al vincular expresiones para 'S.S. Funcionarios': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'S.S. Funcionarios' usando alias base de fila 2.
+Para S.S. Accesible (fila 3):
+  CustomText[0] = Tabla_Iluminacion.[S_S__Accesible]
+  CustomText[1] = Tabla_Iluminacion.[S_S__Accesible_area]
+  CustomText[2] = Tabla_Iluminacion.[S_S__Accesible_desc]
+  CustomText[3] = Tabla_Iluminacion.[S_S__Accesible_ilum]
+Error al vincular expresiones para 'S.S. Accesible': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'S.S. Accesible' usando alias base de fila 3.
+Para S.S. Accesible 2do Piso (fila 4):
+  CustomText[0] = Tabla_Iluminacion.[S_S__Accesible_2do_Piso]
+  CustomText[1] = Tabla_Iluminacion.[S_S__Accesible_2do_Piso_area]
+  CustomText[2] = Tabla_Iluminacion.[S_S__Accesible_2do_Piso_desc]
+  CustomText[3] = Tabla_Iluminacion.[S_S__Accesible_2do_Piso_ilum]
+Error al vincular expresiones para 'S.S. Accesible 2do Piso': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'S.S. Accesible 2do Piso' usando alias base de fila 4.
+Para S.S. 1 (fila 5):
+  CustomText[0] = Tabla_Iluminacion.[S_S__1]
+  CustomText[1] = Tabla_Iluminacion.[S_S__1_area]
+  CustomText[2] = Tabla_Iluminacion.[S_S__1_desc]
+  CustomText[3] = Tabla_Iluminacion.[S_S__1_ilum]
+Error al vincular expresiones para 'S.S. 1': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'S.S. 1' usando alias base de fila 5.
+Para Entrada (fila 6):
+  CustomText[0] = Tabla_Iluminacion.[Entrada]
+  CustomText[1] = Tabla_Iluminacion.[Entrada_area]
+  CustomText[2] = Tabla_Iluminacion.[Entrada_desc]
+  CustomText[3] = Tabla_Iluminacion.[Entrada_ilum]
+Error al vincular expresiones para 'Entrada': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Entrada' usando alias base de fila 6.
+Para Almacenaje (fila 7):
+  CustomText[0] = Tabla_Iluminacion.[Almacenaje]
+  CustomText[1] = Tabla_Iluminacion.[Almacenaje_area]
+  CustomText[2] = Tabla_Iluminacion.[Almacenaje_desc]
+  CustomText[3] = Tabla_Iluminacion.[Almacenaje_ilum]
+Error al vincular expresiones para 'Almacenaje': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Almacenaje' usando alias base de fila 7.
+Para Almacenaje001 (fila 8):
+  CustomText[0] = Tabla_Iluminacion.[Almacenaje001]
+  CustomText[1] = Tabla_Iluminacion.[Almacenaje001_area]
+  CustomText[2] = Tabla_Iluminacion.[Almacenaje001_desc]
+  CustomText[3] = Tabla_Iluminacion.[Almacenaje001_ilum]
+Error al vincular expresiones para 'Almacenaje001': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Almacenaje001' usando alias base de fila 8.
+Para Archivo Base (fila 9):
+  CustomText[0] = Tabla_Iluminacion.[Archivo_Base]
+  CustomText[1] = Tabla_Iluminacion.[Archivo_Base_area]
+  CustomText[2] = Tabla_Iluminacion.[Archivo_Base_desc]
+  CustomText[3] = Tabla_Iluminacion.[Archivo_Base_ilum]
+Error al vincular expresiones para 'Archivo Base': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Archivo Base' usando alias base de fila 9.
+Para Bodega (fila 10):
+  CustomText[0] = Tabla_Iluminacion.[Bodega]
+  CustomText[1] = Tabla_Iluminacion.[Bodega_area]
+  CustomText[2] = Tabla_Iluminacion.[Bodega_desc]
+  CustomText[3] = Tabla_Iluminacion.[Bodega_ilum]
+Error al vincular expresiones para 'Bodega': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Bodega' usando alias base de fila 10.
+Para Plataforma Público (fila 11):
+  CustomText[0] = Tabla_Iluminacion.[Plataforma_Publico]
+  CustomText[1] = Tabla_Iluminacion.[Plataforma_Publico_area]
+  CustomText[2] = Tabla_Iluminacion.[Plataforma_Publico_desc]
+  CustomText[3] = Tabla_Iluminacion.[Plataforma_Publico_ilum]
+Error al vincular expresiones para 'Plataforma Público': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Plataforma Público' usando alias base de fila 11.
+Para Servidor (fila 12):
+  CustomText[0] = Tabla_Iluminacion.[Servidor]
+  CustomText[1] = Tabla_Iluminacion.[Servidor_area]
+  CustomText[2] = Tabla_Iluminacion.[Servidor_desc]
+  CustomText[3] = Tabla_Iluminacion.[Servidor_ilum]
+Error al vincular expresiones para 'Servidor': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Servidor' usando alias base de fila 12.
+Para Pasillo (fila 13):
+  CustomText[0] = Tabla_Iluminacion.[Pasillo]
+  CustomText[1] = Tabla_Iluminacion.[Pasillo_area]
+  CustomText[2] = Tabla_Iluminacion.[Pasillo_desc]
+  CustomText[3] = Tabla_Iluminacion.[Pasillo_ilum]
+Error al vincular expresiones para 'Pasillo': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Pasillo' usando alias base de fila 13.
+Para Pasillo entrada Oficinas (fila 14):
+  CustomText[0] = Tabla_Iluminacion.[Pasillo_entrada_Oficinas]
+  CustomText[1] = Tabla_Iluminacion.[Pasillo_entrada_Oficinas_area]
+  CustomText[2] = Tabla_Iluminacion.[Pasillo_entrada_Oficinas_desc]
+  CustomText[3] = Tabla_Iluminacion.[Pasillo_entrada_Oficinas_ilum]
+Error al vincular expresiones para 'Pasillo entrada Oficinas': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Pasillo entrada Oficinas' usando alias base de fila 14.
+Para Pasillo002 (fila 15):
+  CustomText[0] = Tabla_Iluminacion.[Pasillo002]
+  CustomText[1] = Tabla_Iluminacion.[Pasillo002_area]
+  CustomText[2] = Tabla_Iluminacion.[Pasillo002_desc]
+  CustomText[3] = Tabla_Iluminacion.[Pasillo002_ilum]
+Error al vincular expresiones para 'Pasillo002': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Pasillo002' usando alias base de fila 15.
+Para Pasillo Entrada 2do Piso (fila 16):
+  CustomText[0] = Tabla_Iluminacion.[Pasillo_Entrada_2do_Piso]
+  CustomText[1] = Tabla_Iluminacion.[Pasillo_Entrada_2do_Piso_area]
+  CustomText[2] = Tabla_Iluminacion.[Pasillo_Entrada_2do_Piso_desc]
+  CustomText[3] = Tabla_Iluminacion.[Pasillo_Entrada_2do_Piso_ilum]
+Error al vincular expresiones para 'Pasillo Entrada 2do Piso': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Pasillo Entrada 2do Piso' usando alias base de fila 16.
+Para Gradas 2do Piso (fila 17):
+  CustomText[0] = Tabla_Iluminacion.[Gradas_2do_Piso]
+  CustomText[1] = Tabla_Iluminacion.[Gradas_2do_Piso_area]
+  CustomText[2] = Tabla_Iluminacion.[Gradas_2do_Piso_desc]
+  CustomText[3] = Tabla_Iluminacion.[Gradas_2do_Piso_ilum]
+Error al vincular expresiones para 'Gradas 2do Piso': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Gradas 2do Piso' usando alias base de fila 17.
+Para Jefatura (fila 18):
+  CustomText[0] = Tabla_Iluminacion.[Jefatura]
+  CustomText[1] = Tabla_Iluminacion.[Jefatura_area]
+  CustomText[2] = Tabla_Iluminacion.[Jefatura_desc]
+  CustomText[3] = Tabla_Iluminacion.[Jefatura_ilum]
+Error al vincular expresiones para 'Jefatura': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Jefatura' usando alias base de fila 18.
+Para Sala de Lactancia (fila 19):
+  CustomText[0] = Tabla_Iluminacion.[Sala_de_Lactancia]
+  CustomText[1] = Tabla_Iluminacion.[Sala_de_Lactancia_area]
+  CustomText[2] = Tabla_Iluminacion.[Sala_de_Lactancia_desc]
+  CustomText[3] = Tabla_Iluminacion.[Sala_de_Lactancia_ilum]
+Error al vincular expresiones para 'Sala de Lactancia': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Sala de Lactancia' usando alias base de fila 19.
+Para Boveda (fila 20):
+  CustomText[0] = Tabla_Iluminacion.[Boveda]
+  CustomText[1] = Tabla_Iluminacion.[Boveda_area]
+  CustomText[2] = Tabla_Iluminacion.[Boveda_desc]
+  CustomText[3] = Tabla_Iluminacion.[Boveda_ilum]
+Error al vincular expresiones para 'Boveda': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Boveda' usando alias base de fila 20.
+Para S.S. Funcionarias (fila 21):
+  CustomText[0] = Tabla_Iluminacion.[S_S__Funcionarias]
+  CustomText[1] = Tabla_Iluminacion.[S_S__Funcionarias_area]
+  CustomText[2] = Tabla_Iluminacion.[S_S__Funcionarias_desc]
+  CustomText[3] = Tabla_Iluminacion.[S_S__Funcionarias_ilum]
+Error al vincular expresiones para 'S.S. Funcionarias': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'S.S. Funcionarias' usando alias base de fila 21.
+Para Sala de Espera (fila 22):
+  CustomText[0] = Tabla_Iluminacion.[Sala_de_Espera]
+  CustomText[1] = Tabla_Iluminacion.[Sala_de_Espera_area]
+  CustomText[2] = Tabla_Iluminacion.[Sala_de_Espera_desc]
+  CustomText[3] = Tabla_Iluminacion.[Sala_de_Espera_ilum]
+Error al vincular expresiones para 'Sala de Espera': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Sala de Espera' usando alias base de fila 22.
+Para Pasillo Sala de Lactancia (fila 23):
+  CustomText[0] = Tabla_Iluminacion.[Pasillo_Sala_de_Lactancia]
+  CustomText[1] = Tabla_Iluminacion.[Pasillo_Sala_de_Lactancia_area]
+  CustomText[2] = Tabla_Iluminacion.[Pasillo_Sala_de_Lactancia_desc]
+  CustomText[3] = Tabla_Iluminacion.[Pasillo_Sala_de_Lactancia_ilum]
+Error al vincular expresiones para 'Pasillo Sala de Lactancia': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Pasillo Sala de Lactancia' usando alias base de fila 23.
+Para Pasillo001 (fila 24):
+  CustomText[0] = Tabla_Iluminacion.[Pasillo001]
+  CustomText[1] = Tabla_Iluminacion.[Pasillo001_area]
+  CustomText[2] = Tabla_Iluminacion.[Pasillo001_desc]
+  CustomText[3] = Tabla_Iluminacion.[Pasillo001_ilum]
+Error al vincular expresiones para 'Pasillo001': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Pasillo001' usando alias base de fila 24.
+Para Escalera (fila 25):
+  CustomText[0] = Tabla_Iluminacion.[Escalera]
+  CustomText[1] = Tabla_Iluminacion.[Escalera_area]
+  CustomText[2] = Tabla_Iluminacion.[Escalera_desc]
+  CustomText[3] = Tabla_Iluminacion.[Escalera_ilum]
+Error al vincular expresiones para 'Escalera': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Escalera' usando alias base de fila 25.
+Para Pasillo hacia Escalera (fila 26):
+  CustomText[0] = Tabla_Iluminacion.[Pasillo_hacia_Escalera]
+  CustomText[1] = Tabla_Iluminacion.[Pasillo_hacia_Escalera_area]
+  CustomText[2] = Tabla_Iluminacion.[Pasillo_hacia_Escalera_desc]
+  CustomText[3] = Tabla_Iluminacion.[Pasillo_hacia_Escalera_ilum]
+Error al vincular expresiones para 'Pasillo hacia Escalera': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Pasillo hacia Escalera' usando alias base de fila 26.
+Para Comedor (fila 27):
+  CustomText[0] = Tabla_Iluminacion.[Comedor]
+  CustomText[1] = Tabla_Iluminacion.[Comedor_area]
+  CustomText[2] = Tabla_Iluminacion.[Comedor_desc]
+  CustomText[3] = Tabla_Iluminacion.[Comedor_ilum]
+Error al vincular expresiones para 'Comedor': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Comedor' usando alias base de fila 27.
+Para Cuarto Eléctrico (fila 28):
+  CustomText[0] = Tabla_Iluminacion.[Cuarto_Electrico]
+  CustomText[1] = Tabla_Iluminacion.[Cuarto_Electrico_area]
+  CustomText[2] = Tabla_Iluminacion.[Cuarto_Electrico_desc]
+  CustomText[3] = Tabla_Iluminacion.[Cuarto_Electrico_ilum]
+Error al vincular expresiones para 'Cuarto Eléctrico': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Cuarto Eléctrico' usando alias base de fila 28.
+Para Bodega de Aseo (fila 29):
+  CustomText[0] = Tabla_Iluminacion.[Bodega_de_Aseo]
+  CustomText[1] = Tabla_Iluminacion.[Bodega_de_Aseo_area]
+  CustomText[2] = Tabla_Iluminacion.[Bodega_de_Aseo_desc]
+  CustomText[3] = Tabla_Iluminacion.[Bodega_de_Aseo_ilum]
+Error al vincular expresiones para 'Bodega de Aseo': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Bodega de Aseo' usando alias base de fila 29.
+Para Oficina002 (fila 30):
+  CustomText[0] = Tabla_Iluminacion.[Oficina002]
+  CustomText[1] = Tabla_Iluminacion.[Oficina002_area]
+  CustomText[2] = Tabla_Iluminacion.[Oficina002_desc]
+  CustomText[3] = Tabla_Iluminacion.[Oficina002_ilum]
+Error al vincular expresiones para 'Oficina002': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Oficina002' usando alias base de fila 30.
+Para Oficina001 (fila 31):
+  CustomText[0] = Tabla_Iluminacion.[Oficina001]
+  CustomText[1] = Tabla_Iluminacion.[Oficina001_area]
+  CustomText[2] = Tabla_Iluminacion.[Oficina001_desc]
+  CustomText[3] = Tabla_Iluminacion.[Oficina001_ilum]
+Error al vincular expresiones para 'Oficina001': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Oficina001' usando alias base de fila 31.
+Para Oficina (fila 32):
+  CustomText[0] = Tabla_Iluminacion.[Oficina]
+  CustomText[1] = Tabla_Iluminacion.[Oficina_area]
+  CustomText[2] = Tabla_Iluminacion.[Oficina_desc]
+  CustomText[3] = Tabla_Iluminacion.[Oficina_ilum]
+Error al vincular expresiones para 'Oficina': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Oficina' usando alias base de fila 32.
+Para Pasillo hacia Comedor (fila 33):
+  CustomText[0] = Tabla_Iluminacion.[Pasillo_hacia_Comedor]
+  CustomText[1] = Tabla_Iluminacion.[Pasillo_hacia_Comedor_area]
+  CustomText[2] = Tabla_Iluminacion.[Pasillo_hacia_Comedor_desc]
+  CustomText[3] = Tabla_Iluminacion.[Pasillo_hacia_Comedor_ilum]
+Error al vincular expresiones para 'Pasillo hacia Comedor': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Pasillo hacia Comedor' usando alias base de fila 33.
+Para Caja (fila 34):
+  CustomText[0] = Tabla_Iluminacion.[Caja]
+  CustomText[1] = Tabla_Iluminacion.[Caja_area]
+  CustomText[2] = Tabla_Iluminacion.[Caja_desc]
+  CustomText[3] = Tabla_Iluminacion.[Caja_ilum]
+Error al vincular expresiones para 'Caja': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Caja' usando alias base de fila 34.
+Para Plataforma 1 (fila 35):
+  CustomText[0] = Tabla_Iluminacion.[Plataforma_1]
+  CustomText[1] = Tabla_Iluminacion.[Plataforma_1_area]
+  CustomText[2] = Tabla_Iluminacion.[Plataforma_1_desc]
+  CustomText[3] = Tabla_Iluminacion.[Plataforma_1_ilum]
+Error al vincular expresiones para 'Plataforma 1': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Plataforma 1' usando alias base de fila 35.
+Para Plataforma 2 (fila 36):
+  CustomText[0] = Tabla_Iluminacion.[Plataforma_2]
+  CustomText[1] = Tabla_Iluminacion.[Plataforma_2_area]
+  CustomText[2] = Tabla_Iluminacion.[Plataforma_2_desc]
+  CustomText[3] = Tabla_Iluminacion.[Plataforma_2_ilum]
+Error al vincular expresiones para 'Plataforma 2': {'sclassname': 'class Base::ParserError', 'sErrMsg': 'Failed to parse expression.', 'sfile': '', 'iline': 0, 'sfunction': '', 'swhat': 'Failed to parse expression.', 'btranslatable': False, 'breported': False}
+Etiqueta vinculada creada para 'Plataforma 2' usando alias base de fila 36.
+No se encontraron datos en la tabla para 'Etiquetas001'. Se omite.
+Proceso completado: etiquetas vinculadas con alias y depuración.

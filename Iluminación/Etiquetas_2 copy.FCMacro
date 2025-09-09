@@ -1,0 +1,158 @@
+import FreeCAD
+import FreeCADGui
+import Draft
+import unicodedata
+from PySide2.QtWidgets import QInputDialog
+
+"""
+Macro para generar etiquetas en FreeCAD a partir de una hoja de cálculo.
+Las etiquetas se actualizan dinámicamente según los valores en la hoja y se conectan con una línea líder al centro del rectángulo correspondiente.
+
+Características:
+- Selección de la hoja de cálculo.
+- Identificación automática del número de filas con datos.
+- Creación de etiquetas Draft_Label referenciadas a la tabla.
+- Organización en un subgrupo "Etiquetas" dentro del grupo seleccionado.
+- Conexión de cada etiqueta con una línea líder al centro del rectángulo.
+
+Instrucciones:
+1. Seleccione un grupo en el modelo 3D.
+2. Asegúrese de que la hoja de cálculo tenga datos estructurados.
+3. Ejecute la macro.
+
+Notas:
+- Si la tabla tiene un tamaño indeterminado, la macro detecta la última fila con datos.
+- Si hay errores, revisarlos en la consola de FreeCAD.
+"""
+
+def remove_leading_apostrophe(txt):
+    return txt[1:].strip() if txt.startswith("'") else txt
+
+def remove_accents(txt):
+    s_norm = unicodedata.normalize("NFD", txt)
+    return "".join(c if unicodedata.category(c) != "Mn" else "" for c in s_norm)
+
+def get_last_filled_row(sheet, col="A"):
+    """ Encuentra la última fila con datos en la columna especificada """
+    last_row = 1
+    for i in range(1, 1000):  # Buscar hasta 1000 filas como límite de seguridad
+        try:
+            if sheet.get(f"{col}{i}"):
+                last_row = i
+        except:
+            break  # Si hay error, asumimos que terminamos
+    return last_row
+
+def get_parent_group(obj):
+    return next((p for p in obj.InList if hasattr(p, "Group")), None) if hasattr(obj, "InList") and obj.InList else None
+
+def truncar_ilum(ilum_str):
+    """
+    Convierte 'ilum_str' a float y retorna algo como '100%' (0 decimales).
+    Si falla, deja el texto tal cual.
+    """
+    try:
+        val = float(ilum_str)
+        return f"{val:.0f}%"
+    except:
+        return ilum_str
+
+doc = FreeCAD.ActiveDocument
+if not doc:
+    FreeCAD.Console.PrintMessage("Error: No hay documento activo.\n")
+    raise Exception("No hay documento activo.")
+
+# --- Seleccionar la hoja de cálculo ---
+hojas = [obj for obj in doc.Objects if obj.TypeId == "Spreadsheet::Sheet"]
+if not hojas:
+    FreeCAD.Console.PrintMessage("Error: No hay hojas de cálculo en el documento.\n")
+    raise Exception("No hay hojas de cálculo en el documento.")
+
+nombres_hojas = [h.Label for h in hojas]
+nombre_hoja, ok = QInputDialog.getItem(None, "Seleccionar Hoja de Cálculo", "Seleccione la hoja de cálculo:", nombres_hojas, 0, False)
+if not ok:
+    FreeCAD.Console.PrintMessage("Selección cancelada por el usuario.\n")
+    raise Exception("Selección cancelada por el usuario.")
+
+spreadsheet = next((h for h in hojas if h.Label == nombre_hoja), None)
+if not spreadsheet:
+    FreeCAD.Console.PrintMessage(f"Error: La hoja '{nombre_hoja}' no existe en este documento.\n")
+    raise Exception(f"La hoja '{nombre_hoja}' no existe en este documento.")
+
+FreeCAD.Console.PrintMessage(f"Hoja seleccionada: {spreadsheet.Label}\n")
+
+# --- Leer datos de la hoja ---
+num_filas = get_last_filled_row(spreadsheet, "A")
+FreeCAD.Console.PrintMessage(f"Última fila con datos detectada: {num_filas}\n")
+info_por_recinto = {}
+
+for i in range(2, num_filas + 1):
+    try:
+        rec = str(spreadsheet.get(f"A{i}") or "").strip()
+        if not rec:
+            continue
+        rec_sin_ap = remove_leading_apostrophe(rec)
+        rec_norm = remove_accents(rec_sin_ap)
+        
+        area_val = str(spreadsheet.get(f"B{i}") or "Sin datos")
+        desc_val = str(spreadsheet.get(f"H{i}") or "Sin descripción")
+        ilum_val = truncar_ilum(str(spreadsheet.get(f"O{i}") or "0%"))
+        
+        info_por_recinto[rec_norm] = (area_val, desc_val, ilum_val)
+        FreeCAD.Console.PrintMessage(f"Fila {i}: {rec_sin_ap} -> {info_por_recinto[rec_norm]}\n")
+    except Exception as e:
+        FreeCAD.Console.PrintMessage(f"Error al leer la fila {i}: {str(e)}\n")
+        break
+
+FreeCAD.Console.PrintMessage(f"Se leyeron datos de {len(info_por_recinto)} recintos.\n")
+
+# --- Seleccionar grupo o padre ---
+sel = FreeCADGui.Selection.getSelection()
+if not sel:
+    FreeCAD.Console.PrintMessage("Error: No hay objetos seleccionados.\n")
+    raise Exception("No hay objetos seleccionados.")
+
+grupo = next((obj for obj in sel if hasattr(obj, "Group")), get_parent_group(sel[0]))
+if not grupo or not hasattr(grupo, "Group"):
+    FreeCAD.Console.PrintMessage("Error: No se encontró un grupo válido en la selección.\n")
+    raise Exception("No se encontró un grupo válido en la selección.")
+
+FreeCAD.Console.PrintMessage(f"Grupo identificado: {grupo.Label}\n")
+
+# --- Crear subgrupo "Etiquetas" ---
+subgrupo_label = "Etiquetas"
+subgrupo = next((item for item in grupo.Group if item.Label == subgrupo_label and hasattr(item, "Group")), None)
+if not subgrupo:
+    subgrupo = doc.addObject("App::DocumentObjectGroup", subgrupo_label)
+    grupo.addObject(subgrupo)
+    FreeCAD.Console.PrintMessage(f"Se creó subgrupo '{subgrupo_label}' en '{grupo.Label}'\n")
+
+# --- Crear etiquetas Draft_Label con formato corregido ---
+for rect in grupo.Group or []:
+    if rect == subgrupo:
+        continue
+
+    rect_label = rect.Label.strip()
+    label_sin_ap = remove_leading_apostrophe(rect_label)
+    label_norm = remove_accents(label_sin_ap)
+
+    if label_norm in info_por_recinto:
+        area_val, desc_val, ilum_val = info_por_recinto[label_norm]
+        centro = rect.Shape.BoundBox.Center if hasattr(rect, "Shape") and rect.Shape else rect.Placement.Base
+        posicion = centro.add(FreeCAD.Vector(100, 100, 0))
+
+        etiqueta = Draft.make_label()
+        etiqueta.Label = f"Etiqueta_{label_sin_ap}"
+        etiqueta.CustomText = [label_sin_ap, area_val, desc_val, ilum_val]  # Solo valores, sin encabezados
+        etiqueta.LabelType = "Custom"
+        etiqueta.Placement.Base = posicion
+        etiqueta.ViewObject.FontSize = "200 mm"
+        etiqueta.TargetPoint = centro  # Ajustar líder al centro del rectángulo
+        
+        subgrupo.addObject(etiqueta)
+        FreeCAD.Console.PrintMessage(f"Etiqueta creada para '{rect_label}' con líder en {posicion}\n")
+    else:
+        FreeCAD.Console.PrintMessage(f"No se encontraron datos para '{rect_label}'. Se omite.\n")
+
+doc.recompute()
+FreeCAD.Console.PrintMessage("Proceso finalizado con etiquetas dinámicas y líneas líderes.\n")

@@ -1,0 +1,60 @@
+# Macro: CrearCuboPapercraft.FCMacro
+# Descripcion:
+# Esta macro crea un cubo de 100x100x100 mm con grosor de 0.1 mm (papel)
+# utilizando el SheetMetal Workbench. Agrega dobleces en los 4 lados y despliega
+# el patrón plano (flat pattern) para exportación como papercraft.
+# Fecha: 2025-06-28 - Versión corregida
+# NOTAS:
+# - Requiere SheetMetal Workbench instalado.
+# - Asegúrese de tener un documento nuevo o abierto.
+# - Imprimir DXF o SVG a escala 1:1 para papel.
+
+import FreeCAD as App
+import FreeCADGui as Gui
+import SheetMetalUnfolder, SheetMetalCmd
+import PartDesign, Part
+
+doc = App.ActiveDocument
+if not doc:
+    doc = App.newDocument("Papercraft")
+
+# Crear cuerpo y sketch base
+body = doc.addObject("PartDesign::Body", "BodyPapercraft")
+doc.recompute()
+
+# Crear sketch y mapear a XY_Plane
+sketch = body.newObject("Sketcher::SketchObject", "Sketch")
+sketch.Support = (body.Origin.OriginFeatures[0], [""])  # XY_Plane
+sketch.MapMode = "FlatFace"
+sketch.addRectangle(-50, -50, 50, 50)
+doc.recompute()
+
+# Crear pad como base flange (espesor 0.1 mm)
+pad = body.newObject("PartDesign::Pad", "Pad")
+pad.Profile = sketch
+pad.Length = 0.1
+doc.recompute()
+
+# Convertir en objeto de Sheet Metal base
+SheetMetalCmd.SheetMetalMakeBaseFeature(pad, 0.1, 0.1)
+doc.recompute()
+
+# Buscar aristas externas y aplicar dobleces
+base_obj = doc.getObject("BaseFeature")
+edges = base_obj.Shape.Edges
+for edge in edges:
+    try:
+        SheetMetalCmd.SheetMetalAddBend(edge, 100.0, 0.1, 0.1, 90)
+    except Exception as e:
+        App.Console.PrintError(f"No se pudo agregar doblez: {e}\\n")
+doc.recompute()
+
+# Crear flat pattern
+try:
+    SheetMetalUnfolder.makeUnfold(base_obj)
+    doc.recompute()
+    App.Console.PrintMessage("Cubo papercraft creado correctamente.\\n")
+except Exception as e:
+    App.Console.PrintError(f"No se pudo desplegar el cubo: {e}\\n")
+
+Gui.SendMsgToActiveView("ViewFit")

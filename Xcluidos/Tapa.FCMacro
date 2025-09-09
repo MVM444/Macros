@@ -1,0 +1,67 @@
+import FreeCAD
+import FreeCADGui
+import Part
+
+def colocar_tapa_tomacorrientes(altura_tapa):
+    doc = FreeCAD.ActiveDocument
+
+    # Obtiene el objeto seleccionado
+    selected_objects = FreeCADGui.Selection.getSelection()
+
+    if not selected_objects:
+        FreeCAD.Console.PrintError("No se ha seleccionado ningún objeto.\n")
+        return
+
+    # Verifica si el objeto seleccionado es un grupo
+    if selected_objects[0].TypeId == 'App::DocumentObjectGroup':
+        grupo = selected_objects[0]
+    else:
+        # Si no es un grupo, busca el grupo al que pertenece el objeto
+        for obj in doc.Objects:
+            if obj.TypeId == 'App::DocumentObjectGroup' and selected_objects[0] in obj.Group:
+                grupo = obj
+                break
+        else:
+            FreeCAD.Console.PrintError("El objeto seleccionado no pertenece a ningún grupo.\n")
+            return
+
+    FreeCAD.Console.PrintMessage(f"Grupo seleccionado: {grupo.Name}\n")
+
+    ruta_tapa = "C:/Users/mmfallas/OneDrive - Caja Costarricense de Seguro Social/Documentos/FreeCAD/Macros/Resources/Tapa_de_Tomacorriente-Placa.step"
+
+    for obj in grupo.Group:
+        if "Tomacorriente" in obj.Label:
+            # Cargar el archivo STEP de la tapa
+            try:
+                tapa = Part.read(ruta_tapa)
+                if tapa is None:
+                    FreeCAD.Console.PrintError(f"Error al insertar la tapa para el tomacorriente: {obj.Label}\n")
+                    continue
+                tapa_obj = FreeCAD.ActiveDocument.addObject("Part::Feature", "Tapa_de_" + obj.Name)
+                tapa_obj.Shape = tapa
+            except Exception as e:
+                FreeCAD.Console.PrintError(f"Error al insertar la tapa: {str(e)}\n")
+                continue
+
+            # Ajustar el nombre de la tapa
+            tapa_obj.Label = "Tapa de " + obj.Label
+
+            # Ajustar la posición y orientación de la tapa respecto al tomacorriente
+            tapa_obj.Placement.Base = obj.Placement.Base.add(FreeCAD.Vector(0, 0, altura_tapa))
+            tapa_obj.Placement.Rotation = obj.Placement.Rotation
+
+            # Vincular las propiedades de la tapa a las del tomacorriente utilizando expresiones
+            tapa_obj.setExpression('Placement.Base.x', f'{obj.Name}.Placement.Base.x')
+            tapa_obj.setExpression('Placement.Base.y', f'{obj.Name}.Placement.Base.y')
+            tapa_obj.setExpression('Placement.Base.z', f'{obj.Name}.Placement.Base.z + {altura_tapa}')
+            tapa_obj.setExpression('Placement.Rotation', f'{obj.Name}.Placement.Rotation')
+
+            FreeCAD.Console.PrintMessage(f"Tapa insertada para el tomacorriente: {obj.Label}\n")
+
+    FreeCADGui.activeDocument().activeView().viewAxometric()
+    FreeCADGui.SendMsgToActiveView("ViewFit")
+
+    doc.recompute()
+
+# Ejecuta la función con la altura deseada para la tapa
+colocar_tapa_tomacorrientes(100)

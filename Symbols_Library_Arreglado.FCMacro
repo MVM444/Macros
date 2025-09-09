@@ -1,0 +1,101 @@
+import FreeCAD, FreeCADGui, Part
+from PySide2 import QtGui, QtCore, QtSvg, QtWidgets
+
+param = FreeCAD.ParamGet('User parameter:Plugins/symbols_library')
+s = param.GetString('destination')
+
+if s:
+    LIBRARYPATH = s
+else:
+    folderDialog = QtWidgets.QFileDialog.getExistingDirectory(None, "Location of your existing Symbols library")
+    param.SetString('destination', folderDialog)
+    LIBRARYPATH = param.GetString('destination')
+
+class ExpDockWidget(QtWidgets.QDockWidget):
+    "a library explorer dock widget"
+
+    def __init__(self, LIBRARYPATH):
+        QtWidgets.QDockWidget.__init__(self)
+
+        self.setObjectName("SymbolsLibrary")
+        self.setWindowTitle("Symbols Library")
+
+        # setting up a directory model that shows only svg files
+        self.dirmodel = QtWidgets.QFileSystemModel()
+        self.dirmodel.setRootPath(LIBRARYPATH)
+        self.dirmodel.setNameFilters(["*.svg", "*.SVG"])
+        self.dirmodel.setNameFilterDisables(0)
+
+        container = QtWidgets.QWidget()
+        layout = QtWidgets.QVBoxLayout(container)
+        folder = QtWidgets.QTreeView()
+        folder.setModel(self.dirmodel)
+        folder.clicked[QtCore.QModelIndex].connect(self.clicked)
+        folder.doubleClicked[QtCore.QModelIndex].connect(self.doubleclicked)
+        # Don't show columns for size, file type, and last modified
+        folder.setHeaderHidden(True)
+        folder.hideColumn(1)
+        folder.hideColumn(2)
+        folder.hideColumn(3)
+        folder.setRootIndex(self.dirmodel.index(LIBRARYPATH))
+        layout.addWidget(folder)
+        self.preview = QtSvg.QSvgWidget()
+        self.preview.setFixedHeight(128)
+        self.preview.setFixedWidth(128)
+        layout.addWidget(self.preview)
+        self.configbutton = QtWidgets.QPushButton()
+        self.configbutton.setText("Change path")
+        self.configbutton.clicked.connect(self.changepath)
+        layout.addWidget(self.configbutton)
+        layout.setAlignment(self.preview, QtCore.Qt.AlignHCenter)
+        self.setWidget(container)
+        
+    def clicked(self, index):
+        path = self.dirmodel.filePath(index)
+        if path.lower().endswith(".svg"):
+            self.preview.load(path)
+            self.preview.show()
+            return
+        self.preview.hide()
+        
+    def changepath(self):
+        librarypath = FreeCAD.ParamGet('User parameter:Plugins/symbols_library').GetString('destination', '')
+        np = QtWidgets.QFileDialog.getExistingDirectory(self, "Location of your existing Parts library", librarypath)
+        if np:
+            FreeCAD.ParamGet('User parameter:Plugins/symbols_library').SetString('destination', np)
+
+    def doubleclicked(self, index):
+        path = self.dirmodel.filePath(index)
+        page = None
+        for o in FreeCADGui.Selection.getSelection():
+            if o.isDerivedFrom("Drawing::FeaturePage"):
+                page = o
+                break
+        if not page:
+            for o in FreeCAD.ActiveDocument.Objects:
+                if o.isDerivedFrom("Drawing::FeaturePage"):
+                    page = o
+                    break
+        if page:
+            import Drawing
+            with open(path) as f:
+                svg = f.read()
+            s = FreeCAD.ActiveDocument.addObject('Drawing::FeatureViewSymbol', 'Symbol')
+            s.Symbol = Drawing.removeSvgTags(svg)
+            page.addObject(s)
+            FreeCAD.ActiveDocument.recompute()
+        else:
+            FreeCAD.Console.PrintError("No page found either in the selection or the document")
+
+if QtCore.QDir(LIBRARYPATH).exists():
+    m = FreeCADGui.getMainWindow()
+    w = m.findChild(QtWidgets.QDockWidget, "SymbolsLibrary")
+    if w:
+        if w.isVisible():
+            w.hide()
+        else:
+            w.show()
+    else:
+        m.addDockWidget(QtCore.Qt.RightDockWidgetArea, ExpDockWidget(LIBRARYPATH))
+else:
+    print(f"Symbols library path {LIBRARYPATH} not found.")
