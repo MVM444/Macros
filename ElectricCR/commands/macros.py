@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import sys
 import FreeCAD as App
 import FreeCADGui as Gui
 
@@ -13,6 +14,35 @@ def icon_path(basename: str) -> str:
         if os.path.exists(path):
             return path
     return ""
+
+
+def _run_macro_file(macro_abspath: str):
+    """Execute a .FCMacro (Python) file in the current FreeCAD session."""
+    try:
+        if not os.path.exists(macro_abspath):
+            raise FileNotFoundError(macro_abspath)
+        with open(macro_abspath, 'r', encoding='utf-8', errors='ignore') as f:
+            src = f.read()
+        code = compile(src, macro_abspath, 'exec')
+        # Prepare a globals dict that resembles a macro execution context
+        g = {
+            '__name__': '__main__',
+            '__file__': macro_abspath,
+            'FreeCAD': App,
+            'App': App,
+            'FreeCADGui': Gui,
+            'Gui': Gui,
+            'os': os,
+            'sys': sys,
+        }
+        cwd_prev = os.getcwd()
+        try:
+            os.chdir(os.path.dirname(macro_abspath))
+            exec(code, g, g)
+        finally:
+            os.chdir(cwd_prev)
+    except Exception as e:
+        App.Console.PrintError(f"Error ejecutando macro: {macro_abspath}: {e}\n")
 
 
 def register_macro_command(cmd_name: str, macro_path: str, menu_text: str, tooltip: str = "", icon: str = "") -> str:
@@ -29,10 +59,7 @@ def register_macro_command(cmd_name: str, macro_path: str, menu_text: str, toolt
             }
 
         def Activated(self):
-            try:
-                Gui.runMacro(macro_abspath)
-            except Exception as e:
-                App.Console.PrintError(f"Error ejecutando macro {menu_text}: {e}\n")
+            _run_macro_file(macro_abspath)
 
         def IsActive(self):
             return True
@@ -83,4 +110,3 @@ def register_predefined_macros(base_dir: str):
         groups.append(("Electric • Conectar", con_cmds))
 
     return groups
-
