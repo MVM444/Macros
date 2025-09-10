@@ -2,6 +2,7 @@
 
 import os
 import sys
+import importlib
 import FreeCAD as App
 import FreeCADGui as Gui
 
@@ -12,12 +13,14 @@ def ensure_path_and_load():
         sys.path.append(base_dir)
 
     try:
-        # Al importar, InitGui registra el workbench
-        import ElectricCR.InitGui  # noqa: F401 - registra el workbench al importar
-        App.Console.PrintMessage("ElectricCR: Workbench cargado desde Macros\\ElectricCR\n")
+        # Importar o recargar el módulo para evitar reinicios
+        if 'ElectricCR.InitGui' in sys.modules:
+            importlib.reload(sys.modules['ElectricCR.InitGui'])
+        else:
+            import ElectricCR.InitGui  # noqa: F401
+        App.Console.PrintMessage("ElectricCR: Workbench (re)cargado desde Macros\\ElectricCR\n")
 
-        # Si la GUI está disponible, activar primero Draft para registrar comandos,
-        # y luego activar el workbench ElectricCR.
+        # Activar Draft primero (asegura comandos) y luego ElectricCR
         if App.GuiUp:
             try:
                 Gui.activateWorkbench("DraftWorkbench")
