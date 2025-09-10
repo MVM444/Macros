@@ -12,11 +12,24 @@ def ensure_path_and_load():
         sys.path.append(base_dir)
 
     try:
+        # Al importar, InitGui registra el workbench
         import ElectricCR.InitGui  # noqa: F401 - registra el workbench al importar
         App.Console.PrintMessage("ElectricCR: Workbench cargado desde Macros\\ElectricCR\n")
+
+        # Si la GUI está disponible, activar primero Draft para registrar comandos,
+        # y luego activar el workbench ElectricCR.
+        if App.GuiUp:
+            try:
+                Gui.activateWorkbench("DraftWorkbench")
+            except Exception:
+                pass
+            try:
+                Gui.activateWorkbench("ElectricCRWorkbench")
+                App.Console.PrintMessage("ElectricCR: Workbench activado\n")
+            except Exception as act_err:
+                App.Console.PrintError("ElectricCR: No se pudo activar el workbench: {}\n".format(act_err))
     except Exception as err:
         App.Console.PrintError("ElectricCR: Error cargando el workbench: {}\n".format(err))
 
 
 ensure_path_and_load()
-
