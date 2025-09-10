@@ -129,6 +129,15 @@ def register_predefined_macros(base_dir: str):
             base = "Macro"
         return base
 
+    def _cmd_id(prefix: str, name: str, macro_path: str, icon_path_str: str) -> str:
+        try:
+            mt = os.path.getmtime(macro_path) if os.path.exists(macro_path) else 0
+            it = os.path.getmtime(icon_path_str) if icon_path_str and os.path.exists(icon_path_str) else 0
+            ver = int(max(mt, it))
+        except Exception:
+            ver = 0
+        return f"ElectricCR_{prefix}_{_sanitize_id(name)}_{ver}"
+
     def _register_dir_group(title: str, dirname: str, prefix: str, icon_name: str = ""):
         dir_path = os.path.join(repo_root, dirname)
         if not os.path.isdir(dir_path):
@@ -142,10 +151,10 @@ def register_predefined_macros(base_dir: str):
                 # Skip Windows metadata
                 if os.path.basename(name).lower() == "desktop.ini":
                     continue
-                cmd_id = f"ElectricCR_{prefix}_{_sanitize_id(name)}"
                 label = os.path.splitext(name)[0]
                 # try per-macro icon
                 per_icon = icon_for_macro(dirname, name) or group_icon
+                cmd_id = _cmd_id(prefix, name, macro_path, per_icon)
                 cmd = register_macro_command(cmd_id, macro_path, label, icon=per_icon)
                 if cmd:
                     cmd_ids.append(cmd)
