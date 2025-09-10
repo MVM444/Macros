@@ -16,6 +16,48 @@ def icon_path(basename: str) -> str:
     return ""
 
 
+def icon_for_macro(dirname: str, filename: str) -> str:
+    """Resolve icon for a specific macro by naming convention or header hint.
+
+    Priority:
+    1) icons/<dirname>/<base>.svg|png
+    2) icons/<base>.svg|png
+    3) '# Icon: name.svg' header hint inside macro
+    4) ""
+    """
+    base = os.path.splitext(filename)[0]
+    # 1) subdir icon
+    for candidate in (f"{base}.svg", f"{base}.png"):
+        p = os.path.join(ICONS_DIR, dirname, candidate)
+        if os.path.exists(p):
+            return p
+    # 2) root icon
+    root = icon_path(base)
+    if root:
+        return root
+    # 3) header hint
+    try:
+        macro_path = os.path.join(os.path.abspath(os.path.join(os.path.dirname(os.path.dirname(__file__)), os.pardir)), dirname, filename)
+        with open(macro_path, 'r', encoding='utf-8', errors='ignore') as f:
+            for i in range(12):
+                line = f.readline()
+                if not line:
+                    break
+                if line.strip().lower().startswith('# icon:'):
+                    name = line.split(':', 1)[1].strip()
+                    p = icon_path(name)
+                    if p:
+                        return p
+                    # also try subdir
+                    p2 = os.path.join(ICONS_DIR, dirname, name)
+                    if os.path.exists(p2):
+                        return p2
+                    break
+    except Exception:
+        pass
+    return ""
+
+
 def _run_macro_file(macro_abspath: str):
     """Execute a .FCMacro (Python) file in the current FreeCAD session."""
     try:
@@ -91,7 +133,7 @@ def register_predefined_macros(base_dir: str):
         dir_path = os.path.join(repo_root, dirname)
         if not os.path.isdir(dir_path):
             return
-        icon_file = icon_path(icon_name) if icon_name else ""
+        group_icon = icon_path(icon_name) if icon_name else ""
         cmd_ids = []
         # include both .FCMacro and .py
         for name in sorted(os.listdir(dir_path)):
@@ -102,7 +144,9 @@ def register_predefined_macros(base_dir: str):
                     continue
                 cmd_id = f"ElectricCR_{prefix}_{_sanitize_id(name)}"
                 label = os.path.splitext(name)[0]
-                cmd = register_macro_command(cmd_id, macro_path, label, icon=icon_file)
+                # try per-macro icon
+                per_icon = icon_for_macro(dirname, name) or group_icon
+                cmd = register_macro_command(cmd_id, macro_path, label, icon=per_icon)
                 if cmd:
                     cmd_ids.append(cmd)
         if cmd_ids:

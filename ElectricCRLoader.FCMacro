@@ -13,7 +13,14 @@ def ensure_path_and_load():
         sys.path.append(base_dir)
 
     try:
-        # Importar o recargar el módulo para evitar reinicios
+        # Intentar quitar el workbench si ya existe para forzar reconstrucción
+        try:
+            if "ElectricCRWorkbench" in list(getattr(Gui, 'listWorkbenches')() or {}):
+                getattr(Gui, 'removeWorkbench', lambda *a, **k: None)("ElectricCRWorkbench")
+        except Exception:
+            pass
+
+        # Importar o recargar el módulo
         if 'ElectricCR.InitGui' in sys.modules:
             importlib.reload(sys.modules['ElectricCR.InitGui'])
         else:
