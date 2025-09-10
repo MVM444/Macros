@@ -32,41 +32,9 @@ class ElectricCRWorkbench(Gui.Workbench):
         except Exception:
             pass
 
-        # Lista de comandos Draft comunes
-        draft_commands = [
-            "Draft_SelectPlane",
-            "Draft_Point",
-            "Draft_Line",
-            "Draft_Wire",
-            "Draft_Circle",
-            "Draft_Arc",
-            "Draft_Ellipse",
-            "Draft_Rectangle",
-            "Draft_Polygon",
-            "Draft_Text",
-            "Draft_Dimension",
-            "Draft_Move",
-            "Draft_Rotate",
-            "Draft_Scale",
-            "Draft_Mirror",
-            "Draft_Offset",
-            "Draft_Trimex",
-            "Draft_Join",
-            "Draft_Split",
-            "Draft_Upgrade",
-            "Draft_Downgrade",
-            "Draft_Array",
-            "Draft_PathArray",
-            "Draft_PolarArray",
-            "Draft_Clone",
-            "Draft_Shape2DView",
-            "Draft_Facebinder",
-            "Draft_Edit",
-        ]
-
-        # Filtrar solo los comandos disponibles para evitar "Unknown command"
-        available = set(Gui.listCommands())
-        draft_available = [c for c in draft_commands if c in available]
+        # Detectar dinámicamente todos los comandos Draft disponibles
+        available = list(Gui.listCommands())
+        draft_available = sorted([c for c in available if c.startswith("Draft_")])
 
         # Importar y registrar comandos personalizados
         from .commands.insert_outlet import COMMAND_NAME as INSERT_OUTLET_CMD
