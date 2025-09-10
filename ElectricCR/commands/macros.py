@@ -77,6 +77,37 @@ def register_predefined_macros(base_dir: str):
 
     groups = []
 
+    def _sanitize_id(text: str) -> str:
+        # Build a safe command id: letters, digits, underscore
+        import re
+        base = os.path.splitext(text)[0]
+        base = re.sub(r"[^0-9A-Za-z_]+", "_", base)
+        base = re.sub(r"_+", "_", base).strip("_")
+        if not base:
+            base = "Macro"
+        return base
+
+    def _register_dir_group(title: str, dirname: str, prefix: str, icon_name: str = ""):
+        dir_path = os.path.join(repo_root, dirname)
+        if not os.path.isdir(dir_path):
+            return
+        icon_file = icon_path(icon_name) if icon_name else ""
+        cmd_ids = []
+        # include both .FCMacro and .py
+        for name in sorted(os.listdir(dir_path)):
+            if name.lower().endswith((".fcmacro", ".py")):
+                macro_path = os.path.join(dir_path, name)
+                # Skip Windows metadata
+                if os.path.basename(name).lower() == "desktop.ini":
+                    continue
+                cmd_id = f"ElectricCR_{prefix}_{_sanitize_id(name)}"
+                label = os.path.splitext(name)[0]
+                cmd = register_macro_command(cmd_id, macro_path, label, icon=icon_file)
+                if cmd:
+                    cmd_ids.append(cmd)
+        if cmd_ids:
+            groups.append((title, cmd_ids))
+
     # Tomacorrientes group
     toma_icon = icon_path('tomacorriente')
     tomas = [
@@ -108,5 +139,10 @@ def register_predefined_macros(base_dir: str):
             con_cmds.append(cmd)
     if con_cmds:
         groups.append(("Conectar", con_cmds))
+
+    # Otras carpetas (excluyendo Programación, Respaldos y Xcluidos)
+    _register_dir_group("Áreas", "Areas", prefix="Areas")
+    _register_dir_group("Iluminación", "Iluminación", prefix="Iluminacion")
+    _register_dir_group("Objetos", "Objetos", prefix="Objetos")
 
     return groups
