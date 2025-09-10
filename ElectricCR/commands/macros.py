@@ -92,7 +92,7 @@ def register_predefined_macros(base_dir: str):
         if cmd:
             toma_cmds.append(cmd)
     if toma_cmds:
-        groups.append(("Electric • Tomacorrientes", toma_cmds))
+        groups.append(("Tomacorrientes", toma_cmds))
 
     # Conectar group
     conectar = [
@@ -107,6 +107,6 @@ def register_predefined_macros(base_dir: str):
         if cmd:
             con_cmds.append(cmd)
     if con_cmds:
-        groups.append(("Electric • Conectar", con_cmds))
+        groups.append(("Conectar", con_cmds))
 
     return groups

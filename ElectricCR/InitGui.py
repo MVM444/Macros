@@ -94,5 +94,19 @@ class ElectricCRWorkbench(Gui.Workbench):
         return "Gui::PythonWorkbench"
 
 
-Gui.addWorkbench(ElectricCRWorkbench())
+try:
+    _wb_names = []
+    try:
+        wb_map = Gui.listWorkbenches()
+        if isinstance(wb_map, dict):
+            _wb_names = list(wb_map.keys())
+        else:
+            _wb_names = list(wb_map)
+    except Exception:
+        _wb_names = []
 
+    if "ElectricCRWorkbench" not in _wb_names:
+        Gui.addWorkbench(ElectricCRWorkbench())
+except Exception as _e:
+    # Evitar ruido si ya existe en sesiones de recarga
+    pass
