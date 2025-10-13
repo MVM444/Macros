@@ -1,115 +1,274 @@
+# -*- coding: utf-8 -*-
 """
 Macro: MenuMacrosPersonalizadas
-Descripcion: Crea un menu de macros personalizadas y otro con las 5 macros mas recientes, ordenadas del mas reciente al menos.
+Descripcion: Crea menus de macros personalizadas y recientes.
+- Construye un menu con todas las macros encontradas en MacroPath.
+- Construye un menu con las macros mas recientes (hasta 5 entradas).
+- Actualiza rutas si las macros se movieron a Macros-de-Freecad o Resources.
+- Evita duplicados y omite carpetas temporales.
+
 Autor: ChatGPT
-Fecha: 2025-06-23 09:00
+Fecha: 2025-09-18
 """
 
 import FreeCAD
 import FreeCADGui
 import os
 import json
-from os.path import normpath, abspath
-from PySide2 import QtWidgets
 from functools import partial
+from PySide2 import QtWidgets
 
-# Directorio de macros y fichero para almacenar recien usadas
-raw_dir = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Macro").GetString("MacroPath", "")
-MACRO_DIR = normpath(abspath(raw_dir))
-RECENT_FILE = normpath(abspath(os.path.join(MACRO_DIR, ".macro_recent.json")))
 MAX_RECENT = 5
+_RESOLVE_CACHE = {}
+_SEARCH_PREFIXES = ("", "Macros-de-Freecad", os.path.join("Macros-de-Freecad", "Resources"))
+
+
+def _macro_path_entries():
+    param = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Macro").GetString("MacroPath", "")
+    entries = []
+    if param:
+        sep = ";" if os.name == "nt" else ":"
+        for part in param.split(sep):
+            part = part.strip()
+            if part:
+                full = os.path.normpath(os.path.abspath(part))
+                if full not in entries:
+                    entries.append(full)
+    try:
+        user_dir = FreeCAD.getUserMacroDir()
+    except Exception:
+        user_dir = ""
+    if user_dir:
+        full = os.path.normpath(os.path.abspath(user_dir))
+        if full not in entries:
+            entries.append(full)
+    return entries
+
+
+def _search_roots():
+    roots = []
+    seen = set()
+    for base in _macro_path_entries():
+        for extra in _SEARCH_PREFIXES:
+            candidate = os.path.join(base, extra) if extra else base
+            candidate = os.path.normpath(candidate)
+            if candidate not in seen:
+                roots.append(candidate)
+                seen.add(candidate)
+    return roots
+
+
+def _candidate_relpaths(rel):
+    rel = rel.replace("\\", "/")
+    parts = [p for p in rel.split("/") if p and p != "."]
+    variants = []
+
+    def add(parts_list):
+        if not parts_list:
+            return
+        candidate = os.path.join(*parts_list)
+        if candidate not in variants:
+            variants.append(candidate)
+
+    if parts:
+        add(parts)
+        if parts[0].lower() == "macros-de-freecad":
+            add(parts[1:])
+            add(["Macros-de-Freecad", "Resources"] + parts[1:])
+        else:
+            add(["Macros-de-Freecad"] + parts)
+            add(["Macros-de-Freecad", "Resources"] + parts)
+        if parts[0].lower() == "resources":
+            add(parts[1:])
+        else:
+            add(["Resources"] + parts)
+    return [v for v in variants if v]
+
+
+def _resolve_macro_path(path):
+    if not path:
+        return path
+    norm = os.path.normpath(path)
+    key = os.path.normcase(norm)
+    cached = _RESOLVE_CACHE.get(key)
+    if cached:
+        return cached
+    if os.path.exists(norm):
+        _RESOLVE_CACHE[key] = norm
+        return norm
+    for base in _macro_path_entries():
+        try:
+            rel = os.path.relpath(norm, base)
+        except Exception:
+            continue
+        if rel.startswith(".."):
+            continue
+        for candidate_rel in _candidate_relpaths(rel):
+            candidate = os.path.normpath(os.path.join(base, candidate_rel))
+            if os.path.exists(candidate):
+                _RESOLVE_CACHE[key] = candidate
+                return candidate
+    filename = os.path.basename(norm)
+    for root in _search_roots():
+        if not os.path.isdir(root):
+            continue
+        for dirpath, _, files in os.walk(root):
+            if filename in files:
+                resolved = os.path.normpath(os.path.join(dirpath, filename))
+                _RESOLVE_CACHE[key] = resolved
+                return resolved
+    _RESOLVE_CACHE[key] = norm
+    return norm
+
+
+def _primary_macro_dir():
+    entries = _macro_path_entries()
+    return entries[0] if entries else ""
+
+
+def _recent_file_path():
+    base = _primary_macro_dir()
+    if not base:
+        return ""
+    return os.path.normpath(os.path.join(base, ".macro_recent.json"))
 
 
 def load_recent():
-    """Carga lista de macros recien usadas"""
+    path = _recent_file_path()
+    if not path or not os.path.exists(path):
+        return []
     try:
-        with open(RECENT_FILE, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-        if isinstance(data, list):
-            return data
+        with open(path, "r", encoding="utf-8") as handle:
+            data = json.load(handle)
     except Exception:
-        pass
-    return []
+        return []
+    if not isinstance(data, list):
+        return []
+    resolved = []
+    changed = False
+    for item in data:
+        resolved_item = _resolve_macro_path(item)
+        if resolved_item != item:
+            changed = True
+        if os.path.exists(resolved_item) and resolved_item not in resolved:
+            resolved.append(resolved_item)
+    resolved = resolved[:MAX_RECENT]
+    if changed or len(resolved) != len(data):
+        save_recent(resolved)
+    return resolved
 
 
 def save_recent(lst):
-    """Guarda lista de macros recien usadas"""
+    path = _recent_file_path()
+    if not path:
+        return
     try:
-        with open(RECENT_FILE, 'w', encoding='utf-8') as f:
-            json.dump(lst, f, indent=2)
-    except Exception as e:
-        FreeCAD.Console.PrintError(f"Error guardando recien usadas: {e}\n")
+        with open(path, "w", encoding="utf-8") as handle:
+            json.dump(lst[:MAX_RECENT], handle, indent=2)
+    except Exception as err:
+        FreeCAD.Console.PrintError(f"Error guardando recien usadas: {err}\n")
 
 
 def populate_recent_menu(menu):
-    """Repuebla el menu de macros frecuentes con las más recientes"""
     menu.clear()
-    recent = load_recent()
-    for path in recent:
+    for path in load_recent():
         name = os.path.splitext(os.path.basename(path))[0]
-        act = menu.addAction(name)
-        act.triggered.connect(partial(run_macro, path))
+        action = menu.addAction(name)
+        action.setToolTip(path)
+        action.triggered.connect(partial(run_macro, path))
 
 
 def create_recent_menu(bar):
-    """Crea menu de macros frecuentes y enlaza a aboutToShow"""
     freq = bar.addMenu("Macros Frecuentes")
     freq.aboutToShow.connect(lambda: populate_recent_menu(freq))
 
 
+def _ensure_menu(cache, parts):
+    if not parts:
+        return cache[()]
+    key = tuple(parts)
+    if key in cache:
+        return cache[key]
+    parent = _ensure_menu(cache, parts[:-1])
+    menu = parent.addMenu(parts[-1])
+    cache[key] = menu
+    return menu
+
+
 def create_custom_menu(bar):
-    """Crea menu de macros personalizadas"""
     custom = bar.addMenu("Macros Personalizadas")
-    if not os.path.isdir(MACRO_DIR):
-        FreeCAD.Console.PrintError(f"Directorio de macros no existe: {MACRO_DIR}\n")
+    bases = _macro_path_entries()
+    if not bases:
+        FreeCAD.Console.PrintError("Directorio de macros no existe.\n")
         return
-    for root, dirs, files in os.walk(MACRO_DIR):
-        rel = os.path.relpath(root, MACRO_DIR)
-        macros = [f for f in sorted(files) if f.lower().endswith('.fcmacro')]
-        if not macros:
+    menu_cache = {(): custom}
+    seen = set()
+    primary_base = next((b for b in bases if os.path.isdir(b)), bases[0])
+    primary_norm = os.path.normcase(os.path.abspath(primary_base))
+
+    for base in bases:
+        if not os.path.isdir(base):
             continue
-        submenu = custom if rel in ('.', './') else custom.addMenu(rel)
-        for f in macros:
-            path = normpath(abspath(os.path.join(root, f)))
-            name = os.path.splitext(f)[0]
-            act = submenu.addAction(name)
-            act.triggered.connect(partial(run_macro, path))
-
-
+        base_label = os.path.basename(base.rstrip("\/"))
+        base_tag = base_label or base
+        is_primary = os.path.normcase(os.path.abspath(base)) == primary_norm
+        for root, dirs, files in os.walk(base):
+            dirs[:] = [d for d in dirs if d not in {".git", "__pycache__", ".vscode"}]
+            macro_files = [f for f in files if f.lower().endswith((".fcmacro", ".py"))]
+            if not macro_files:
+                continue
+            rel = os.path.relpath(root, base)
+            rel_parts = [p for p in rel.replace("\\", "/").split("/") if p and p != "."]
+            if is_primary:
+                target_parts = rel_parts
+            else:
+                if rel_parts:
+                    target_parts = [base_tag] + rel_parts
+                else:
+                    target_parts = [base_tag]
+            submenu = _ensure_menu(menu_cache, target_parts)
+            for fname in sorted(macro_files):
+                full = os.path.normpath(os.path.join(root, fname))
+                key = os.path.normcase(full)
+                if key in seen:
+                    continue
+                seen.add(key)
+                label = os.path.splitext(fname)[0]
+                action = submenu.addAction(label)
+                action.setToolTip(full)
+                action.triggered.connect(partial(run_macro, full))
 def recreate_menus():
-    """Elimina y crea ambos menus"""
     mw = FreeCADGui.getMainWindow()
     bar = mw.menuBar()
     for title in ("Macros Frecuentes", "Macros Personalizadas"):
-        for m in bar.findChildren(QtWidgets.QMenu):
-            if m.title() == title:
-                bar.removeAction(m.menuAction())
+        for menu in bar.findChildren(QtWidgets.QMenu):
+            if menu.title() == title:
+                bar.removeAction(menu.menuAction())
     create_recent_menu(bar)
     create_custom_menu(bar)
 
 
 def run_macro(path):
-    """Ejecuta macro y actualiza recien usadas"""
-    path = normpath(abspath(path))
+    target = _resolve_macro_path(path)
+    if not target or not os.path.exists(target):
+        FreeCAD.Console.PrintError(f"No se encontro la macro: {target}\n")
+        return
     recent = load_recent()
-    if path in recent:
-        recent.remove(path)
-    recent.insert(0, path)
-    if len(recent) > MAX_RECENT:
-        recent = recent[:MAX_RECENT]
+    if target in recent:
+        recent.remove(target)
+    recent.insert(0, target)
     save_recent(recent)
     try:
-        with open(path, 'r', encoding='utf-8') as f:
-            exec(f.read(), globals())
-    except Exception as e:
-        FreeCAD.Console.PrintError(f"Error en macro {path}: {e}\n")
-    # actualizar menu inmediato
+        with open(target, "r", encoding="utf-8", errors="ignore") as handle:
+            exec(handle.read(), globals())
+    except Exception as err:
+        FreeCAD.Console.PrintError(f"Error en macro {target}: {err}\n")
     mw = FreeCADGui.getMainWindow()
-    for m in mw.menuBar().findChildren(QtWidgets.QMenu):
-        if m.title() == "Macros Frecuentes":
-            populate_recent_menu(m)
+    for menu in mw.menuBar().findChildren(QtWidgets.QMenu):
+        if menu.title() == "Macros Frecuentes":
+            populate_recent_menu(menu)
             break
 
-# Al iniciar FreeCAD, construir menus
+
 if FreeCAD.GuiUp:
     recreate_menus()

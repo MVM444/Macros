@@ -1,0 +1,7 @@
+Macro NodeJsonExample - chat notes
+2025-09-27T22:51:39Z UTC
+
+Log entries:
+1. User requested a practical example to understand Node JSON usage in FreeCAD for placing switches on a wall.
+2. Assistant acknowledged instructions about asking clarifying questions and noted inability to browse the internet.
+3. Requirement captured: provide a JSON template describing node flow to insert wall switches.

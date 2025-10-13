@@ -1,0 +1,270 @@
+{
+    "id": 5001,
+    "scene_width": 64000,
+    "scene_height": 64000,
+    "nodes": [
+        {
+            "id": 1001,
+            "title": "Wall In",
+            "pos_x": -593.7500000000001,
+            "pos_y": -201.56250000000003,
+            "inputs": [],
+            "outputs": [
+                {
+                    "id": 2001,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 6
+                }
+            ],
+            "content": {
+                "value": "Muro"
+            },
+            "op_code": "<class 'scene_obj_in.ObjectIn'>"
+        },
+        {
+            "id": 1002,
+            "title": "Switch Template",
+            "pos_x": -587.2500000000001,
+            "pos_y": -42.75000000000001,
+            "inputs": [],
+            "outputs": [
+                {
+                    "id": 2002,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 6
+                }
+            ],
+            "content": {
+                "value": "Apagador"
+            },
+            "op_code": "<class 'scene_obj_in.ObjectIn'>"
+        },
+        {
+            "id": 1003,
+            "title": "Spacing (mm)",
+            "pos_x": -600.0,
+            "pos_y": 120.0,
+            "inputs": [],
+            "outputs": [
+                {
+                    "id": 2003,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 6
+                }
+            ],
+            "content": {
+                "value": "1200"
+            },
+            "op_code": "<class 'number_number.Number'>"
+        },
+        {
+            "id": 1004,
+            "title": "Height (mm)",
+            "pos_x": -600.0,
+            "pos_y": 220.0,
+            "inputs": [],
+            "outputs": [
+                {
+                    "id": 2004,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 6
+                }
+            ],
+            "content": {
+                "value": "1100"
+            },
+            "op_code": "<class 'number_number.Number'>"
+        },
+        {
+            "id": 1005,
+            "title": "Edge Offset (mm)",
+            "pos_x": -600.0,
+            "pos_y": 320.0,
+            "inputs": [],
+            "outputs": [
+                {
+                    "id": 2005,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 6
+                }
+            ],
+            "content": {
+                "value": "50"
+            },
+            "op_code": "<class 'number_number.Number'>"
+        },
+        {
+            "id": 1006,
+            "title": "Face Offset (mm)",
+            "pos_x": -600.0,
+            "pos_y": 420.0,
+            "inputs": [],
+            "outputs": [
+                {
+                    "id": 2006,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 6
+                }
+            ],
+            "content": {
+                "value": "10"
+            },
+            "op_code": "<class 'number_number.Number'>"
+        },
+        {
+            "id": 1007,
+            "title": "Wall Side",
+            "pos_x": -600.0,
+            "pos_y": 520.0,
+            "inputs": [],
+            "outputs": [
+                {
+                    "id": 2007,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 6
+                }
+            ],
+            "content": {
+                "value": "Left"
+            },
+            "op_code": "<class 'text_text.Text'>"
+        },
+        {
+            "id": 1008,
+            "title": "Tag Prefix",
+            "pos_x": -600.0,
+            "pos_y": 620.0,
+            "inputs": [],
+            "outputs": [
+                {
+                    "id": 2008,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 6
+                }
+            ],
+            "content": {
+                "value": "Apagador"
+            },
+            "op_code": "<class 'text_text.Text'>"
+        },
+        {
+            "id": 1009,
+            "title": "Group Label",
+            "pos_x": -600.0,
+            "pos_y": 720.0,
+            "inputs": [],
+            "outputs": [
+                {
+                    "id": 2009,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 6
+                }
+            ],
+            "content": {
+                "value": "Apagadores"
+            },
+            "op_code": "<class 'text_text.Text'>"
+        },
+        {
+            "id": 1010,
+            "title": "Place Switch Array",
+            "pos_x": 100.0,
+            "pos_y": 180.0,
+            "inputs": [
+                {
+                    "id": 3001,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 2,
+                    "socket_type": 6
+                }
+            ],
+            "outputs": [
+                {
+                    "id": 2010,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 6
+                }
+            ],
+            "content": {},
+            "op_code": "<class 'script_py_script.PyScript'>",
+            "code_string": "# Node: Place switches along a wall (robust)\n# Entradas esperadas (mismo orden):\n# 0 Wall (ObjectIn: Name/Label o el objeto)\n# 1 Switch template (ObjectIn: Name/Label o el objeto)\n# 2 Spacing mm (Number) | 3 Height mm (Number)\n# 4 Edge Offset mm (Number) | 5 Face Offset mm (Number)\n# 6 Wall Side text (Left/Right/Front/Back o espa\u00f1ol)\n# 7 Tag prefix (Text) | 8 Group label (Text)\n\nimport math\nimport FreeCAD as App\nfrom FreeCAD import Vector\n\ndef log(msg): App.Console.PrintMessage(f\"[SWITCH-ARRAY] {msg}\\n\")\ndef warn(msg): App.Console.PrintWarning(f\"[SWITCH-ARRAY][WARN] {msg}\\n\")\ndef err(msg): App.Console.PrintError(f\"[SWITCH-ARRAY][ERROR] {msg}\\n\")\n\ndef _extract(entries, index, default=None):\n    if index >= len(entries): return default\n    v = entries[index]\n    if isinstance(v, list): return v[0] if v else default\n    return v if v is not None else default\n\ndef _vec(vec):\n    v = Vector(vec); return Vector(float(v.x), float(v.y), float(v.z))\n\ndef _normalized(vec):\n    v = _vec(vec); L = v.Length\n    return Vector(1,0,0) if L==0 else Vector(v.x/L, v.y/L, v.z/L)\n\ndef _scaled(vec, s):\n    v = _vec(vec); return Vector(v.x*s, v.y*s, v.z*s)\n\ndef _translate(vec, dirv, d):\n    return _vec(vec) + _scaled(dirv, d)\n\ndef _resolve_to_obj(doc, maybe_obj):\n    \"\"\"Acepta objeto directo, Name, o Label y devuelve el objeto o None.\"\"\"\n    if maybe_obj is None: return None\n    # Si ya es objeto FreeCAD con Shape/TypeId, lo devolvemos\n    if hasattr(maybe_obj, \"TypeId\") or hasattr(maybe_obj, \"Shape\"):\n        return maybe_obj\n    # Si es string, probar Name y luego Label\n    if isinstance(maybe_obj, str):\n        name = maybe_obj.strip()\n        # 1) Name exacto\n        o = doc.getObject(name)\n        if o: return o\n        # 2) Label exacto\n        for obj in doc.Objects:\n            if getattr(obj, \"Label\", \"\") == name:\n                return obj\n        # 3) Label \u201cempieza con\u201d (por si puso Wall001 pero el Name es distinto)\n        for obj in doc.Objects:\n            if getattr(obj, \"Label\", \"\").startswith(name):\n                return obj\n    return None\n\ntry:\n    input_data = In if isinstance(In, list) else [In]\n\n    wall_in   = _extract(input_data, 0, None)\n    sw_in     = _extract(input_data, 1, None)\n    spacing   = float(_extract(input_data, 2, 1200) or 1200)\n    height    = float(_extract(input_data, 3, 1100) or 1100)\n    off_edge  = float(_extract(input_data, 4, 50) or 50)\n    off_face  = float(_extract(input_data, 5, 0) or 0)\n    side_txt  = str(_extract(input_data, 6, \"Left\") or \"Left\").strip().lower()\n    tag_pref  = str(_extract(input_data, 7, \"Apagador\") or \"Apagador\")\n    group_lbl = str(_extract(input_data, 8, \"Apagadores\") or \"Apagadores\")\n\n    doc = App.ActiveDocument\n    if doc is None:\n        err(\"No hay documento activo.\"); Out = []; raise SystemExit\n\n    # Resolver objetos\n    wall_obj = None\n    if isinstance(wall_in, list) and wall_in: wall_in = wall_in[0]\n    if isinstance(sw_in, list) and sw_in:     sw_in   = sw_in[0]\n\n    wall_obj = _resolve_to_obj(doc, wall_in)\n    sw_obj   = _resolve_to_obj(doc, sw_in)\n\n    if wall_obj is None:\n        err(\"No se pudo resolver el muro (por Name/Label). Revise 'Wall In'.\"); Out=[]\n        raise SystemExit\n    if sw_obj is None:\n        err(\"No se pudo resolver el template (por Name/Label). Revise 'Switch Template'.\"); Out=[]\n        raise SystemExit\n\n    if not hasattr(wall_obj, \"Shape\") or wall_obj.Shape is None:\n        err(\"El muro no tiene Shape v\u00e1lido.\"); Out=[]; raise SystemExit\n\n    shape = wall_obj.Shape\n\n    # Caras verticales\n    vertical_faces = []\n    for face in shape.Faces:\n        try:\n            n = face.normalAt(0.5, 0.5)\n        except Exception:\n            continue\n        if abs(n.z) <= 0.4:  # normal ~ horizontal => cara ~ vertical\n            vertical_faces.append((face, n, face.CenterOfMass))\n    if not vertical_faces:\n        err(\"El muro no tiene caras verticales detectables.\"); Out=[]; raise SystemExit\n\n    # Lado: soportar espa\u00f1ol/ingl\u00e9s\n    s = side_txt\n    if s.startswith((\"r\",\"der\")):     chosen = max(vertical_faces, key=lambda it: it[2].y)  # Right/Derecha\n    elif s.startswith((\"f\",\"fr\")):    chosen = max(vertical_faces, key=lambda it: it[2].x)  # Front/Frente\n    elif s.startswith((\"b\",\"atr\")):   chosen = min(vertical_faces, key=lambda it: it[2].x)  # Back/Atr\u00e1s\n    else:                             chosen = min(vertical_faces, key=lambda it: it[2].y)  # Left/Izquierda\n\n    face, face_n, face_c = chosen\n    face_n = _normalized(face_n)\n\n    # Aristas horizontales en la cara (z ~ constante)\n    horizontal_edges = []\n    for e in face.Edges:\n        vs = [v.Point for v in e.Vertexes]\n        if len(vs) < 2: continue\n        dirv = vs[-1] - vs[0]\n        if dirv.Length == 0: continue\n        if abs(dirv.z) > 0.1: continue  # evitar aristas inclinadas/verticales\n        avgz = sum(p.z for p in vs)/len(vs)\n        horizontal_edges.append((e, avgz))\n    if not horizontal_edges:\n        err(\"La cara elegida no tiene aristas horizontales.\"); Out=[]; raise SystemExit\n\n    # Mejor usar la arista horizontal m\u00e1s larga como base\n    base_edge = max(horizontal_edges, key=lambda item: item[0].Length)[0]\n    edge_length = float(base_edge.Length)\n\n    # Par\u00e1metros saneados\n    spacing  = max(1.0, float(spacing))\n    off_edge = max(0.0, float(off_edge))\n    off_face = max(0.0, float(off_face))\n    height   = max(0.0, float(height))\n\n    if edge_length <= max(1.0, off_edge):\n        err(f\"Arista demasiado corta ({edge_length:.1f} mm) para el offset inicial ({off_edge:.1f} mm).\"); Out=[]\n        raise SystemExit\n\n    # Muestreo del borde\n    sample_step  = max(5.0, min(50.0, spacing/5.0))\n    sample_count = max(10, int(edge_length / sample_step) + 2)\n    samples = base_edge.discretize(sample_count)\n\n    # Distancias acumuladas\n    dists = [0.0]\n    for i in range(1, len(samples)):\n        dists.append(dists[-1] + samples[i-1].distanceToPoint(samples[i]))\n\n    def point_at(d):\n        if d <= 0: return Vector(samples[0])\n        if d >= dists[-1]: return Vector(samples[-1])\n        for i in range(1, len(samples)):\n            d0, d1 = dists[i-1], dists[i]\n            if d <= d1:\n                t = 0.0 if d1==d0 else (d - d0)/(d1 - d0)\n                p0, p1 = Vector(samples[i-1]), Vector(samples[i])\n                return p0 + (p1 - p0)*t\n        return Vector(samples[-1])\n\n    def tangent_at(d):\n        delta = max(10.0, spacing*0.1)\n        p0 = point_at(max(0.0, d - delta))\n        p1 = point_at(min(edge_length, d + delta))\n        t = p1 - p0\n        L = t.Length\n        return Vector(1,0,0) if L==0 else t.multiply(1.0/L)\n\n    min_face_z = min(v.Point.z for v in face.Vertexes)\n\n    # Puntos de colocaci\u00f3n\n    current = off_edge\n    placements = []\n    while current <= edge_length + 0.1:\n        pt = point_at(current)\n        pt.z = min_face_z + height\n        pt = _translate(pt, face_n, off_face)\n        tg = tangent_at(current)\n        placements.append((pt, tg))\n        current += spacing\n\n    log(f\"Muro: {getattr(wall_obj,'Name','?')} | Cara vertical OK | Arista base L={edge_length:.1f} mm\")\n    log(f\"Instancias a crear: {len(placements)} | spacing={spacing} off_edge={off_edge} off_face={off_face} height={height}\")\n\n    # Grupo\n    grp = doc.getObject(group_lbl)\n    if grp is None:\n        grp = doc.addObject(\"App::DocumentObjectGroup\", group_lbl)\n\n    # Borrar solo los previos del prefijo (si existen)\n    prev = [c for c in list(grp.Group) if getattr(c, \"TypeId\",\"\")=='App::Link' and c.Label.startswith(tag_pref)]\n    for lk in prev:\n        grp.removeObject(lk)\n        doc.removeObject(lk.Name)\n\n    created = []\n    for i,(base_pt, tg) in enumerate(placements, start=1):\n        link_name = f\"{tag_pref}_{i:02d}\"\n        link = doc.addObject(\"App::Link\", link_name)\n        link.LinkedObject = sw_obj\n\n        x_axis = _normalized(tg)\n        y_axis = _normalized(face_n)\n        z_axis = x_axis.cross(y_axis)\n        if z_axis.Length == 0:\n            z_axis = Vector(0,0,1)\n        else:\n            z_axis = _normalized(z_axis)\n        y_axis = _normalized(z_axis.cross(x_axis))\n\n        m = App.Matrix()\n        m.A11, m.A12, m.A13 = x_axis.x, y_axis.x, z_axis.x\n        m.A21, m.A22, m.A23 = x_axis.y, y_axis.y, z_axis.y\n        m.A31, m.A32, m.A33 = x_axis.z, y_axis.z, z_axis.z\n        rot = App.Rotation(m)\n        link.Placement = App.Placement(base_pt, rot)\n\n        grp.addObject(link)\n        created.append(link)\n\n    doc.recompute()\n    log(f\"Creado(s) {len(created)} link(s) con prefijo '{tag_pref}' en grupo '{group_lbl}'.\")\n    Out = [created]\n\nexcept SystemExit:\n    pass\nexcept Exception as ex:\n    err(f\"Excepci\u00f3n no controlada: {ex}\")\n    Out = []\n"
+        }
+    ],
+    "edges": [
+        {
+            "id": 4001,
+            "edge_type": 2,
+            "start": 2001,
+            "end": 3001
+        },
+        {
+            "id": 4002,
+            "edge_type": 2,
+            "start": 2002,
+            "end": 3001
+        },
+        {
+            "id": 4003,
+            "edge_type": 2,
+            "start": 2003,
+            "end": 3001
+        },
+        {
+            "id": 4004,
+            "edge_type": 2,
+            "start": 2004,
+            "end": 3001
+        },
+        {
+            "id": 4005,
+            "edge_type": 2,
+            "start": 2005,
+            "end": 3001
+        },
+        {
+            "id": 4006,
+            "edge_type": 2,
+            "start": 2006,
+            "end": 3001
+        },
+        {
+            "id": 4007,
+            "edge_type": 2,
+            "start": 2007,
+            "end": 3001
+        },
+        {
+            "id": 4008,
+            "edge_type": 2,
+            "start": 2008,
+            "end": 3001
+        },
+        {
+            "id": 4009,
+            "edge_type": 2,
+            "start": 2009,
+            "end": 3001
+        }
+    ]
+}

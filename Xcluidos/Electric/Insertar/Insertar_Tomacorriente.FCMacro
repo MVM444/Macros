@@ -1,0 +1,139 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""Insertar_Tomacorriente macro with detailed debugging."""
+
+import FreeCAD as App
+import os
+import types
+import traceback
+
+LOG_TAG = "[ELEC]"
+DEBUG_ENABLED = True
+
+
+def _debug(msg):
+    if DEBUG_ENABLED:
+        App.Console.PrintMessage(f"{LOG_TAG}[DEBUG] {msg}
+")
+
+
+def _info(msg):
+    App.Console.PrintMessage(f"{LOG_TAG}[INFO] {msg}
+")
+
+
+def _warn(msg):
+    App.Console.PrintWarning(f"{LOG_TAG}[WARN] {msg}
+")
+
+
+def _err(msg):
+    App.Console.PrintError(f"{LOG_TAG}[ERROR] {msg}
+")
+
+
+def _candidate_principal_paths():
+    paths = []
+    try:
+        here = os.path.dirname(os.path.abspath(__file__))
+        paths.append(os.path.join(here, "..", "Electric_Principal.FCMacro"))
+        paths.append(os.path.join(here, "Electric_Principal.FCMacro"))
+    except Exception as exc:
+        _debug(f"candidate path error: {exc}")
+    macro_dirs = []
+    try:
+        user_dir = App.getUserMacroDir()
+        if user_dir:
+            macro_dirs.append(user_dir)
+    except Exception as exc:
+        _debug(f"user macro dir error: {exc}")
+    try:
+        sep = ";" if os.name == "nt" else ":"
+        mp = App.ParamGet("User parameter:BaseApp/Preferences/Macro").GetString("MacroPath", "")
+        for entry in mp.split(sep):
+            entry = entry.strip()
+            if entry:
+                macro_dirs.append(entry)
+    except Exception as exc:
+        _debug(f"macro path param error: {exc}")
+    for base in macro_dirs:
+        paths.extend([
+            os.path.join(base, "Electric_Principal.FCMacro"),
+            os.path.join(base, "Electric", "Electric_Principal.FCMacro"),
+            os.path.join(base, "Macros-de-Freecad", "Electric", "Electric_Principal.FCMacro"),
+        ])
+    uniq = []
+    seen = set()
+    for path in paths:
+        ap = os.path.abspath(path)
+        if ap not in seen:
+            seen.add(ap)
+            uniq.append(ap)
+    _debug(f"candidate principal paths: {uniq}")
+    return uniq
+
+
+def _load_module_from_path(path):
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            source = fh.read()
+    except Exception as exc:
+        _err(f"could not read {path}: {exc}")
+        return None
+    module = types.ModuleType("Electric_Principal")
+    module.__file__ = path
+    try:
+        exec(compile(source, path, "exec"), module.__dict__)
+        return module
+    except Exception as exc:
+        _err(f"failed to execute principal at {path}: {exc}
+{traceback.format_exc()}")
+        return None
+
+
+def _load_principal():
+    for path in _candidate_principal_paths():
+        if os.path.exists(path):
+            _debug(f"trying principal {path}")
+            mod = _load_module_from_path(path)
+            if mod is not None:
+                _info(f"cargado principal: {path}")
+                return mod
+        else:
+            _debug(f"path not found: {path}")
+    _err("Electric_Principal.FCMacro no encontrado")
+    return None
+
+
+def insertar_tomacorriente(params=None):
+    _debug(f"insertar_tomacorriente called with params={params}")
+    mod = _load_principal()
+    if mod is None:
+        return None
+    defaults = {
+        "Categoria": "Pared",
+        "Tipo": "Toma",
+        "ModoVisual": "Ambos",
+        "AlturaRel": 300,
+        "MontajePared": "Sobrepuesto",
+        "EtiquetaPlano": "Toma",
+        "CircuitoID": "",
+    }
+    if params:
+        defaults.update(params)
+    _debug(f"final params for factory: {defaults}")
+    try:
+        obj = mod.create_objeto_electromecanico(defaults)
+    except Exception:
+        _err(f"create_objeto_electromecanico raised exception:
+{traceback.format_exc()}")
+        raise
+    if obj is not None:
+        _info(f"insertado {obj.Label}")
+    else:
+        _warn("factory returned None")
+    return obj
+
+
+if __name__ == "__main__":
+    insertar_tomacorriente()

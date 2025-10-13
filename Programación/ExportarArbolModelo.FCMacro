@@ -1,0 +1,266 @@
+# -*- coding: utf-8 -*-
+"""
+===============================================================================
+Macro: ExportarArbolModelo.FCMacro
+Descripcion:
+    - Recorre el arbol del modelo (documento activo) preservando la jerarquia
+      mostrada en el TreeView (grupos, App::Part, Body, subgrupos, links, etc.).
+    - Imprime el resultado en la Report View.
+    - Copia el resultado al portapapeles del sistema.
+
+Uso:
+    - Por defecto exporta desde la seleccion (si hay seleccion). Si no hay
+      seleccion, exporta los RootObjects del documento activo.
+    - Ajustar las banderas de configuracion segun necesidad.
+
+Notas:
+    - Sin tildes ni caracteres especiales en comentarios y cadenas.
+    - Muestra mensajes de depuracion en consola con prefijo [ARBOL].
+    - Evita fallos si claimChildren devuelve ViewProviders convirtiendolos a
+      DocumentObjects cuando sea posible.
+    - Incluye datos basicos: Name, Label, TypeId, Visibilidad, capa si existe.
+
+Version:
+    Se imprime fecha y hora en runtime (zona horaria del sistema).
+===============================================================================
+"""
+
+import FreeCAD as App
+import FreeCADGui as Gui
+import time
+
+# Intentar soporte de Qt para portapapeles (PySide2 o PySide)
+try:
+    from PySide2 import QtGui
+except Exception:
+    try:
+        from PySide import QtGui
+    except Exception:
+        QtGui = None
+
+# -------------------------
+# Configuracion del usuario
+# -------------------------
+EXPORT_FROM_SELECTION_ONLY = False  # True: solo ramas seleccionadas; False: todo el doc si no hay seleccion
+INCLUDE_VISIBILITY = True
+INCLUDE_LAYER = True               # Intenta leer propiedad Layer si existe (Draft/Arch)
+SHOW_TYPE_COMPACT = True           # Usa TypeId corto (parte posterior despues de ':')
+
+# Prefijos visuales ASCII (simples para evitar caracteres raros)
+CHAR_BRANCH = " |_ "
+CHAR_SPACE  = "    "
+CHAR_PIPE   = " |  "
+
+# -------------------------
+# Utilidades de impresion
+# -------------------------
+def log_info(msg):
+    App.Console.PrintMessage("[ARBOL][INFO] " + msg + "\n")
+
+def log_warn(msg):
+    App.Console.PrintWarning("[ARBOL][WARN] " + msg + "\n")
+
+def log_err(msg):
+    App.Console.PrintError("[ARBOL][ERROR] " + msg + "\n")
+
+# -------------------------
+# Funciones de recorrido
+# -------------------------
+def normalize_child_to_obj(node):
+    """
+    Acepta un posible ViewProvider u Object y devuelve un DocumentObject si es posible.
+    """
+    # Algunos claimChildren devuelven ViewProviders con atributo .Object
+    if hasattr(node, "Object"):
+        return node.Object
+    return node
+
+def short_type_id(type_id):
+    """
+    Retorna la parte final del TypeId despues de ':' si SHOW_TYPE_COMPACT esta activo.
+    """
+    if not type_id:
+        return ""
+    if SHOW_TYPE_COMPACT and ":" in type_id:
+        return type_id.rsplit(":", 1)[-1]
+    return type_id
+
+def safe_label(obj):
+    try:
+        return obj.Label
+    except Exception:
+        return getattr(obj, "Name", "<?>")
+
+def safe_name_alpha(obj):
+    """
+    Version similar a tu referencia: solo letras del Name para hacerlo compacto.
+    """
+    name = getattr(obj, "Name", "")
+    return "".join(ch for ch in name if ch.isalpha())
+
+def get_children(doc_obj):
+    """
+    Obtiene los hijos tal como los ve el TreeView usando claimChildren del ViewObject.
+    Devuelve una lista de DocumentObjects (normalizados).
+    """
+    try:
+        vobj = getattr(doc_obj, "ViewObject", None)
+        if vobj and hasattr(vobj, "claimChildren"):
+            raw = vobj.claimChildren()
+            result = []
+            for child in (raw or []):
+                result.append(normalize_child_to_obj(child))
+            return [c for c in result if c is not None]
+    except Exception as exc:
+        log_warn("claimChildren fallo en {}: {}".format(safe_label(doc_obj), exc))
+    return []
+
+def format_info_line(obj):
+    """
+    Arma una linea con los datos principales: Label, {NameAlpha}, [Type], vis, layer
+    """
+    label = safe_label(obj)
+    name_alpha = safe_name_alpha(obj)
+    tpe = short_type_id(getattr(obj, "TypeId", ""))
+    parts = []
+
+    # Etiqueta base
+    parts.append("{} {{{}}}".format(label, name_alpha if name_alpha else "?"))
+
+    # Tipo
+    if tpe:
+        parts.append("[{}]".format(tpe))
+
+    # Visibilidad
+    if INCLUDE_VISIBILITY:
+        vis = False
+        try:
+            vis = bool(obj.ViewObject.Visibility)
+        except Exception:
+            pass
+        parts.append("vis={}".format(int(vis)))
+
+    # Capa (si aplica)
+    if INCLUDE_LAYER:
+        lyr = None
+        # Ensayar propiedades comunes
+        for cand in ("Layer", "Layers", "IfcLayer", "DraftLayer", "LayerGroup"):
+            if hasattr(obj, cand):
+                try:
+                    val = getattr(obj, cand)
+                    if isinstance(val, (list, tuple)):
+                        # Si fueran multiples capas
+                        lyr = ",".join(str(x) for x in val)
+                    else:
+                        lyr = str(val)
+                    break
+                except Exception:
+                    continue
+        if lyr:
+            parts.append("layer={}".format(lyr))
+
+    return " ".join(parts)
+
+def build_tree_lines(objs, baseline=""):
+    """
+    Recorre una lista de objetos y devuelve lineas formateadas de texto.
+    """
+    lines = []
+    objs = [o for o in objs if o is not None]
+    total = len(objs)
+    for idx, obj in enumerate(objs, 1):
+        # Linea de este nodo
+        line = baseline + CHAR_BRANCH + format_info_line(obj)
+        lines.append(line)
+
+        # baseline para hijos
+        if idx == total:
+            next_base = baseline + CHAR_SPACE
+        else:
+            next_base = baseline + CHAR_PIPE
+
+        # Recurse
+        children = get_children(obj)
+        if children:
+            lines.extend(build_tree_lines(children, next_base))
+    return lines
+
+def roots_from_document(doc):
+    """
+    Obtiene las raices visibles en el arbol (RootObjects).
+    """
+    try:
+        return doc.RootObjects
+    except Exception:
+        # Fallback: todo el documento (menos ocultos especiales)
+        log_warn("RootObjects no disponible, usando doc.Objects como fallback")
+        return [o for o in doc.Objects if hasattr(o, "ViewObject")]
+
+# -------------------------
+# Ejecucion principal
+# -------------------------
+def main():
+    t0 = time.time()
+    doc = App.ActiveDocument
+    if not doc:
+        log_err("No hay documento activo")
+        return
+
+    log_info("Inicio macro ExportarArbolModelo - {}".format(time.strftime("%Y-%m-%d %H:%M:%S")))
+    log_info("Documento: {}".format(doc.Name))
+
+    sel = Gui.Selection.getSelection()
+    sources = []
+
+    if sel:
+        log_info("Se detecto seleccion: {} objeto(s).".format(len(sel)))
+        sources = sel
+    elif not EXPORT_FROM_SELECTION_ONLY:
+        roots = roots_from_document(doc)
+        log_info("Usando RootObjects: {} objeto(s).".format(len(roots)))
+        sources = roots
+    else:
+        log_warn("No hay seleccion y EXPORT_FROM_SELECTION_ONLY=True. Nada que exportar.")
+        return
+
+    lines = build_tree_lines(sources, baseline="")
+    header = []
+    header.append("Arbol del modelo - doc='{}' - fecha_hora='{}'".format(doc.Name, time.strftime("%Y-%m-%d %H:%M:%S")))
+    header.append("Total lineas: {}".format(len(lines)))
+    header.append("-" * 60)
+
+    out_text = "\n".join(header + lines) + "\n"
+
+    # Imprimir en Report View
+    App.Console.PrintMessage(out_text)
+
+    # Copiar al portapapeles si es posible
+    copied = False
+    if QtGui is not None:
+        try:
+            cb = QtGui.QGuiApplication.clipboard()
+        except Exception:
+            # Algunas versiones usan QApplication
+            try:
+                cb = QtGui.QApplication.clipboard()
+            except Exception:
+                cb = None
+        if cb:
+            cb.setText(out_text)
+            copied = True
+
+    if copied:
+        log_info("Resultado copiado al portapapeles.")
+    else:
+        log_warn("No se pudo copiar al portapapeles. QtGui no disponible o clipboard no accesible.")
+
+    dt = time.time() - t0
+    log_info("Fin macro. Tiempo: {:.3f} s".format(dt))
+
+# Ejecutar
+if __name__ == "__main__":
+    try:
+        main()
+    except Exception as e:
+        log_err("Excepcion no controlada: {}".format(e))
+        raise

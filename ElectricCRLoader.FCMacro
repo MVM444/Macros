@@ -7,27 +7,99 @@ import FreeCAD as App
 import FreeCADGui as Gui
 
 
-def ensure_path_and_load():
-    base_dir = os.path.dirname(__file__)
-    if base_dir not in sys.path:
-        sys.path.append(base_dir)
-
+def _macro_path_entries():
     try:
-        # Intentar quitar el workbench si ya existe para forzar reconstrucción
+        param = App.ParamGet("User parameter:BaseApp/Preferences/Macro").GetString("MacroPath", "")
+    except Exception:
+        param = ""
+    entries = []
+    if param:
+        sep = ";" if os.name == "nt" else ":"
+        for part in param.split(sep):
+            part = part.strip()
+            if part:
+                full = os.path.normpath(os.path.abspath(part))
+                if full not in entries:
+                    entries.append(full)
+    default = os.path.dirname(__file__)
+    if default not in entries:
+        entries.insert(0, default)
+    try:
+        user_dir = App.getUserAppDataDir()
+        if user_dir:
+            macro_dir = os.path.join(user_dir, "Macro")
+            macro_dir = os.path.normpath(os.path.abspath(macro_dir))
+            if os.path.isdir(macro_dir) and macro_dir not in entries:
+                entries.append(macro_dir)
+    except Exception:
+        pass
+    return entries
+
+
+def _candidate_roots():
+    roots = []
+    seen = set()
+    for base in _macro_path_entries():
+        for extra in ("", "Macros-de-Freecad", os.path.join("Macros-de-Freecad", "Resources")):
+            root = os.path.join(base, extra) if extra else base
+            root = os.path.normpath(root)
+            if root not in seen and os.path.isdir(root):
+                roots.append(root)
+                seen.add(root)
+    return roots
+
+
+def _find_package_root():
+    candidates = []
+    for root in _candidate_roots():
+        pkg = os.path.join(root, "ElectricCR")
+        if os.path.isdir(pkg) and os.path.exists(os.path.join(pkg, "InitGui.py")):
+            candidates.append(root)
+    if candidates:
+        return candidates[0]
+    for root in _candidate_roots():
+        for dirpath, dirnames, filenames in os.walk(root):
+            if "InitGui.py" in filenames and os.path.basename(dirpath) == "ElectricCR":
+                return os.path.dirname(dirpath)
+    return None
+
+
+def _ensure_sys_path(path):
+    if not path:
+        return
+    norm = os.path.normpath(path)
+    if norm not in sys.path:
+        sys.path.insert(0, norm)
+
+
+def _purge_modules():
+    for name in list(sys.modules.keys()):
+        if name == "ElectricCR" or name.startswith("ElectricCR."):
+            sys.modules.pop(name, None)
+
+
+def ensure_path_and_load():
+    try:
+        pkg_root = _find_package_root()
+        if pkg_root:
+            _ensure_sys_path(pkg_root)
+        else:
+            App.Console.PrintError("ElectricCR: no se encontro la carpeta del workbench.\n")
+            return
+
+        _purge_modules()
+        importlib.invalidate_caches()
+
         try:
             if "ElectricCRWorkbench" in list(getattr(Gui, 'listWorkbenches')() or {}):
                 getattr(Gui, 'removeWorkbench', lambda *a, **k: None)("ElectricCRWorkbench")
         except Exception:
             pass
 
-        # Importar o recargar el módulo
-        if 'ElectricCR.InitGui' in sys.modules:
-            importlib.reload(sys.modules['ElectricCR.InitGui'])
-        else:
-            import ElectricCR.InitGui  # noqa: F401
-        App.Console.PrintMessage("ElectricCR: Workbench (re)cargado desde Macros\\ElectricCR\n")
+        module = importlib.import_module('ElectricCR.InitGui')
+        importlib.reload(module)
+        App.Console.PrintMessage(f"ElectricCR: Workbench recargado desde {module.__file__}\n")
 
-        # Activar Draft primero (asegura comandos) y luego ElectricCR
         if App.GuiUp:
             try:
                 Gui.activateWorkbench("DraftWorkbench")

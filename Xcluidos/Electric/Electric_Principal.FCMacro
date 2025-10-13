@@ -1,0 +1,644 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""Electric Principal macro implementing ObjetoElectromecanico MVP with verbose debugging."""
+
+import FreeCAD as App
+import FreeCADGui as Gui
+import Part
+import os
+import uuid
+import traceback
+
+LOG_TAG = "[ELEC]"
+SCHEMA_VERSION = "2025-09-18T12:30Z"
+PROTO_GROUP_PATH = ["electrico", "_lib"]
+PROTO2D_LABEL = "ProtoToma2D"
+PROTO3D_LABEL = "ProtoToma3D"
+DEBUG_ENABLED = True
+
+
+def _debug(msg):
+    if DEBUG_ENABLED:
+        App.Console.PrintMessage(f"{LOG_TAG}[DEBUG] {msg}\n")
+
+
+def _info(msg):
+    App.Console.PrintMessage(f"{LOG_TAG}[INFO] {msg}\n")
+
+
+def _warn(msg):
+    App.Console.PrintWarning(f"{LOG_TAG}[WARN] {msg}\n")
+
+
+def _err(msg):
+    App.Console.PrintError(f"{LOG_TAG}[ERROR] {msg}\n")
+
+
+def _resource_dirs():
+
+():
+    dirs = []
+    try:
+        here = os.path.dirname(os.path.abspath(__file__))
+        dirs.append(os.path.join(here, "Resources"))
+        dirs.append(os.path.join(here, "..", "Resources"))
+    except Exception:
+        pass
+    try:
+        udir = App.getUserMacroDir()
+        if udir:
+            dirs.append(os.path.join(udir, "Resources"))
+    except Exception:
+        pass
+    try:
+        sep = ";" if os.name == "nt" else ":"
+        mp = App.ParamGet("User parameter:BaseApp/Preferences/Macro").GetString("MacroPath", "")
+        for entry in mp.split(sep):
+            entry = entry.strip()
+            if entry:
+                dirs.append(os.path.join(entry, "Resources"))
+    except Exception:
+        pass
+    out = []
+    seen = set()
+    for d in dirs:
+        ad = os.path.abspath(d)
+        if ad not in seen:
+            seen.add(ad)
+            out.append(ad)
+    _debug(f"resource dirs -> {out}")
+    return out
+
+
+def _find_resource_files():
+    candidates2d = ("toma_2d.step", "SimboloToma.step")
+    candidates3d = ("toma_3d.step", "tomacorriente-3D.step")
+    for d in _resource_dirs():
+        for c2 in candidates2d:
+            path2 = os.path.join(d, c2)
+            if not os.path.exists(path2):
+                continue
+            for c3 in candidates3d:
+                path3 = os.path.join(d, c3)
+                if os.path.exists(path3):
+                    _debug(f"resources found at {d}")
+                    return path2, path3
+    _debug("no STEP resources found, will use placeholders")
+    return None, None
+
+
+def _ensure_group_path(doc, names):
+    parent = None
+    current = None
+    for label in names:
+        found = None
+        pool = doc.Objects if parent is None else getattr(parent, "Group", [])
+        for obj in pool:
+            if obj.Label == label and obj.TypeId in ("App::DocumentObjectGroup", "App::Part"):
+                found = obj
+                break
+        if found is None:
+            found = doc.addObject("App::DocumentObjectGroup", label)
+            _debug(f"created group '{label}'")
+            if parent is not None:
+                try:
+                    parent.addObject(found)
+                except Exception:
+                    g = list(getattr(parent, "Group", []))
+                    g.append(found)
+                    parent.Group = g
+        hide = label.startswith("_")
+        try:
+            found.ViewObject.ShowInTree = not hide
+        except Exception:
+            pass
+        parent = found
+        current = found
+    return current
+
+
+def _ensure_library(doc):
+    return _ensure_group_path(doc, PROTO_GROUP_PATH)
+
+
+def _hide_library(doc):
+    lib = _ensure_library(doc)
+    try:
+        lib.ViewObject.ShowInTree = False
+        lib.ViewObject.Visibility = False
+    except Exception:
+        pass
+
+
+def _make_placeholder_2d(doc, label):
+    pts = [
+        App.Vector(-10, -6, 0),
+        App.Vector(10, -6, 0),
+        App.Vector(10, 6, 0),
+        App.Vector(-10, 6, 0),
+        App.Vector(-10, -6, 0),
+    ]
+    wire = Part.makePolygon(pts)
+    obj = doc.addObject("Part::Feature", label)
+    obj.Shape = wire
+    return obj
+
+
+def _make_placeholder_3d(doc, label):
+    shape = Part.makeBox(40, 25, 20)
+    obj = doc.addObject("Part::Feature", label)
+    obj.Shape = shape
+    return obj
+
+
+def _make_child_from_step(doc, label, path):
+    try:
+        shape = Part.Shape()
+        shape.read(path)
+        obj = doc.addObject("Part::Feature", label)
+        obj.Shape = shape
+        return obj
+    except Exception as exc:
+        _warn(f"STEP load failed for {label}: {exc}")
+        return None
+
+
+def _get_or_create_prototypes(doc):
+    lib = _ensure_library(doc)
+    proto2d = None
+    proto3d = None
+    for child in getattr(lib, "Group", []):
+        if child.Label == PROTO2D_LABEL:
+            proto2d = child
+        elif child.Label == PROTO3D_LABEL:
+            proto3d = child
+    path2, path3 = _find_resource_files()
+    if proto2d is None:
+        proto2d = _make_child_from_step(doc, PROTO2D_LABEL, path2) if path2 else _make_placeholder_2d(doc, PROTO2D_LABEL)
+        if proto2d is not None:
+            try:
+                lib.addObject(proto2d)
+            except Exception:
+                g = list(getattr(lib, "Group", []))
+                g.append(proto2d)
+                lib.Group = g
+            try:
+                proto2d.ViewObject.ShowInTree = False
+                proto2d.ViewObject.Visibility = False
+            except Exception:
+                pass
+            _debug("prototype 2D created")
+    if proto3d is None:
+        proto3d = _make_child_from_step(doc, PROTO3D_LABEL, path3) if path3 else _make_placeholder_3d(doc, PROTO3D_LABEL)
+        if proto3d is not None:
+            try:
+                lib.addObject(proto3d)
+            except Exception:
+                g = list(getattr(lib, "Group", []))
+                g.append(proto3d)
+                lib.Group = g
+            try:
+                proto3d.ViewObject.ShowInTree = False
+                proto3d.ViewObject.Visibility = False
+            except Exception:
+                pass
+            _debug("prototype 3D created")
+    return proto2d, proto3d
+
+
+def _rotation_from_axes(x_axis, y_axis, z_axis):
+    m = App.Matrix()
+    m.A11 = x_axis.x
+    m.A12 = y_axis.x
+    m.A13 = z_axis.x
+    m.A21 = x_axis.y
+    m.A22 = y_axis.y
+    m.A23 = z_axis.y
+    m.A31 = x_axis.z
+    m.A32 = y_axis.z
+    m.A33 = z_axis.z
+    return App.Rotation(m)
+
+
+def _rotation_from_normal(normal):
+    n = App.Vector(normal)
+    if n.Length == 0:
+        return App.Rotation()
+    n.normalize()
+    up = App.Vector(0, 0, 1)
+    if abs(n.dot(up)) > 0.95:
+        up = App.Vector(0, 1, 0)
+    y_axis = up - n.multiply(up.dot(n))
+    if y_axis.Length < 1e-6:
+        y_axis = App.Vector(1, 0, 0)
+    y_axis.normalize()
+    x_axis = y_axis.cross(n)
+    if x_axis.Length < 1e-6:
+        x_axis = App.Vector(1, 0, 0)
+    x_axis.normalize()
+    y_axis = n.cross(x_axis)
+    y_axis.normalize()
+    return _rotation_from_axes(x_axis, y_axis, n)
+
+
+def _rotation_from_tangent(tangent):
+    t = App.Vector(tangent)
+    if t.Length == 0:
+        return App.Rotation()
+    t.normalize()
+    up = App.Vector(0, 0, 1)
+    z_axis = up
+    x_axis = t - up.multiply(t.dot(up))
+    if x_axis.Length < 1e-6:
+        x_axis = App.Vector(1, 0, 0)
+    x_axis.normalize()
+    y_axis = z_axis.cross(x_axis)
+    if y_axis.Length < 1e-6:
+        y_axis = App.Vector(0, 1, 0)
+    y_axis.normalize()
+    return _rotation_from_axes(x_axis, y_axis, z_axis)
+
+
+def _attach_by_selection(obj):
+    if not App.GuiUp:
+        _debug("no GUI, skipping selection attach")
+        return False
+    sel = Gui.Selection.getSelectionEx()
+    if not sel:
+        return False
+    target = None
+    for item in sel:
+        if item.HasSubObjects and item.SubObjects:
+            target = item.SubObjects[0]
+            break
+    if target is None:
+        return False
+    base = App.Vector(0, 0, 0)
+    try:
+        if hasattr(target, "CenterOfMass"):
+            base = target.CenterOfMass
+        elif hasattr(target, "Point"):
+            base = target.Point
+        else:
+            base = target.valueAt(0.5)
+    except Exception:
+        pass
+    rot = None
+    if isinstance(target, Part.Face):
+        try:
+            rot = _rotation_from_normal(target.normalAt(0.5, 0.5))
+        except Exception as exc:
+            _warn(f"face normal failed: {exc}")
+    if rot is None:
+        try:
+            par = 0.5
+            if hasattr(target, "FirstParameter") and hasattr(target, "LastParameter"):
+                par = 0.5 * (target.FirstParameter + target.LastParameter)
+            if hasattr(target, "tangentAt"):
+                tan = target.tangentAt(par)
+                rot = _rotation_from_tangent(tan)
+        except Exception:
+            rot = App.Rotation()
+    obj.Placement = App.Placement(base, rot or App.Rotation())
+    _debug(f"attached by selection base={base} rotation={obj.Placement.Rotation}")
+    return True
+
+
+def _children(obj):
+    return list(getattr(obj, "Group", []))
+
+
+def _child_by_label(obj, label):
+    for child in _children(obj):
+        if child.Label == label:
+            return child
+    return None
+
+
+def _next_label(group, prefix):
+    existing = {child.Label for child in getattr(group, "Group", [])}
+    idx = 1
+    while True:
+        label = f"{prefix} {idx:02d}"
+        if label not in existing:
+            return label
+        idx += 1
+
+
+class ObjetoElectromecanicoProxy:
+    __slots__ = ("_doc_name", "_object_name", "_updating")
+
+    def __init__(self, obj):
+        self._doc_name = obj.Document.Name if obj.Document else None
+        self._object_name = obj.Name
+        self._updating = False
+        self._ensure_properties(obj)
+        obj.Proxy = self
+        _debug(f"proxy created for {obj.Name}")
+
+    def _object(self):
+        if not self._doc_name or not self._object_name:
+            return None
+        doc = App.getDocument(self._doc_name)
+        if doc is None:
+            return None
+        return doc.getObject(self._object_name)
+
+    def _ensure_properties(self, obj):
+        grp = "ObjetoElectromecanico"
+        props = set(obj.PropertiesList)
+        if "Placement" not in props or not hasattr(obj, "Placement"):
+            try:
+                obj.addProperty("App::PropertyPlacement", "Placement", "Base", "Placement base")
+            except Exception:
+                pass
+        if not hasattr(obj, "Placement"):
+            try:
+                obj.Placement = App.Placement()
+            except Exception:
+                _warn(f"{obj.Name} missing Placement property")
+        if "Categoria" not in props:
+            obj.addProperty("App::PropertyString", "Categoria", grp, "Categoria logica")
+        if not getattr(obj, "Categoria", ""):
+            obj.Categoria = "Pared"
+        if "Tipo" not in props:
+            obj.addProperty("App::PropertyString", "Tipo", grp, "Tipo base")
+        if not getattr(obj, "Tipo", ""):
+            obj.Tipo = "Toma"
+        if "ModoVisual" not in props:
+            obj.addProperty("App::PropertyEnumeration", "ModoVisual", grp, "Control de visibilidad")
+            obj.ModoVisual = ["Ambos", "Solo2D", "Solo3D"]
+        if isinstance(getattr(obj, "ModoVisual", None), list) or str(obj.ModoVisual) not in ("Ambos", "Solo2D", "Solo3D"):
+            obj.ModoVisual = "Ambos"
+        if "NivelRef" not in props:
+            obj.addProperty("App::PropertyString", "NivelRef", grp, "Nivel de referencia")
+        if not getattr(obj, "NivelRef", ""):
+            obj.NivelRef = "Nivel_01"
+        if "AlturaRel" not in props:
+            obj.addProperty("App::PropertyLength", "AlturaRel", grp, "Altura relativa al nivel")
+            obj.AlturaRel = 900
+        if "Giro" not in props:
+            obj.addProperty("App::PropertyAngle", "Giro", grp, "Giro en grados")
+            obj.Giro = 0.0
+        if "OffsetX" not in props:
+            obj.addProperty("App::PropertyLength", "OffsetX", grp, "Desplazamiento local X")
+            obj.OffsetX = 0
+        if "OffsetY" not in props:
+            obj.addProperty("App::PropertyLength", "OffsetY", grp, "Desplazamiento local Y")
+            obj.OffsetY = 0
+        if "MontajePared" not in props:
+            obj.addProperty("App::PropertyEnumeration", "MontajePared", grp, "Modo de montaje")
+            obj.MontajePared = ["Sobrepuesto", "Empotrado"]
+        if isinstance(getattr(obj, "MontajePared", None), list) or str(obj.MontajePared) not in ("Sobrepuesto", "Empotrado"):
+            obj.MontajePared = "Sobrepuesto"
+        if "SeparacionPared" not in props:
+            obj.addProperty("App::PropertyLength", "SeparacionPared", grp, "Distancia sobrepuesto")
+            obj.SeparacionPared = 0
+        if "ProfundidadEmpotrar" not in props:
+            obj.addProperty("App::PropertyLength", "ProfundidadEmpotrar", grp, "Profundidad empotrar")
+            obj.ProfundidadEmpotrar = 25
+        if "EtiquetaPlano" not in props:
+            obj.addProperty("App::PropertyString", "EtiquetaPlano", grp, "Etiqueta para planos")
+        if not getattr(obj, "EtiquetaPlano", ""):
+            obj.EtiquetaPlano = "Toma"
+        if "CircuitoID" not in props:
+            obj.addProperty("App::PropertyString", "CircuitoID", grp, "Identificador de circuito")
+        if "UUID" not in props:
+            obj.addProperty("App::PropertyString", "UUID", grp, "Identificador unico")
+            obj.UUID = str(uuid.uuid4())
+        if "SchemaVersion" not in props:
+            obj.addProperty("App::PropertyString", "SchemaVersion", grp, "Version interna")
+        obj.SchemaVersion = SCHEMA_VERSION
+        if "Link2DName" not in props:
+            obj.addProperty("App::PropertyString", "Link2DName", grp, "Nombre del link 2D")
+            obj.Link2DName = "Link2D"
+        if "Link3DName" not in props:
+            obj.addProperty("App::PropertyString", "Link3DName", grp, "Nombre del link 3D")
+            obj.Link3DName = "Link3D"
+        if "RefPlacement" not in props or not hasattr(obj, "RefPlacement"):
+            try:
+                obj.addProperty("App::PropertyPlacement", "RefPlacement", grp, "Colocacion base interna")
+            except Exception:
+                pass
+            try:
+                obj.RefPlacement = App.Placement()
+            except Exception:
+                _warn(f"{obj.Name} could not set RefPlacement")
+        try:
+            obj.setEditorMode("UUID", 1)
+            obj.setEditorMode("SchemaVersion", 1)
+            obj.setEditorMode("RefPlacement", 1)
+        except Exception:
+            pass
+
+    def __getstate__(self):
+        return {"schema": SCHEMA_VERSION, "doc": self._doc_name, "obj": self._object_name}
+
+    def __setstate__(self, state):
+        self._doc_name = state.get("doc")
+        self._object_name = state.get("obj")
+        self._updating = False
+
+    def onDocumentRestored(self, obj):
+        self._doc_name = obj.Document.Name if obj.Document else None
+        self._object_name = obj.Name
+        self._updating = False
+        self._ensure_properties(obj)
+
+    def onChanged(self, obj, prop):
+        if self._updating:
+            return
+        if prop in {
+            "ModoVisual",
+            "MontajePared",
+            "SeparacionPared",
+            "ProfundidadEmpotrar",
+            "AlturaRel",
+            "Giro",
+            "OffsetX",
+            "OffsetY",
+            "RefPlacement",
+            "Placement",
+        }:
+            _debug(f"onChanged triggered by {prop}")
+            self.apply_all()
+
+    def execute(self, obj):
+        _debug("execute called")
+        self.apply_all()
+
+    def apply_all(self):
+        obj = self._object()
+        if obj is None or self._updating:
+            _warn("apply_all skipped: object missing or already updating")
+            return
+        self._object_name = obj.Name
+        self._doc_name = obj.Document.Name if obj.Document else self._doc_name
+        self._updating = True
+        _debug(f"apply_all start for {obj.Name}")
+        try:
+            link2d, link3d = self._ensure_links(obj)
+            self._update_editor_modes(obj)
+            self._update_parent_transform(obj)
+            self._update_children(obj, link2d, link3d)
+            self._update_visibility(obj, link2d, link3d)
+        except Exception:
+            _err(f"apply_all exception: {traceback.format_exc()}")
+        finally:
+            self._updating = False
+            _debug("apply_all end")
+
+    def _ensure_links(self, obj):
+        doc = obj.Document
+        if doc is None:
+            _warn("_ensure_links: document is None")
+            return None, None
+        proto2d, proto3d = _get_or_create_prototypes(doc)
+        link2d = _child_by_label(obj, getattr(obj, "Link2DName", "Link2D"))
+        if link2d is None:
+            link2d = doc.addObject("App::Link")
+            link2d.Label = f"{obj.Label}_2D"
+            obj.Link2DName = link2d.Label
+            try:
+                obj.addObject(link2d)
+            except Exception:
+                g = list(getattr(obj, "Group", []))
+                g.append(link2d)
+                obj.Group = g
+            _debug("link2d created")
+        if link2d.LinkedObject != proto2d:
+            link2d.LinkedObject = proto2d
+            _debug("link2d linked to prototype")
+        link3d = _child_by_label(obj, getattr(obj, "Link3DName", "Link3D"))
+        if link3d is None:
+            link3d = doc.addObject("App::Link")
+            link3d.Label = f"{obj.Label}_3D"
+            obj.Link3DName = link3d.Label
+            try:
+                obj.addObject(link3d)
+            except Exception:
+                g = list(getattr(obj, "Group", []))
+                g.append(link3d)
+                obj.Group = g
+            _debug("link3d created")
+        if link3d.LinkedObject != proto3d:
+            link3d.LinkedObject = proto3d
+            _debug("link3d linked to prototype")
+        for link in (link2d, link3d):
+            if link is None:
+                continue
+            try:
+                link.ViewObject.ShowInTree = False
+                link.ViewObject.Visibility = True
+            except Exception:
+                pass
+        return link2d, link3d
+
+    def _update_editor_modes(self, obj):
+        montaje = str(getattr(obj, "MontajePared", "Sobrepuesto") or "Sobrepuesto")
+        try:
+            if montaje == "Sobrepuesto":
+                obj.setEditorMode("SeparacionPared", 0)
+                obj.setEditorMode("ProfundidadEmpotrar", 1)
+            else:
+                obj.setEditorMode("SeparacionPared", 1)
+                obj.setEditorMode("ProfundidadEmpotrar", 0)
+        except Exception:
+            pass
+
+    def _update_parent_transform(self, obj):
+        if not hasattr(obj, "Placement"):
+            _warn(f"{obj.Name} lacks Placement; skipping parent transform")
+            return
+        ref = getattr(obj, "RefPlacement", App.Placement())
+        ref_copy = App.Placement(ref.Base, ref.Rotation)
+        offx = _quantity_value(getattr(obj, "OffsetX", 0.0))
+        offy = _quantity_value(getattr(obj, "OffsetY", 0.0))
+        giro = _quantity_value(getattr(obj, "Giro", 0.0))
+        offset_local = App.Vector(offx, offy, 0.0)
+        offset_global = ref_copy.Rotation.multVec(offset_local)
+        rotation = ref_copy.Rotation.multiply(App.Rotation(App.Vector(0, 0, 1), giro))
+        obj.Placement = App.Placement(ref_copy.Base.add(offset_global), rotation)
+        _debug(f"parent placement set base={obj.Placement.Base} rot={obj.Placement.Rotation}")
+
+    def _update_children(self, obj, link2d, link3d):
+        if not hasattr(obj, "Placement"):
+            _warn(f"{obj.Name} lacks Placement; skipping child updates")
+            return
+        parent_pl = getattr(obj, "Placement", App.Placement())
+        base = parent_pl.Base
+        rot = parent_pl.Rotation
+        if link2d is not None and link2d.Placement != parent_pl:
+            link2d.Placement = App.Placement(base, rot)
+        if link3d is not None:
+            alt = _quantity_value(getattr(obj, "AlturaRel", 0.0))
+            sep = _quantity_value(getattr(obj, "SeparacionPared", 0.0))
+            prof = _quantity_value(getattr(obj, "ProfundidadEmpotrar", 0.0))
+            montaje = str(getattr(obj, "MontajePared", "Sobrepuesto") or "Sobrepuesto")
+            delta = sep if montaje == "Sobrepuesto" else -prof
+            vertical_offset = rot.multVec(App.Vector(0.0, alt, 0.0))
+            normal_offset = rot.multVec(App.Vector(0.0, 0.0, delta))
+            child_base = base.add(vertical_offset).add(normal_offset)
+            link3d.Placement = App.Placement(child_base, rot)
+            _debug(f"link3d placement base={child_base}")
+
+    def _update_visibility(self, obj, link2d, link3d):
+        mode = str(getattr(obj, "ModoVisual", "Ambos") or "Ambos")
+        if link2d is not None:
+            try:
+                link2d.ViewObject.Visibility = mode in ("Ambos", "Solo2D")
+            except Exception:
+                pass
+        if link3d is not None:
+            try:
+                link3d.ViewObject.Visibility = mode in ("Ambos", "Solo3D")
+            except Exception:
+                pass
+
+
+def create_objeto_electromecanico(params=None):
+    try:
+        doc = App.ActiveDocument or App.newDocument("ProyectoElectrico")
+        params = params or {}
+        tipo_default = params.get("Tipo", "Toma") or "Toma"
+        group = _ensure_group_path(doc, ["electrico", "tomacorrientes"])
+        label = params.get("Label") or _next_label(group, tipo_default)
+        obj = doc.addObject("App::FeaturePython", label)
+        try:
+            obj.addExtension("App::GroupExtensionPython")
+        except Exception:
+            pass
+        proxy = ObjetoElectromecanicoProxy(obj)
+        try:
+            obj.Placement = App.Placement()
+        except Exception:
+            _warn(f"{obj.Label} could not initialize Placement")
+        placed = _attach_by_selection(obj)
+        if not placed:
+            obj.Placement = App.Placement()
+        obj.RefPlacement = App.Placement(obj.Placement.Base, obj.Placement.Rotation)
+        for key, value in params.items():
+            if key == "Label":
+                continue
+            if hasattr(obj, key):
+                setattr(obj, key, value)
+                _debug(f"param override {key}={value}")
+
+        proxy.apply_all()
+        try:
+            group.addObject(obj)
+        except Exception:
+            g = list(getattr(group, "Group", []))
+            g.append(obj)
+            group.Group = g
+        _hide_library(doc)
+        doc.recompute()
+        _info(f"ObjetoElectromecanico creado: {obj.Label} uuid={obj.UUID}")
+        return obj
+    except Exception:
+        _err(f"create_objeto_electromecanico failed: {traceback.format_exc()}")
+        raise
+
+
+if __name__ == "__main__":
+    create_objeto_electromecanico()

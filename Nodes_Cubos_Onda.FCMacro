@@ -1,0 +1,130 @@
+# -*- coding: utf-8 -*-
+"""
+Nombre: Nodes_Cubos_Onda.FCMacro
+Version: 2025-09-27 17:00
+Descripcion:
+  Genera una malla de cubos tipo "onda" senoidal controlada por una hoja de calculo.
+  Parametros en hoja "OndaCfg":
+    - filas (int)
+    - columnas (int)
+    - paso_mm (float)  distancia entre cubos
+    - base_mm (float)  tamano de arista del cubo base
+    - amplitud_mm (float) altura extra por la onda
+    - fase (float) fase en radianes
+  Notas:
+    - Sin tildes ni caracteres especiales para evitar problemas en Expresiones.
+    - Muestra mensajes de depuracion en la consola.
+    - Crea un grupo "onda_cubos" y coloca alli los solidos.
+Objetivo final del proyecto: ir reuniendo macros para un futuro Workbench.
+"""
+
+import math
+import FreeCAD as App
+import FreeCADGui as Gui
+
+DOC = App.ActiveDocument
+if DOC is None:
+    DOC = App.newDocument("Onda_Nodes_Demo")
+
+def log(msg):
+    App.Console.PrintMessage("[NODES_ONDA][INFO] " + str(msg) + "\n")
+
+def warn(msg):
+    App.Console.PrintWarning("[NODES_ONDA][WARN] " + str(msg) + "\n")
+
+def err(msg):
+    App.Console.PrintError("[NODES_ONDA][ERROR] " + str(msg) + "\n")
+
+def get_or_create_cfg_sheet(doc):
+    name = "OndaCfg"
+    sh = doc.getObject(name)
+    if sh:
+        return sh
+    sh = doc.addObject("Spreadsheet::Sheet", name)
+    # valores por defecto
+    sh.set("A1", "filas");       sh.set("B1", "8")
+    sh.set("A2", "columnas");    sh.set("B2", "12")
+    sh.set("A3", "paso_mm");     sh.set("B3", "800")
+    sh.set("A4", "base_mm");     sh.set("B4", "300")
+    sh.set("A5", "amplitud_mm"); sh.set("B5", "500")
+    sh.set("A6", "fase");        sh.set("B6", "0.0")
+    sh.recompute()
+    log("Hoja OndaCfg creada con valores por defecto")
+    return sh
+
+def read_cfg(sh):
+    try:
+        filas = int(float(sh.get("B1")))
+        cols = int(float(sh.get("B2")))
+        paso = float(sh.get("B3"))
+        base = float(sh.get("B4"))
+        amp  = float(sh.get("B5"))
+        fase = float(sh.get("B6"))
+        return filas, cols, paso, base, amp, fase
+    except Exception as e:
+        err("Error leyendo hoja: " + repr(e))
+        # fallback seguro
+        return 8, 12, 800.0, 300.0, 500.0, 0.0
+
+def get_or_create_group(doc, label="onda_cubos"):
+    grp = doc.getObject(label)
+    if grp is None:
+        grp = doc.addObject("App::DocumentObjectGroup", label)
+        grp.Label = label
+        log("Grupo creado: " + label)
+    return grp
+
+def clear_group(grp):
+    # elimina hijos del grupo
+    if not grp.Group:
+        return
+    for obj in list(grp.Group):
+        try:
+            DOC.removeObject(obj.Name)
+        except Exception:
+            warn("No se pudo eliminar: " + obj.Name)
+
+def build_wave():
+    sh = get_or_create_cfg_sheet(DOC)
+    filas, cols, paso, base, amp, fase = read_cfg(sh)
+    log(f"cfg filas={filas} cols={cols} paso={paso} base={base} amp={amp} fase={fase}")
+
+    grp = get_or_create_group(DOC, "onda_cubos")
+    clear_group(grp)
+
+    # origen en (0,0,0); centramos aprox en X-Y
+    offset_x = - (cols - 1) * paso * 0.5
+    offset_y = - (filas - 1) * paso * 0.5
+
+    created = 0
+    for r in range(filas):
+        for c in range(cols):
+            x = offset_x + c * paso
+            y = offset_y + r * paso
+            # altura por onda senoidal 2D
+            h_extra = amp * math.sin(0.5 * c + 0.35 * r + fase)
+            size = max(10.0, base)  # evita cero o negativo
+            try:
+                box = DOC.addObject("Part::Box", f"bx_{r}_{c}")
+                box.Length = size
+                box.Width  = size
+                # altura base + componente senoidal positiva
+                box.Height = max(10.0, base + h_extra)
+                box.Placement.Base = App.Vector(x, y, 0.0)
+                grp.addObject(box)
+                created += 1
+            except Exception as e:
+                warn(f"fallo creando cubo r={r} c={c}: {repr(e)}")
+
+    DOC.recompute()
+    log(f"Cubos creados: {created}")
+
+if __name__ == "__main__":
+    try:
+        build_wave()
+        if Gui.Up:
+            Gui.ActiveDocument.ActiveView.viewAxonometric()
+            Gui.SendMsgToActiveView("ViewFit")
+        log("Listo")
+    except Exception as ex:
+        err("Fallo general: " + repr(ex))

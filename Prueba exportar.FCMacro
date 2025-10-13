@@ -1,0 +1,62 @@
+# -*- coding: utf-8 -*-
+
+# Macro Begin: C:\Users\marco\OneDrive - Caja Costarricense de Seguro Social\Documentos\FreeCAD\Macros\Prueba exportar.FCMacro +++++++++++++++++++++++++++++++++++++++++++++++++
+import FreeCAD
+import FreeCADGui
+
+# Gui.runCommand('Std_DlgMacroRecord',0)
+# Gui.runCommand('Std_Export',0)
+# Gui.Selection.clearSelection()
+# Gui.Selection.addSelection('Casa_Prueba','BuildingPart')
+# Gui.Selection.clearSelection()
+# Gui.Selection.addSelection('Casa_Prueba','Structure')
+# Gui.Selection.addSelection('Casa_Prueba','Wall')
+# Gui.Selection.addSelection('Casa_Prueba','Window')
+# Gui.Selection.clearSelection()
+# Gui.Selection.addSelection('Casa_Prueba','Wall')
+# Gui.Selection.clearSelection()
+# Gui.Selection.addSelection('Casa_Prueba','Truss')
+# Gui.Selection.addSelection('Casa_Prueba','Roof')
+# Gui.Selection.addSelection('Casa_Prueba','Wall')
+# Gui.Selection.addSelection('Casa_Prueba','Structure')
+# Gui.Selection.addSelection('Casa_Prueba','Tomacorrientes')
+# Gui.Selection.addSelection('Casa_Prueba','Part__FeaturePython')
+# Gui.Selection.addSelection('Casa_Prueba','Part__FeaturePython011')
+# Gui.Selection.addSelection('Casa_Prueba','Part__FeaturePython010')
+# Gui.Selection.addSelection('Casa_Prueba','Part__FeaturePython009')
+# Gui.Selection.addSelection('Casa_Prueba','Part__FeaturePython008')
+# Gui.Selection.addSelection('Casa_Prueba','Part__FeaturePython007')
+# Gui.Selection.addSelection('Casa_Prueba','Part__FeaturePython006')
+# Gui.Selection.addSelection('Casa_Prueba','Part__FeaturePython005')
+# Gui.Selection.addSelection('Casa_Prueba','Part__FeaturePython004')
+# Gui.Selection.addSelection('Casa_Prueba','Part__FeaturePython003')
+# Gui.Selection.addSelection('Casa_Prueba','Part__FeaturePython002')
+# Gui.Selection.addSelection('Casa_Prueba','Part__FeaturePython012')
+### Begin command Std_Export
+__objs__ = []
+__objs__.append(FreeCAD.getDocument("Casa_Prueba").getObject("Truss"))
+__objs__.append(FreeCAD.getDocument("Casa_Prueba").getObject("Roof"))
+__objs__.append(FreeCAD.getDocument("Casa_Prueba").getObject("Wall"))
+__objs__.append(FreeCAD.getDocument("Casa_Prueba").getObject("Structure"))
+__objs__.append(FreeCAD.getDocument("Casa_Prueba").getObject("Tomacorrientes"))
+__objs__.append(FreeCAD.getDocument("Casa_Prueba").getObject("Part__FeaturePython"))
+__objs__.append(FreeCAD.getDocument("Casa_Prueba").getObject("Part__FeaturePython011"))
+__objs__.append(FreeCAD.getDocument("Casa_Prueba").getObject("Part__FeaturePython010"))
+__objs__.append(FreeCAD.getDocument("Casa_Prueba").getObject("Part__FeaturePython009"))
+__objs__.append(FreeCAD.getDocument("Casa_Prueba").getObject("Part__FeaturePython008"))
+__objs__.append(FreeCAD.getDocument("Casa_Prueba").getObject("Part__FeaturePython007"))
+__objs__.append(FreeCAD.getDocument("Casa_Prueba").getObject("Part__FeaturePython006"))
+__objs__.append(FreeCAD.getDocument("Casa_Prueba").getObject("Part__FeaturePython005"))
+__objs__.append(FreeCAD.getDocument("Casa_Prueba").getObject("Part__FeaturePython004"))
+__objs__.append(FreeCAD.getDocument("Casa_Prueba").getObject("Part__FeaturePython003"))
+__objs__.append(FreeCAD.getDocument("Casa_Prueba").getObject("Part__FeaturePython002"))
+__objs__.append(FreeCAD.getDocument("Casa_Prueba").getObject("Part__FeaturePython012"))
+if hasattr(FreeCADGui, "exportOptions"):
+    options = FreeCADGui.exportOptions(u"C:/Users/marco/OneDrive - Caja Costarricense de Seguro Social/Documentos/FreeCAD/Casa Prueba.x3d")
+    FreeCADGui.export(__objs__, u"C:/Users/marco/OneDrive - Caja Costarricense de Seguro Social/Documentos/FreeCAD/Casa Prueba.x3d", options)
+else:
+    FreeCADGui.export(__objs__, u"C:/Users/marco/OneDrive - Caja Costarricense de Seguro Social/Documentos/FreeCAD/Casa Prueba.x3d")
+
+del __objs__
+### End command Std_Export
+# Macro End: C:\Users\marco\OneDrive - Caja Costarricense de Seguro Social\Documentos\FreeCAD\Macros\Prueba exportar.FCMacro +++++++++++++++++++++++++++++++++++++++++++++++++

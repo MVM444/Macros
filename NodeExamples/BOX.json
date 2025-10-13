@@ -1,0 +1,224 @@
+{
+    "id": 2125158788496,
+    "scene_width": 64000,
+    "scene_height": 64000,
+    "nodes": [
+        {
+            "id": 2125158836176,
+            "title": "Box",
+            "pos_x": -302.0,
+            "pos_y": -124.0,
+            "inputs": [
+                {
+                    "id": 2125139900304,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 2,
+                    "socket_type": 6
+                },
+                {
+                    "id": 2125139225040,
+                    "index": 1,
+                    "multi_edges": true,
+                    "position": 2,
+                    "socket_type": 6
+                },
+                {
+                    "id": 2125155806480,
+                    "index": 2,
+                    "multi_edges": true,
+                    "position": 2,
+                    "socket_type": 6
+                },
+                {
+                    "id": 2125158883280,
+                    "index": 3,
+                    "multi_edges": true,
+                    "position": 2,
+                    "socket_type": 6
+                },
+                {
+                    "id": 2125158884816,
+                    "index": 4,
+                    "multi_edges": true,
+                    "position": 2,
+                    "socket_type": 6
+                }
+            ],
+            "outputs": [
+                {
+                    "id": 2125158890704,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 6
+                }
+            ],
+            "content": {},
+            "op_code": "<class 'generators_solid_box.SolidBox'>"
+        },
+        {
+            "id": 2125158998736,
+            "title": "Number",
+            "pos_x": -434.0,
+            "pos_y": -146.0,
+            "inputs": [],
+            "outputs": [
+                {
+                    "id": 2125159003600,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 6
+                }
+            ],
+            "content": {
+                "value": "20"
+            },
+            "op_code": "<class 'number_number.Number'>"
+        },
+        {
+            "id": 2124843336528,
+            "title": "CViewer",
+            "pos_x": 351.0,
+            "pos_y": -111.0,
+            "inputs": [
+                {
+                    "id": 2125231562768,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 2,
+                    "socket_type": 6
+                }
+            ],
+            "outputs": [],
+            "content": {},
+            "op_code": "<class 'viz_compound_viewer.CompoundViewer'>"
+        },
+        {
+            "id": 2125231969360,
+            "title": "PyScript",
+            "pos_x": 25.0,
+            "pos_y": -287.0,
+            "inputs": [
+                {
+                    "id": 2125159047632,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 2,
+                    "socket_type": 6
+                }
+            ],
+            "outputs": [
+                {
+                    "id": 2125139483728,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 6
+                }
+            ],
+            "content": {},
+            "op_code": "<class 'script_py_script.PyScript'>",
+            "code_string": "# PyScript: multi_in_out_demo\n# Fecha_hora: 2025-09-27 17:45\n# Proposito:\n#   Mostrar como simular multiples entradas y salidas usando dict.\n#   IN: dict con claves:\n#       rows:int, cols:int, step:float, size:float, amp:float, phase:float\n#       opcional: center:bool (centrar grilla)\n#   OUT: dict con claves:\n#       shapes:   lista de Part.Shape (cajas)\n#       centers:  lista de FreeCAD.Vector (centros)\n#       stats:    dict con info (count, min_h, max_h)\n#       debug:    cadena con info rapida\n#\n# Conectar: PyScript.Out -> CViewer.In  (para ver las cajas)\n# Y paralelamente: usar \"Dict Get\" para extraer centers o stats.\n\nimport math\nimport FreeCAD as App\nimport Part\n\ndef log(msg):\n    try:\n        App.Console.PrintMessage(\"[PYS_MULTI][INFO] \" + str(msg) + \"\\n\")\n    except Exception:\n        pass\n\n# ---- leer IN en modo compatible (segun build puede ser var 'In' o dict 'inputs') ----\nparams = None\ntry:\n    params = In\nexcept Exception:\n    try:\n        params = inputs.get(\"In\", None)\n    except Exception:\n        params = None\n\nif not isinstance(params, dict):\n    params = {}\n\n# defaults\nrows  = int(params.get(\"rows\", 6))\ncols  = int(params.get(\"cols\", 10))\nstep  = float(params.get(\"step\", 600.0))\nsize  = float(params.get(\"size\", 250.0))\namp   = float(params.get(\"amp\", 300.0))\nphase = float(params.get(\"phase\", 0.0))\ncenter_grid = bool(params.get(\"center\", True))\n\nsafe_size = max(10.0, size)\n\n# offsets\nif center_grid:\n    ox = - (cols - 1) * step * 0.5\n    oy = - (rows - 1) * step * 0.5\nelse:\n    ox = 0.0\n    oy = 0.0\n\nshapes = []\ncenters = []\nmin_h =  1e9\nmax_h = -1e9\n\nfor r in range(rows):\n    for c in range(cols):\n        x = ox + c * step\n        y = oy + r * step\n        # altura con onda\n        h_extra = amp * math.sin(0.6 * c + 0.35 * r + phase)\n        h = max(10.0, safe_size + h_extra)\n        min_h = min(min_h, h)\n        max_h = max(max_h, h)\n        # Part.makeBox(L, W, H, BaseVector)\n        box = Part.makeBox(safe_size, safe_size, h, App.Vector(x, y, 0.0))\n        shapes.append(box)\n        centers.append(App.Vector(x + safe_size*0.5, y + safe_size*0.5, h*0.5))\n\nstats = {\"count\": len(shapes), \"min_h\": float(min_h), \"max_h\": float(max_h)}\nout_dict = {\n    \"shapes\": shapes,\n    \"centers\": centers,\n    \"stats\": stats,\n    \"debug\": f\"rows={rows} cols={cols} step={step} size={size} amp={amp} phase={phase}\"\n}\n\n# publicar OUT compatible con ambas variantes\ntry:\n    Out = out_dict\nexcept Exception:\n    outputs = {\"Out\": out_dict}\n\nlog(\"listo: \" + out_dict[\"debug\"])\n"
+        },
+        {
+            "id": 2125231658768,
+            "title": "PyScript",
+            "pos_x": 196.0,
+            "pos_y": -274.0,
+            "inputs": [
+                {
+                    "id": 2124725457296,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 2,
+                    "socket_type": 6
+                }
+            ],
+            "outputs": [
+                {
+                    "id": 2125307789392,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 6
+                }
+            ],
+            "content": {},
+            "op_code": "<class 'script_py_script.PyScript'>",
+            "code_string": "# PyScript: extraer shapes de un dict\nd = In\nif isinstance(d, dict):\n    Out = d.get(\"shapes\", [])\nelse:\n    Out = []\n"
+        },
+        {
+            "id": 2125326623824,
+            "title": "PyScript",
+            "pos_x": -122.0,
+            "pos_y": -217.0,
+            "inputs": [
+                {
+                    "id": 2125159043472,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 2,
+                    "socket_type": 6
+                }
+            ],
+            "outputs": [
+                {
+                    "id": 2125326618384,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 6
+                }
+            ],
+            "content": {},
+            "op_code": "<class 'script_py_script.PyScript'>",
+            "code_string": "# PyScript: genera dict de parametros para la onda\nparams = {\n    \"rows\": 30,\n    \"cols\": 10,\n    \"step\": 600.0,\n    \"size\": 250.0,\n    \"amp\": 300.0,\n    \"phase\": 0.0,\n    \"center\": True\n}\n\nOut = params\n"
+        }
+    ],
+    "edges": [
+        {
+            "id": 2125154795344,
+            "edge_type": 2,
+            "start": 2125159003600,
+            "end": 2125139900304
+        },
+        {
+            "id": 2125159001360,
+            "edge_type": 2,
+            "start": 2125139225040,
+            "end": 2125159003600
+        },
+        {
+            "id": 2125159050512,
+            "edge_type": 2,
+            "start": 2125155806480,
+            "end": 2125159003600
+        },
+        {
+            "id": 2125326677712,
+            "edge_type": 2,
+            "start": 2125326618384,
+            "end": 2125159047632
+        },
+        {
+            "id": 2125326626832,
+            "edge_type": 2,
+            "start": 2125158890704,
+            "end": 2125231562768
+        },
+        {
+            "id": 2125187244368,
+            "edge_type": 2,
+            "start": 2125139483728,
+            "end": 2124725457296
+        },
+        {
+            "id": 2125326734608,
+            "edge_type": 2,
+            "start": 2125307789392,
+            "end": 2125231562768
+        }
+    ]
+}

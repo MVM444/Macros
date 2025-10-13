@@ -1,0 +1,30 @@
+{
+  "root_label": "Edificio",
+  "export_dir": "C:/Users/marco/OneDrive - Caja Costarricense de Seguro Social/Documentos/FreeCAD/Macros",
+  "base_name": "Casa Prueba",
+  "auto_baseline": false,
+  "cats": {
+    "Walls": true,
+    "Floors": true,
+    "Roofs": true,
+    "Furniture": true,
+    "Lights": true,
+    "Cameras": false
+  },
+  "triangulate": true,
+  "freeze_colors": true,
+  "materials": {
+    "em_r": 0.0,
+    "em_g": 0.0,
+    "em_b": 0.0,
+    "transp": 0.0,
+    "shiny": 0.2
+  },
+  "settings": {
+    "default_dir": "C:\\Users\\marco\\AppData\\Roaming\\FreeCAD\\tmp",
+    "file_suffix": "",
+    "restore_last": true,
+    "cge_executable_path": "C:/Users/marco/Desktop/castle-model-viewer/castle-model-viewer.exe",
+    "auto_launch_cge": false
+  }
+}
