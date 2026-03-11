@@ -1,0 +1,60 @@
+# GameEngineExportLoader Macro
+# Description: Reload and activate the GameEngineExportWB workbench from the FreeCAD macro directory.
+# Important instructions: keep ASCII only strings, maintain [GAMEEXPORT] prefixed logs, and ensure code stays inside the FreeCAD macro tree.
+# Usage: place the repository inside the FreeCAD macro directory, run this macro to refresh the workbench without restarting FreeCAD.
+# Version timestamp: 2025-10-13 19:55 UTC
+
+import FreeCAD
+import FreeCADGui
+import sys
+import os
+import importlib
+
+LOG_PREFIX = "[GAMEEXPORT] "
+
+
+def log_info(message):
+    FreeCAD.Console.PrintMessage(f"{LOG_PREFIX}{message}\n")
+
+
+def log_error(message):
+    FreeCAD.Console.PrintError(f"{LOG_PREFIX}{message}\n")
+
+
+def ensure_repo_on_path(repo_root):
+    if repo_root not in sys.path:
+        sys.path.insert(0, repo_root)
+        log_info(f"Added repo path: {repo_root}")
+
+
+def reload_module(module_name):
+    if module_name in sys.modules:
+        importlib.reload(sys.modules[module_name])
+        log_info(f"Reloaded module: {module_name}")
+    else:
+        importlib.import_module(module_name)
+        log_info(f"Imported module: {module_name}")
+
+
+def activate_workbench(wb_name):
+    FreeCADGui.activateWorkbench(wb_name)
+    log_info(f"Activated workbench: {wb_name}")
+
+
+def main():
+    this_dir = os.path.dirname(__file__)
+    repo_root = os.path.abspath(this_dir)
+    ensure_repo_on_path(repo_root)
+
+    try:
+        reload_module("Mod.GameEngineExportWB.Init")
+        reload_module("Mod.GameEngineExportWB.InitGui")
+        activate_workbench("Game Engine Export WB")
+        log_info("Workbench loaded successfully")
+    except Exception as exc:
+        log_error(f"Failed to load workbench: {exc}")
+        raise
+
+
+if __name__ == "__main__":
+    main()
