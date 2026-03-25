@@ -16,11 +16,42 @@ import FreeCADGui
 import os
 import json
 from functools import partial
-from PySide2 import QtWidgets
+try:
+    from PySide2 import QtCore, QtWidgets
+except Exception:
+    from PySide import QtCore, QtGui as QtWidgets
+try:
+    from shiboken2 import isValid as _qt_is_valid
+except Exception:
+    try:
+        from shiboken import isValid as _qt_is_valid
+    except Exception:
+        _qt_is_valid = None
 
 MAX_RECENT = 5
 _RESOLVE_CACHE = {}
 _SEARCH_PREFIXES = ("", "Macros-de-Freecad", os.path.join("Macros-de-Freecad", "Resources"))
+_MENU_TITLES = ("Macros Frecuentes", "Macros Personalizadas")
+_CONTROLLER_ATTR = "_macros_personalizadas_controller"
+_RECENT_MENU_OBJECT = "MacrosPersonalizadas.RecentMenu"
+_CUSTOM_MENU_OBJECT = "MacrosPersonalizadas.CustomMenu"
+
+
+def _is_alive_qobject(obj):
+    if obj is None:
+        return False
+    if _qt_is_valid is not None:
+        try:
+            return bool(_qt_is_valid(obj))
+        except Exception:
+            return False
+    try:
+        obj.objectName()
+        return True
+    except RuntimeError:
+        return False
+    except Exception:
+        return True
 
 
 def _macro_path_entries():
@@ -133,8 +164,64 @@ def _recent_file_path():
     return os.path.normpath(os.path.join(base, ".macro_recent.json"))
 
 
-def load_recent():
-    path = _recent_file_path()
+def _usage_file_path():
+    base = _primary_macro_dir()
+    if not base:
+        return ""
+    return os.path.normpath(os.path.join(base, ".macro_usage.json"))
+
+
+def _script_dir():
+    try:
+        return os.path.dirname(os.path.abspath(__file__))
+    except Exception:
+        return ""
+
+
+def _unique_existing_paths(paths):
+    out = []
+    seen = set()
+    for path in list(paths or []):
+        if not path:
+            continue
+        p = os.path.normpath(path)
+        key = os.path.normcase(p)
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(p)
+    return out
+
+
+def _recent_file_candidates():
+    candidates = []
+    primary = _recent_file_path()
+    if primary:
+        candidates.append(primary)
+    for base in _macro_path_entries():
+        candidates.append(os.path.join(base, ".macro_recent.json"))
+    sdir = _script_dir()
+    if sdir:
+        candidates.append(os.path.join(sdir, ".macro_recent.json"))
+    candidates.append(os.path.join(os.getcwd(), ".macro_recent.json"))
+    return _unique_existing_paths(candidates)
+
+
+def _usage_file_candidates():
+    candidates = []
+    primary = _usage_file_path()
+    if primary:
+        candidates.append(primary)
+    for base in _macro_path_entries():
+        candidates.append(os.path.join(base, ".macro_usage.json"))
+    sdir = _script_dir()
+    if sdir:
+        candidates.append(os.path.join(sdir, ".macro_usage.json"))
+    candidates.append(os.path.join(os.getcwd(), ".macro_usage.json"))
+    return _unique_existing_paths(candidates)
+
+
+def _load_json_list(path):
     if not path or not os.path.exists(path):
         return []
     try:
@@ -142,18 +229,63 @@ def load_recent():
             data = json.load(handle)
     except Exception:
         return []
-    if not isinstance(data, list):
-        return []
+    return data if isinstance(data, list) else []
+
+
+def _load_json_dict(path):
+    if not path or not os.path.exists(path):
+        return {}
+    try:
+        with open(path, "r", encoding="utf-8") as handle:
+            data = json.load(handle)
+    except Exception:
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def load_recent():
+    raw_recent = []
+    raw_seen = set()
+    for candidate in _recent_file_candidates():
+        for item in _load_json_list(candidate):
+            key = os.path.normcase(os.path.normpath(str(item)))
+            if key in raw_seen:
+                continue
+            raw_seen.add(key)
+            raw_recent.append(str(item))
+
     resolved = []
     changed = False
-    for item in data:
+    for item in raw_recent:
         resolved_item = _resolve_macro_path(item)
         if resolved_item != item:
             changed = True
         if os.path.exists(resolved_item) and resolved_item not in resolved:
             resolved.append(resolved_item)
+
+    if len(resolved) < MAX_RECENT:
+        usage_candidates = []
+        for candidate in _usage_file_candidates():
+            usage_data = _load_json_dict(candidate)
+            pairs = []
+            for p, count in usage_data.items():
+                try:
+                    score = int(count)
+                except Exception:
+                    score = 0
+                pairs.append((score, str(p)))
+            pairs.sort(key=lambda x: x[0], reverse=True)
+            usage_candidates.extend([p for _score, p in pairs])
+        for item in usage_candidates:
+            if len(resolved) >= MAX_RECENT:
+                break
+            normalized = os.path.normpath(str(item).replace("/", os.sep))
+            resolved_item = _resolve_macro_path(normalized)
+            if os.path.exists(resolved_item) and resolved_item not in resolved:
+                resolved.append(resolved_item)
+
     resolved = resolved[:MAX_RECENT]
-    if changed or len(resolved) != len(data):
+    if changed or len(resolved) != len(raw_recent):
         save_recent(resolved)
     return resolved
 
@@ -161,8 +293,14 @@ def load_recent():
 def save_recent(lst):
     path = _recent_file_path()
     if not path:
+        candidates = _recent_file_candidates()
+        path = candidates[0] if candidates else ""
+    if not path:
         return
     try:
+        folder = os.path.dirname(path)
+        if folder and not os.path.isdir(folder):
+            os.makedirs(folder, exist_ok=True)
         with open(path, "w", encoding="utf-8") as handle:
             json.dump(lst[:MAX_RECENT], handle, indent=2)
     except Exception as err:
@@ -170,17 +308,55 @@ def save_recent(lst):
 
 
 def populate_recent_menu(menu):
-    menu.clear()
-    for path in load_recent():
+    if not _is_alive_qobject(menu):
+        return
+    try:
+        menu.clear()
+    except RuntimeError:
+        return
+    paths = load_recent()
+    if not paths:
+        try:
+            empty = menu.addAction("(Sin macros recientes)")
+            empty.setEnabled(False)
+        except Exception:
+            pass
+        return
+    for path in paths:
+        if not _is_alive_qobject(menu):
+            return
         name = os.path.splitext(os.path.basename(path))[0]
-        action = menu.addAction(name)
+        try:
+            action = menu.addAction(name)
+        except RuntimeError:
+            return
         action.setToolTip(path)
         action.triggered.connect(partial(run_macro, path))
 
 
+def _refresh_recent_menu_safe():
+    bar = _menu_bar()
+    if bar is None:
+        return
+    for menu in _top_level_menus(bar):
+        if not _is_alive_qobject(menu):
+            continue
+        try:
+            if menu.objectName() == _RECENT_MENU_OBJECT:
+                populate_recent_menu(menu)
+                return
+        except RuntimeError:
+            continue
+        except Exception:
+            continue
+
+
 def create_recent_menu(bar):
     freq = bar.addMenu("Macros Frecuentes")
-    freq.aboutToShow.connect(lambda: populate_recent_menu(freq))
+    freq.setObjectName(_RECENT_MENU_OBJECT)
+    freq.aboutToShow.connect(partial(populate_recent_menu, freq))
+    populate_recent_menu(freq)
+    return freq
 
 
 def _ensure_menu(cache, parts):
@@ -197,10 +373,11 @@ def _ensure_menu(cache, parts):
 
 def create_custom_menu(bar):
     custom = bar.addMenu("Macros Personalizadas")
+    custom.setObjectName(_CUSTOM_MENU_OBJECT)
     bases = _macro_path_entries()
     if not bases:
         FreeCAD.Console.PrintError("Directorio de macros no existe.\n")
-        return
+        return None
     menu_cache = {(): custom}
     seen = set()
     primary_base = next((b for b in bases if os.path.isdir(b)), bases[0])
@@ -214,7 +391,7 @@ def create_custom_menu(bar):
         is_primary = os.path.normcase(os.path.abspath(base)) == primary_norm
         for root, dirs, files in os.walk(base):
             dirs[:] = [d for d in dirs if d not in {".git", "__pycache__", ".vscode"}]
-            macro_files = [f for f in files if f.lower().endswith((".fcmacro", ".py"))]
+            macro_files = [f for f in files if f.lower().endswith(".fcmacro")]
             if not macro_files:
                 continue
             rel = os.path.relpath(root, base)
@@ -237,13 +414,100 @@ def create_custom_menu(bar):
                 action = submenu.addAction(label)
                 action.setToolTip(full)
                 action.triggered.connect(partial(run_macro, full))
-def recreate_menus():
-    mw = FreeCADGui.getMainWindow()
-    bar = mw.menuBar()
-    for title in ("Macros Frecuentes", "Macros Personalizadas"):
-        for menu in bar.findChildren(QtWidgets.QMenu):
+    return custom
+
+
+def _main_window():
+    try:
+        return FreeCADGui.getMainWindow()
+    except Exception:
+        return None
+
+
+def _menu_bar():
+    mw = _main_window()
+    if mw is None:
+        return None
+    try:
+        return mw.menuBar()
+    except Exception:
+        return None
+
+
+def _top_level_menus(bar):
+    menus = []
+    try:
+        actions = list(bar.actions())
+    except Exception:
+        return menus
+    for action in actions:
+        try:
+            menu = action.menu()
+        except Exception:
+            menu = None
+        if menu is not None:
+            menus.append(menu)
+    return menus
+
+
+def _top_level_menu_count(bar, title):
+    count = 0
+    for menu in _top_level_menus(bar):
+        try:
             if menu.title() == title:
-                bar.removeAction(menu.menuAction())
+                count += 1
+        except Exception:
+            continue
+    return count
+
+
+def _is_managed_menu(menu):
+    try:
+        if menu.objectName() in {_RECENT_MENU_OBJECT, _CUSTOM_MENU_OBJECT}:
+            return True
+    except Exception:
+        pass
+    try:
+        return menu.title() in _MENU_TITLES
+    except Exception:
+        return False
+
+
+def _remove_managed_menus():
+    mw = _main_window()
+    bar = _menu_bar()
+    if mw is None or bar is None:
+        return
+
+    for action in list(bar.actions()):
+        try:
+            menu = action.menu()
+        except Exception:
+            menu = None
+        if menu is not None and _is_managed_menu(menu):
+            bar.removeAction(action)
+
+    for menu in list(mw.findChildren(QtWidgets.QMenu)):
+        if not _is_managed_menu(menu):
+            continue
+        try:
+            parent = menu.parentWidget()
+            if isinstance(parent, QtWidgets.QMenuBar):
+                parent.removeAction(menu.menuAction())
+            elif isinstance(parent, QtWidgets.QMenu):
+                parent.removeAction(menu.menuAction())
+        except Exception:
+            pass
+        try:
+            menu.deleteLater()
+        except Exception:
+            pass
+
+def recreate_menus():
+    bar = _menu_bar()
+    if bar is None:
+        return
+    _remove_managed_menus()
     create_recent_menu(bar)
     create_custom_menu(bar)
 
@@ -260,15 +524,115 @@ def run_macro(path):
     save_recent(recent)
     try:
         with open(target, "r", encoding="utf-8", errors="ignore") as handle:
-            exec(handle.read(), globals())
+            source = handle.read()
+        exec(compile(source, target, "exec"), {"__file__": target, "__name__": "__main__"})
     except Exception as err:
         FreeCAD.Console.PrintError(f"Error en macro {target}: {err}\n")
-    mw = FreeCADGui.getMainWindow()
-    for menu in mw.menuBar().findChildren(QtWidgets.QMenu):
-        if menu.title() == "Macros Frecuentes":
-            populate_recent_menu(menu)
-            break
+    bar = _menu_bar()
+    if bar is None:
+        return
+    _refresh_recent_menu_safe()
+
+
+class _MenuPersistenceController(QtCore.QObject):
+    def __init__(self):
+        super().__init__()
+        self._main_window = None
+        self._connected = False
+        self._startup = QtCore.QTimer(self)
+        self._startup.setInterval(500)
+        self._startup.timeout.connect(self._on_startup_tick)
+        self._refresh = QtCore.QTimer(self)
+        self._refresh.setSingleShot(True)
+        self._refresh.timeout.connect(self._refresh_menus)
+
+    def start(self):
+        if not self._startup.isActive():
+            self._startup.start()
+        self.schedule_refresh(0)
+
+    def _on_startup_tick(self):
+        mw = _main_window()
+        if mw is None:
+            return
+        try:
+            if not mw.property("eventLoop"):
+                return
+        except Exception:
+            pass
+        self._bind_main_window(mw)
+        self._startup.stop()
+        self.schedule_refresh(0)
+
+    def _bind_main_window(self, mw):
+        if mw is None or (self._connected and mw is self._main_window):
+            return
+        self._main_window = mw
+        try:
+            mw.workbenchActivated.connect(self._on_workbench_activated)
+        except Exception:
+            pass
+        try:
+            mw.mainWindowClosed.connect(self._on_main_window_closed)
+        except Exception:
+            pass
+        self._connected = True
+
+    def _on_workbench_activated(self, *args):
+        del args
+        self.schedule_refresh(250)
+
+    def schedule_refresh(self, delay=0):
+        try:
+            self._refresh.start(max(0, int(delay)))
+        except Exception:
+            recreate_menus()
+
+    def _refresh_menus(self):
+        recreate_menus()
+
+    def _on_main_window_closed(self):
+        self._startup.stop()
+        self._refresh.stop()
+
+    def shutdown(self):
+        try:
+            self._startup.stop()
+        except Exception:
+            pass
+        try:
+            self._refresh.stop()
+        except Exception:
+            pass
+
+
+def install():
+    if not FreeCAD.GuiUp:
+        return None
+    controller = getattr(FreeCADGui, _CONTROLLER_ATTR, None)
+    if controller is not None and not isinstance(controller, _MenuPersistenceController):
+        try:
+            if hasattr(controller, "shutdown") and callable(getattr(controller, "shutdown")):
+                controller.shutdown()
+            else:
+                for timer_name in ("_startup", "_refresh"):
+                    tmr = getattr(controller, timer_name, None)
+                    if tmr is not None and hasattr(tmr, "stop"):
+                        tmr.stop()
+        except Exception:
+            pass
+        controller = None
+    if controller is None:
+        controller = _MenuPersistenceController()
+        setattr(FreeCADGui, _CONTROLLER_ATTR, controller)
+    controller.start()
+    try:
+        recreate_menus()
+    except Exception:
+        controller.schedule_refresh(0)
+    controller.schedule_refresh(250)
+    return controller
 
 
 if FreeCAD.GuiUp:
-    recreate_menus()
+    install()

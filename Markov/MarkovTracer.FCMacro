@@ -1,0 +1,23 @@
+# -*- coding: utf-8 -*-
+# Macro de FreeCAD para abrir la GUI del trazador Markov
+# Autor: Marco Mora (CCSS) / ChatGPT
+# Fecha: 2025-10-15
+# Descripción:
+#   Ejecuta el script "markov_trace_freecad.py" (debe estar en la carpeta de macros)
+#   y abre la interfaz gráfica para trazar las llamadas de un script Python
+#   y generar markov.dot / markov.png.
+
+import sys, os
+
+# Ruta a la carpeta de macros (ajusta si lo tienes en otro sitio)
+macro_dir = os.path.join(os.path.expanduser("~"), "AppData", "Roaming", "FreeCAD", "Macro")
+if macro_dir not in sys.path:
+    sys.path.append(macro_dir)
+
+try:
+    import markov_trace_freecad as mtf
+    mtf.launch_qt_gui_freecad()
+except Exception as e:
+    import FreeCADGui
+    FreeCADGui.doCommand(f'print("Error al ejecutar el trazador Markov: {e}")')
+    raise

@@ -16,6 +16,13 @@ def build_config_tab():
     tab = QtGui.QWidget()
     layout = QtGui.QVBoxLayout(tab)
 
+    info_label = QtGui.QLabel(
+        "Salida y nombre base se ajustan en la pestana Escena para evitar duplicacion.\n"
+        "Output folder and base name live in the Scene tab to avoid duplication."
+    )
+    info_label.setWordWrap(True)
+    layout.addWidget(info_label)
+
     cge_group = QtGui.QGroupBox("Castle Engine")
     cge_layout = QtGui.QHBoxLayout(cge_group)
     cge_layout.addWidget(QtGui.QLabel("Ruta ejecutable / Executable path"))

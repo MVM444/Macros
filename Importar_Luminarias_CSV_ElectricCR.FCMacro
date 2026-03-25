@@ -1,0 +1,332 @@
+# -*- coding: utf-8 -*-
+"""
+Importar_Luminarias_CSV_ElectricCR.FCMacro
+
+Importa luminarias desde CSV y crea instancias App::Link en el documento activo.
+Pensado para flujo ElectricCR:
+  electrico/Iluminacion/Luminarias_Importadas
+
+CSV esperado:
+  Nombre,X,Y,Z
+"""
+
+import csv
+import os
+import unicodedata
+
+import FreeCAD as App
+
+
+# -------------------- Configuracion editable --------------------
+CSV_PATH = r"C:\Users\marco\OneDrive - Caja Costarricense de Seguro Social\2026\03-Marzo-2026\La Cruz\1411-04 Luminarias y Ejes La Cruz.csv"
+BASE_OBJECT_NAME = "Luminaria_Base"   # Name o Label del objeto base
+SCALE_FACTOR = 1.0                    # 0.001 si CSV en mm y modelo en m
+
+WORKBENCH_ID = "ElectricCRWorkbench"
+REQUIRE_ELECTRICCR_WORKBENCH = True
+
+ELECTRICO_LABEL = "electrico"
+ELECTRICO_NAME = "electrico"
+ILUMINACION_LABEL = "Iluminacion"
+ILUMINACION_NAME = "Iluminacion"
+IMPORT_GROUP_LABEL = "Luminarias_Importadas"
+IMPORT_GROUP_NAME = "Luminarias_Importadas"
+
+LINK_NAME_PREFIX = "Luminaria"
+USE_CSV_NAME_AS_LABEL = True
+
+CSV_ENCODING = "utf-8-sig"
+CSV_DELIMITER = None                  # None = autodetect
+# ----------------------------------------------------------------
+
+
+def log(msg):
+    App.Console.PrintMessage(str(msg) + "\n")
+
+
+def to_ascii(text):
+    if text is None:
+        return ""
+    normalized = unicodedata.normalize("NFKD", str(text))
+    return normalized.encode("ascii", "ignore").decode("ascii")
+
+
+def sanitize_name(text, fallback):
+    raw = to_ascii(text).strip()
+    clean = []
+    for ch in raw:
+        if ch.isalnum() or ch == "_":
+            clean.append(ch)
+        else:
+            clean.append("_")
+    name = "".join(clean).strip("_")
+    if not name:
+        name = fallback
+    if name[0].isdigit():
+        name = "{}_{}".format(fallback, name)
+    return name
+
+
+def unique_value(base, used_set):
+    candidate = base
+    idx = 1
+    while candidate in used_set:
+        candidate = "{}_{:03d}".format(base, idx)
+        idx += 1
+    used_set.add(candidate)
+    return candidate
+
+
+def is_group_container(obj):
+    if obj is None:
+        return False
+    type_id = getattr(obj, "TypeId", "")
+    if type_id.startswith("App::DocumentObjectGroup"):
+        return True
+    return hasattr(obj, "addObject") and hasattr(obj, "Group")
+
+
+def find_object_by_name_or_label(doc, token):
+    if not token:
+        return None
+    obj = doc.getObject(token)
+    if obj is not None:
+        return obj
+    for item in doc.Objects:
+        if getattr(item, "Label", "") == token:
+            return item
+    return None
+
+
+def find_child_group(parent_group, label=None, name=None):
+    for child in getattr(parent_group, "Group", []) or []:
+        if not is_group_container(child):
+            continue
+        if label is not None and getattr(child, "Label", "") == label:
+            return child
+        if name is not None and getattr(child, "Name", "") == name:
+            return child
+    return None
+
+
+def make_unique_object_name(doc, base_name):
+    candidate = base_name
+    idx = 1
+    while doc.getObject(candidate) is not None:
+        candidate = "{}_{:02d}".format(base_name, idx)
+        idx += 1
+    return candidate
+
+
+def create_group(doc, label, preferred_name, parent=None):
+    base_name = sanitize_name(preferred_name or label, "Group")
+    object_name = make_unique_object_name(doc, base_name)
+    grp = doc.addObject("App::DocumentObjectGroup", object_name)
+    grp.Label = label
+    if parent is not None:
+        parent.addObject(grp)
+    return grp
+
+
+def ensure_root_group(doc, label, preferred_name):
+    by_name = doc.getObject(preferred_name) if preferred_name else None
+    if is_group_container(by_name):
+        return by_name
+
+    for obj in doc.Objects:
+        if is_group_container(obj) and getattr(obj, "Label", "") == label:
+            return obj
+
+    grp = create_group(doc, label, preferred_name, parent=None)
+    log("[INFO] Grupo creado: {}".format(label))
+    return grp
+
+
+def ensure_child_group(doc, parent_group, label, preferred_name):
+    child = find_child_group(parent_group, label=label)
+    if child is not None:
+        return child
+
+    child = find_child_group(parent_group, name=preferred_name)
+    if child is not None:
+        if getattr(child, "Label", "") != label:
+            child.Label = label
+        return child
+
+    child = create_group(doc, label, preferred_name, parent=parent_group)
+    log("[INFO] Subgrupo creado: {}/{}".format(parent_group.Label, label))
+    return child
+
+
+def parse_number(value, field_name, row_number):
+    text = str(value).strip() if value is not None else ""
+    if text == "":
+        raise ValueError("fila {}: {} vacio".format(row_number, field_name))
+    text = text.replace(",", ".")
+    try:
+        return float(text)
+    except Exception:
+        raise ValueError("fila {}: {} invalido ({})".format(row_number, field_name, text))
+
+
+def open_csv_dict_reader(path, encoding, delimiter):
+    file_obj = open(path, "r", newline="", encoding=encoding)
+    active_delimiter = delimiter
+    if active_delimiter is None:
+        sample = file_obj.read(4096)
+        file_obj.seek(0)
+        try:
+            dialect = csv.Sniffer().sniff(sample, delimiters=",;|\t")
+            active_delimiter = dialect.delimiter
+        except Exception:
+            active_delimiter = ","
+    reader = csv.DictReader(file_obj, delimiter=active_delimiter)
+    return file_obj, reader
+
+
+def validate_headers(reader):
+    if not reader.fieldnames:
+        raise RuntimeError("CSV sin encabezados")
+
+    reader.fieldnames = [(h or "").strip() for h in reader.fieldnames]
+    header_map = {}
+    for h in reader.fieldnames:
+        if h:
+            header_map[h.lower()] = h
+
+    for required in ("x", "y", "z"):
+        if required not in header_map:
+            raise RuntimeError("falta encabezado requerido: {}".format(required.upper()))
+
+    key_nombre = header_map.get("nombre")
+    return key_nombre, header_map["x"], header_map["y"], header_map["z"]
+
+
+def ensure_electriccr_workbench():
+    if not REQUIRE_ELECTRICCR_WORKBENCH:
+        return True
+
+    if not getattr(App, "GuiUp", False):
+        log("[WARN] GUI no disponible. No se puede validar workbench.")
+        return True
+
+    try:
+        import FreeCADGui as Gui
+    except Exception as ex:
+        log("[ERROR] No se pudo importar FreeCADGui: {}".format(ex))
+        return False
+
+    try:
+        workbenches = Gui.listWorkbenches() or {}
+    except Exception as ex:
+        log("[ERROR] No se pudo listar workbenches: {}".format(ex))
+        return False
+
+    if WORKBENCH_ID not in workbenches:
+        log("[ERROR] Workbench '{}' no esta cargado.".format(WORKBENCH_ID))
+        log("[ERROR] Ejecute ElectricCRLoader y vuelva a correr la macro.")
+        return False
+
+    try:
+        Gui.activateWorkbench(WORKBENCH_ID)
+        log("[INFO] Workbench activo: {}".format(WORKBENCH_ID))
+    except Exception as ex:
+        log("[ERROR] No se pudo activar '{}': {}".format(WORKBENCH_ID, ex))
+        return False
+
+    return True
+
+
+def import_luminarias_csv():
+    doc = App.ActiveDocument
+    if doc is None:
+        log("[ERROR] No hay documento activo.")
+        return
+
+    if not ensure_electriccr_workbench():
+        return
+
+    if not os.path.isfile(CSV_PATH):
+        log("[ERROR] Archivo CSV no encontrado: {}".format(CSV_PATH))
+        return
+
+    base_obj = find_object_by_name_or_label(doc, BASE_OBJECT_NAME)
+    if base_obj is None:
+        log("[ERROR] No existe objeto base: {}".format(BASE_OBJECT_NAME))
+        return
+
+    log("[INFO] Inicio importacion CSV luminarias")
+    log("[INFO] CSV: {}".format(CSV_PATH))
+    log("[INFO] Base: {} (Name='{}', Label='{}')".format(BASE_OBJECT_NAME, base_obj.Name, base_obj.Label))
+    log("[INFO] Scale factor: {}".format(SCALE_FACTOR))
+
+    created = 0
+    skipped = 0
+    used_names = set(obj.Name for obj in doc.Objects)
+    used_labels = set(obj.Label for obj in doc.Objects)
+
+    doc.openTransaction("ElectricCR: importar luminarias CSV")
+    try:
+        g_electrico = ensure_root_group(doc, ELECTRICO_LABEL, ELECTRICO_NAME)
+        g_iluminacion = ensure_child_group(doc, g_electrico, ILUMINACION_LABEL, ILUMINACION_NAME)
+        g_importadas = ensure_child_group(doc, g_iluminacion, IMPORT_GROUP_LABEL, IMPORT_GROUP_NAME)
+
+        file_obj, reader = open_csv_dict_reader(CSV_PATH, CSV_ENCODING, CSV_DELIMITER)
+        try:
+            key_nombre, key_x, key_y, key_z = validate_headers(reader)
+
+            for row_number, row in enumerate(reader, start=2):
+                link_obj = None
+                try:
+                    x = parse_number(row.get(key_x), "X", row_number) * SCALE_FACTOR
+                    y = parse_number(row.get(key_y), "Y", row_number) * SCALE_FACTOR
+                    z = parse_number(row.get(key_z), "Z", row_number) * SCALE_FACTOR
+
+                    csv_name = ""
+                    if key_nombre is not None:
+                        csv_name = (row.get(key_nombre) or "").strip()
+
+                    base_name = sanitize_name(csv_name if csv_name else LINK_NAME_PREFIX, LINK_NAME_PREFIX)
+                    object_name = unique_value(base_name, used_names)
+
+                    link_obj = doc.addObject("App::Link", object_name)
+                    if hasattr(link_obj, "LinkedObject"):
+                        link_obj.LinkedObject = base_obj
+                    else:
+                        link_obj.Link = base_obj
+
+                    link_obj.Placement = App.Placement(App.Vector(x, y, z), App.Rotation())
+
+                    if USE_CSV_NAME_AS_LABEL and csv_name:
+                        label_seed = csv_name
+                    else:
+                        label_seed = object_name
+                    link_obj.Label = unique_value(label_seed, used_labels)
+
+                    g_importadas.addObject(link_obj)
+                    created += 1
+
+                except Exception as row_error:
+                    skipped += 1
+                    if link_obj is not None:
+                        try:
+                            doc.removeObject(link_obj.Name)
+                        except Exception:
+                            pass
+                    log("[WARN] Fila {} omitida: {}".format(row_number, row_error))
+        finally:
+            file_obj.close()
+
+        doc.recompute()
+        doc.commitTransaction()
+
+    except Exception as ex:
+        doc.abortTransaction()
+        log("[ERROR] Importacion cancelada: {}".format(ex))
+        return
+
+    log("[INFO] Importacion finalizada. Creados: {}. Omitidos: {}.".format(created, skipped))
+
+
+import_luminarias_csv()
+

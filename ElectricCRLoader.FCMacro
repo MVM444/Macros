@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
+# Icon: ElectricCRLoader.svg
 
 import os
 import sys
 import importlib
 import FreeCAD as App
 import FreeCADGui as Gui
+
+_ICON_NAME = "ElectricCRLoader.svg"
 
 
 def _macro_path_entries():
@@ -49,8 +52,87 @@ def _candidate_roots():
     return roots
 
 
+def _resolve_icon_path(icon_name):
+    search_roots = []
+    here = os.path.dirname(__file__)
+    search_roots.extend(
+        [
+            here,
+            os.path.join(here, "iconos"),
+            os.path.join(os.path.dirname(here), "iconos"),
+        ]
+    )
+    try:
+        for root in _candidate_roots():
+            search_roots.extend(
+                [
+                    root,
+                    os.path.join(root, "iconos"),
+                    os.path.join(root, "icons"),
+                    os.path.join(root, "Resources"),
+                    os.path.join(root, "Resources", "iconos"),
+                    os.path.join(root, "Resources", "icons"),
+                ]
+            )
+    except Exception:
+        pass
+    try:
+        pref = App.ParamGet("User parameter:BaseApp/Preferences/Macro").GetString("MacroPath", "")
+        if pref:
+            sep = ";" if os.name == "nt" else ":"
+            for entry in pref.split(sep):
+                entry = entry.strip()
+                if entry:
+                    search_roots.extend(
+                        [
+                            entry,
+                            os.path.join(entry, "iconos"),
+                            os.path.join(entry, "icons"),
+                            os.path.join(entry, "Resources"),
+                            os.path.join(entry, "Resources", "iconos"),
+                            os.path.join(entry, "Resources", "icons"),
+                        ]
+                    )
+    except Exception:
+        pass
+    seen = set()
+    for root in search_roots:
+        if not root:
+            continue
+        norm = os.path.normpath(os.path.abspath(root))
+        if norm in seen:
+            continue
+        seen.add(norm)
+        candidate = os.path.join(norm, icon_name)
+        if os.path.exists(candidate):
+            return candidate
+    return ""
+
+
+__Icon__ = _resolve_icon_path(_ICON_NAME)
+__icon__ = __Icon__
+
+
+def _is_complete_pkg(pkg_dir: str) -> bool:
+    try:
+        return (
+            os.path.isdir(pkg_dir)
+            and os.path.exists(os.path.join(pkg_dir, "InitGui.py"))
+            and os.path.isdir(os.path.join(pkg_dir, "electriccr"))
+        )
+    except Exception:
+        return False
+
+
 def _find_package_root():
     candidates = []
+    for root in _candidate_roots():
+        pkg = os.path.join(root, "ElectricCR")
+        if _is_complete_pkg(pkg):
+            candidates.append(root)
+    if candidates:
+        return candidates[0]
+    # Fallback: si no hay paquete "completo", aceptar cualquier InitGui.py
     for root in _candidate_roots():
         pkg = os.path.join(root, "ElectricCR")
         if os.path.isdir(pkg) and os.path.exists(os.path.join(pkg, "InitGui.py")):
@@ -99,6 +181,13 @@ def ensure_path_and_load():
         module = importlib.import_module('ElectricCR.InitGui')
         importlib.reload(module)
         App.Console.PrintMessage(f"ElectricCR: Workbench recargado desde {module.__file__}\n")
+        try:
+            import ElectricCR.electriccr  # noqa: F401
+        except Exception as e:
+            App.Console.PrintError(
+                "ElectricCR: paquete incompleto (no se encontro 'ElectricCR.electriccr').\n"
+            )
+            App.Console.PrintError(f"ElectricCR: detalle: {e}\n")
 
         if App.GuiUp:
             try:

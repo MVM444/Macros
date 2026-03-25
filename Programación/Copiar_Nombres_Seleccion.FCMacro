@@ -1,0 +1,148 @@
+# -*- coding: utf-8 -*-
+# Macro: Copiar_Nombres_Seleccion.FCMacro
+# Descripcion:
+#   Copia al portapapeles una lista sencilla de objetos seleccionados.
+#   Util para debug rapido, nombres de objetos, labels y ruta de grupos.
+
+import FreeCAD as App
+import FreeCADGui as Gui
+
+try:
+    from PySide2.QtWidgets import QApplication
+except Exception:
+    try:
+        from PySide.QtGui import QApplication  # type: ignore
+    except Exception:
+        QApplication = None
+
+
+TAG = "[COPIAR_NOMBRES]"
+
+# Opciones rapidas
+INCLUDE_NAME = True
+INCLUDE_LABEL = True
+INCLUDE_TYPEID = False
+INCLUDE_GROUP_PATH = True
+USE_TABS = True
+
+
+def log_info(msg):
+    App.Console.PrintMessage(f"{TAG}[INFO] {msg}\n")
+
+
+def log_warn(msg):
+    App.Console.PrintWarning(f"{TAG}[WARN] {msg}\n")
+
+
+def log_err(msg):
+    App.Console.PrintError(f"{TAG}[ERROR] {msg}\n")
+
+
+def safe_text(value):
+    try:
+        return str(value or "")
+    except Exception:
+        return ""
+
+
+def is_group(obj):
+    if obj is None:
+        return False
+    try:
+        if obj.isDerivedFrom("App::DocumentObjectGroup"):
+            return True
+    except Exception:
+        pass
+    try:
+        if obj.isDerivedFrom("App::Part"):
+            return True
+    except Exception:
+        pass
+    return hasattr(obj, "Group")
+
+
+def parent_group(obj):
+    if obj is None:
+        return None
+    if hasattr(obj, "getParentGroup"):
+        try:
+            grp = obj.getParentGroup()
+            if grp is not None:
+                return grp
+        except Exception:
+            pass
+    for parent in (getattr(obj, "InList", []) or []):
+        if is_group(parent):
+            return parent
+    return None
+
+
+def group_path(obj):
+    parts = []
+    seen = set()
+    cur = obj
+    while True:
+        grp = parent_group(cur)
+        if grp is None:
+            break
+        gid = safe_text(getattr(grp, "Name", "")).strip()
+        if not gid or gid in seen:
+            break
+        seen.add(gid)
+        parts.append(safe_text(getattr(grp, "Label", "")) or gid)
+        cur = grp
+    parts.reverse()
+    return "/".join(parts)
+
+
+def format_row(obj):
+    parts = []
+    if INCLUDE_NAME:
+        parts.append(safe_text(getattr(obj, "Name", "")))
+    if INCLUDE_LABEL:
+        parts.append(safe_text(getattr(obj, "Label", "")))
+    if INCLUDE_TYPEID:
+        parts.append(safe_text(getattr(obj, "TypeId", "")))
+    if INCLUDE_GROUP_PATH:
+        parts.append(group_path(obj))
+    sep = "\t" if USE_TABS else " | "
+    return sep.join(parts).rstrip()
+
+
+def copy_to_clipboard(text_value):
+    if QApplication is None:
+        return False
+    try:
+        clipboard = QApplication.clipboard()
+        clipboard.setText(text_value)
+        return True
+    except Exception:
+        return False
+
+
+def main():
+    selection = list(Gui.Selection.getSelection() or [])
+    if not selection:
+        log_err("Seleccione uno o mas objetos primero.")
+        return
+
+    rows = []
+    for obj in selection:
+        row = format_row(obj)
+        if row:
+            rows.append(row)
+            log_info(f"Objeto: {safe_text(getattr(obj, 'Name', ''))}")
+
+    if not rows:
+        log_warn("La seleccion no produjo texto para copiar.")
+        return
+
+    text_value = "\n".join(rows)
+    if copy_to_clipboard(text_value):
+        log_info(f"Copiado al portapapeles. Objetos={len(rows)}")
+    else:
+        log_warn("No se pudo copiar al portapapeles. Se imprime en consola.")
+    App.Console.PrintMessage(text_value + "\n")
+
+
+main()

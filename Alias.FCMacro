@@ -1,0 +1,175 @@
+import FreeCAD as App
+
+# Intento de import según versión de FreeCAD
+try:
+    from PySide2 import QtGui, QtWidgets, QtCore
+except ImportError:
+    from PySide import QtGui, QtCore
+    QtWidgets = QtGui
+
+# ============================
+# CONFIGURACIÓN
+# ============================
+
+COLUMNA_NOMBRE = "A"          # Columna donde está el texto del alias (ej. diametro_olla)
+COLUMNA_VALOR  = "B"          # Columna donde está el valor numérico al que se le pone alias
+FILA_INICIO = 2               # Primera fila con datos (1 = encabezados)
+LIMITE_FILAS = 2000           # Límite máximo de filas a revisar (seguridad)
+MAX_VACIOS_CONSECUTIVOS = 3   # Nº de filas vacías seguidas para considerar fin de tabla
+
+doc = App.ActiveDocument
+if doc is None:
+    raise Exception("No hay documento activo. Abre tu archivo antes de ejecutar la macro.")
+
+
+# ============================
+# FUNCIONES PARA HOJAS
+# ============================
+
+def obtener_hojas_spreadsheet():
+    """Devuelve una lista de objetos Sheet del documento."""
+    hojas = []
+    for obj in doc.Objects:
+        if obj.TypeId.startswith("Spreadsheet::Sheet"):
+            hojas.append(obj)
+    return hojas
+
+
+def seleccionar_hoja_gui(hojas):
+    """
+    Muestra un diálogo para seleccionar una hoja de cálculo.
+    Devuelve la hoja seleccionada o None si se cancela.
+    """
+    dialog = QtWidgets.QDialog()
+    dialog.setWindowTitle("Seleccionar hoja de cálculo")
+    layout = QtWidgets.QVBoxLayout(dialog)
+
+    label = QtWidgets.QLabel("Seleccione la hoja de cálculo que contiene la tabla de parámetros:")
+    layout.addWidget(label)
+
+    list_widget = QtWidgets.QListWidget()
+    for hoja in hojas:
+        texto = hoja.Label if hoja.Label else hoja.Name
+        item = QtWidgets.QListWidgetItem(texto)
+        item.setData(QtCore.Qt.UserRole, hoja)
+        list_widget.addItem(item)
+    layout.addWidget(list_widget)
+
+    botones = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
+    layout.addWidget(botones)
+
+    def aceptar():
+        if list_widget.currentItem() is None:
+            QtWidgets.QMessageBox.warning(dialog, "Atención", "Seleccione una hoja o pulse Cancelar.")
+            return
+        dialog.accept()
+
+    def cancelar():
+        dialog.reject()
+
+    botones.accepted.connect(aceptar)
+    botones.rejected.connect(cancelar)
+
+    if dialog.exec_() == QtWidgets.QDialog.Accepted:
+        item = list_widget.currentItem()
+        hoja_sel = item.data(QtCore.Qt.UserRole)
+        return hoja_sel
+
+    return None
+
+
+# ============================
+# FUNCIONES AUXILIARES DE CELDA / ALIAS
+# ============================
+
+def leer_celda(hoja, col, fila):
+    addr = f"{col}{fila}"
+    try:
+        val = hoja.get(addr)
+        if val is None:
+            return ""
+        return str(val)
+    except Exception:
+        return ""
+
+def alias_existente(hoja, addr):
+    try:
+        al = hoja.getAlias(addr)
+        if al is None:
+            return ""
+        return str(al)
+    except Exception:
+        return ""
+
+def asignar_alias(hoja, addr, alias):
+    try:
+        hoja.setAlias(addr, alias)
+        print(f"Alias asignado: '{alias}' → {addr}")
+    except Exception as e:
+        print(f"⚠ No se pudo asignar alias '{alias}' en {addr}: {e}")
+
+
+# ============================
+# PROGRAMA PRINCIPAL
+# ============================
+
+# 1) Buscar hojas Spreadsheet
+hojas = obtener_hojas_spreadsheet()
+
+if not hojas:
+    QtWidgets.QMessageBox.information(None, "Sin hojas", "No se encontraron hojas tipo Spreadsheet en el documento.")
+    raise SystemExit
+
+# 2) Seleccionar hoja con GUI
+hoja = seleccionar_hoja_gui(hojas)
+
+if hoja is None:
+    print("No se seleccionó ninguna hoja. Macro cancelada.")
+    raise SystemExit
+
+print(f"Usando hoja: {hoja.Name} (Label: {hoja.Label})")
+
+# 3) Recorrer filas con conteo de vacíos consecutivos
+fila = FILA_INICIO
+vacios_consecutivos = 0
+
+for _ in range(LIMITE_FILAS):
+
+    nombre_raw = leer_celda(hoja, COLUMNA_NOMBRE, fila)
+    nombre = nombre_raw
+    limpio = nombre.strip()
+
+    # ¿Está vacía (o solo espacios)?
+    if limpio == "":
+        vacios_consecutivos += 1
+        print(f"Fila {fila}: celda vacía o solo espacios en columna {COLUMNA_NOMBRE} "
+              f"(vacíos consecutivos: {vacios_consecutivos})")
+
+        if vacios_consecutivos >= MAX_VACIOS_CONSECUTIVOS:
+            print(f"Se alcanzaron {MAX_VACIOS_CONSECUTIVOS} filas vacías seguidas → fin de la macro.")
+            break
+
+        fila += 1
+        continue
+
+    # Si hay texto, reseteamos el contador de vacíos
+    vacios_consecutivos = 0
+
+    # Texto válido en "Nombre" → alias
+    alias_nuevo = limpio
+    celda_valor = f"{COLUMNA_VALOR}{fila}"
+    alias_actual = alias_existente(hoja, celda_valor)
+
+    if alias_actual:
+        print(f"Fila {fila}: {celda_valor} ya tiene alias '{alias_actual}', se conserva.")
+    else:
+        asignar_alias(hoja, celda_valor, alias_nuevo)
+
+    fila += 1
+
+else:
+    print(f"⚠ Se alcanzó el límite de {LIMITE_FILAS} filas sin encontrar fin de tabla claro. "
+          "Macro detenida por seguridad.")
+
+doc.recompute()
+print("Proceso completado. Aliases actualizados.")

@@ -35,3 +35,5 @@ Trabajar en dos equipos
 - Versiona esta carpeta con Git y sube a GitHub (o sincroniza con OneDrive). En la otra mÃ¡quina, clona/descarga y coloca el contenido en `Macros`.
 - VS Code compartirÃ¡ configuraciÃ³n si este repo incluye la carpeta `.vscode/` (ya incluida).
 
+Revisar la versión actual
+- Ejecuta scripts\show_version.ps1 desde la raíz del repositorio para ver la rama activa, el estado del árbol y el último commit; así sabes sin abrir paneles si estás en la compilación más reciente.

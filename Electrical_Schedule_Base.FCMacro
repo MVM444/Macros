@@ -1,0 +1,582 @@
+# -*- coding: utf-8 -*-
+"""
+Macro: Electrical_Schedule_Base.FCMacro
+Descripcion:
+- Crea objetos logicos ElectricalCircuit y ElectricalLoad.
+- Genera un Spreadsheet "PanelSchedule" con el cuadro de circuitos por tablero.
+- Calcula VA total, corriente nominal aproximada y un indicador de desbalance por fase.
+- Estructura de tablas (hoja "Tables") para que el usuario complete ampacidades/breakers segun NEC/Codigo CR.
+
+Notas importantes:
+- Evitar tildes y caracteres especiales en nombres y comentarios.
+- Esta macro es base. Dimensionamiento de conductores/breakers se deja como placeholder (Tables).
+- Depuracion: imprime en consola FreeCAD.
+
+Version: 2026-03-05
+"""
+
+import FreeCAD as App
+
+
+# -----------------------------
+# Helpers
+# -----------------------------
+
+def _get_or_create_spreadsheet(doc, name):
+    ss = doc.getObject(name)
+    if ss:
+        return ss
+    ss = doc.addObject("Spreadsheet::Sheet", name)
+    return ss
+
+
+def _set_cell(ss, cell, value):
+    try:
+        ss.set(cell, str(value))
+    except Exception as e:
+        App.Console.PrintError("set cell failed {} = {} | {}\n".format(cell, value, e))
+
+
+def _clear_sheet(ss, max_rows=300, max_cols=30):
+    # Basic clear: write empty to a reasonable range
+    # Columns: A..AD approx 30 cols
+    cols = []
+    for i in range(max_cols):
+        cols.append(chr(ord("A") + i) if i < 26 else "A" + chr(ord("A") + (i - 26)))
+    for r in range(1, max_rows + 1):
+        for c in cols:
+            ss.set(c + str(r), "")
+
+
+def _safe_get(obj, prop, default=None):
+    if not obj:
+        return default
+    try:
+        if hasattr(obj, prop):
+            return getattr(obj, prop)
+        if prop in obj.PropertiesList:
+            return obj.getPropertyByName(prop)
+    except Exception:
+        pass
+    return default
+
+
+def _phase_contribution(phase_code, va):
+    """
+    Returns dict with VA contribution per phase A/B/C.
+    Manual phase assignment expected:
+    - "A","B","C" (1P)
+    - "AB","BC","CA" (2P shared)
+    - "ABC" (3P shared)
+    """
+    phase_code = (phase_code or "").upper().strip()
+
+    if phase_code in ["A", "B", "C"]:
+        return {
+            "A": va if phase_code == "A" else 0.0,
+            "B": va if phase_code == "B" else 0.0,
+            "C": va if phase_code == "C" else 0.0,
+        }
+
+    if phase_code in ["AB", "BA"]:
+        # split evenly
+        return {"A": va / 2.0, "B": va / 2.0, "C": 0.0}
+
+    if phase_code in ["BC", "CB"]:
+        return {"A": 0.0, "B": va / 2.0, "C": va / 2.0}
+
+    if phase_code in ["CA", "AC"]:
+        return {"A": va / 2.0, "B": 0.0, "C": va / 2.0}
+
+    if phase_code in ["ABC", "3P", "3PH"]:
+        return {"A": va / 3.0, "B": va / 3.0, "C": va / 3.0}
+
+    # Unknown: treat as no phase assignment
+    return {"A": 0.0, "B": 0.0, "C": 0.0}
+
+
+def _current_nominal(va, voltage, poles):
+    """
+    Simple nominal current estimator.
+    - If 3P (poles==3 or phase_code == ABC): I ~= VA / (V * sqrt(3))
+    - Else: I ~= VA / V
+    """
+    try:
+        va = float(va or 0.0)
+        voltage = float(voltage or 0.0)
+        poles = int(poles or 1)
+        if voltage <= 0:
+            return 0.0
+        if poles >= 3:
+            import math
+
+            return va / (voltage * math.sqrt(3.0))
+        return va / voltage
+    except Exception:
+        return 0.0
+
+
+# -----------------------------
+# Custom objects (logical)
+# -----------------------------
+
+class ElectricalCircuit:
+    def __init__(self, obj):
+        obj.Proxy = self
+        self.Type = "ElectricalCircuit"
+        self.add_properties(obj)
+
+    def add_properties(self, obj):
+        # Basic ID
+        obj.addProperty("App::PropertyString", "Panel", "Electrical", "Panel name, e.g. TA")
+        obj.addProperty(
+            "App::PropertyString", "CircuitId", "Electrical", "Circuit id, e.g. TA-01 or 01"
+        )
+        obj.addProperty("App::PropertyEnumeration", "CircuitKind", "Electrical", "Branch or Feeder")
+        obj.CircuitKind = ["Branch", "Feeder"]
+
+        # Electrical
+        obj.addProperty("App::PropertyInteger", "Poles", "Electrical", "Poles: 1,2,3")
+        obj.Poles = 1
+        obj.addProperty("App::PropertyFloat", "Voltage", "Electrical", "Nominal voltage")
+        obj.Voltage = 120.0
+
+        obj.addProperty(
+            "App::PropertyString", "Phase", "Electrical", "Manual phase code: A,B,C,AB,BC,CA,ABC"
+        )
+        obj.Phase = "A"
+
+        obj.addProperty("App::PropertyFloat", "Length_m", "Electrical", "Circuit length in meters")
+        obj.Length_m = 0.0
+
+        obj.addProperty("App::PropertyFloat", "DemandFactor", "Electrical", "Demand factor 0..1")
+        obj.DemandFactor = 1.0
+
+        obj.addProperty("App::PropertyFloat", "PF", "Electrical", "Power factor 0..1")
+        obj.PF = 1.0
+
+        obj.addProperty("App::PropertyString", "Description", "Electrical", "Text description")
+        obj.addProperty("App::PropertyString", "Notes", "Electrical", "Notes")
+
+    def execute(self, obj):
+        # No geometry
+        pass
+
+
+class ElectricalLoad:
+    def __init__(self, obj):
+        obj.Proxy = self
+        self.Type = "ElectricalLoad"
+        self.add_properties(obj)
+
+    def add_properties(self, obj):
+        obj.addProperty("App::PropertyString", "Panel", "Electrical", "Panel name, e.g. TA")
+        obj.addProperty(
+            "App::PropertyString", "CircuitId", "Electrical", "Circuit id link, e.g. TA-01 or 01"
+        )
+
+        obj.addProperty("App::PropertyEnumeration", "LoadType", "Electrical", "Load type")
+        obj.LoadType = ["Receptacle180", "Receptacle300", "Lighting", "HVAC", "Equipment", "Other"]
+
+        obj.addProperty("App::PropertyInteger", "Qty", "Electrical", "Quantity")
+        obj.Qty = 1
+
+        obj.addProperty("App::PropertyFloat", "VA_each", "Electrical", "VA per unit (if applicable)")
+        obj.VA_each = 0.0
+
+        obj.addProperty(
+            "App::PropertyFloat", "VA_direct", "Electrical", "Direct VA total for this load (optional)"
+        )
+        obj.VA_direct = 0.0
+
+        obj.addProperty("App::PropertyFloat", "PF", "Electrical", "Power factor 0..1")
+        obj.PF = 1.0
+
+        obj.addProperty("App::PropertyFloat", "DemandFactor", "Electrical", "Demand factor 0..1 (optional)")
+        obj.DemandFactor = 1.0
+
+        obj.addProperty("App::PropertyString", "Description", "Electrical", "Text description")
+        obj.addProperty("App::PropertyString", "Notes", "Electrical", "Notes")
+
+    def execute(self, obj):
+        # No geometry
+        pass
+
+
+# -----------------------------
+# Core: schedule builder
+# -----------------------------
+
+def build_panel_schedule(doc, panel_filter=None):
+    App.Console.PrintMessage("build_panel_schedule start\n")
+
+    ss = _get_or_create_spreadsheet(doc, "PanelSchedule")
+    tables = _get_or_create_spreadsheet(doc, "Tables")
+
+    # Basic tables placeholders
+    if tables:
+        # Leave user editable structure
+        _set_cell(tables, "A1", "Tables (user editable)")
+        _set_cell(tables, "A3", "Breakers_A")
+        _set_cell(tables, "B3", "Example: 15,20,30,40,50,60,70,80,90,100,125,150,175,200")
+        _set_cell(tables, "A5", "Conductors")
+        _set_cell(tables, "B5", "Placeholder: fill ampacity tables per NEC/Codigo CR")
+
+    # Collect circuits and loads
+    circuits = []
+    loads = []
+
+    for obj in doc.Objects:
+        if hasattr(obj, "Proxy") and obj.Proxy:
+            ptype = getattr(obj.Proxy, "Type", "")
+            if ptype == "ElectricalCircuit":
+                circuits.append(obj)
+            elif ptype == "ElectricalLoad":
+                loads.append(obj)
+
+    App.Console.PrintMessage("Found circuits: {}\n".format(len(circuits)))
+    App.Console.PrintMessage("Found loads: {}\n".format(len(loads)))
+
+    # Index circuits by (Panel, CircuitId)
+    ckt_map = {}
+    for c in circuits:
+        panel = (_safe_get(c, "Panel", "") or "").strip()
+        cid = (_safe_get(c, "CircuitId", "") or "").strip()
+        if not cid:
+            continue
+        key = (panel, cid)
+        ckt_map[key] = c
+
+    # Aggregate by circuit key
+    agg = {}  # key -> dict
+    for ld in loads:
+        panel = (_safe_get(ld, "Panel", "") or "").strip()
+        cid = (_safe_get(ld, "CircuitId", "") or "").strip()
+
+        # If load is missing panel but circuit exists, inherit from circuit
+        if (not panel) and cid:
+            # try any circuit with same cid
+            # fallback: exact match on empty panel not possible, user should set Panel
+            pass
+
+        if panel_filter and panel != panel_filter:
+            continue
+
+        if not cid:
+            App.Console.PrintWarning("Load without CircuitId: {}\n".format(ld.Name))
+            continue
+
+        key = (panel, cid)
+        if key not in agg:
+            agg[key] = {
+                "Panel": panel,
+                "CircuitId": cid,
+                "VA_total": 0.0,
+                "VA_lighting": 0.0,
+                "VA_recp180": 0.0,
+                "VA_recp300": 0.0,
+                "VA_hvac": 0.0,
+                "VA_equip": 0.0,
+                "VA_other": 0.0,
+                "PF": 1.0,
+                "Demand": 1.0,
+                "Desc": "",
+                "Phase": "",
+                "Poles": 1,
+                "Voltage": 120.0,
+                "Length_m": 0.0,
+            }
+
+        lt = _safe_get(ld, "LoadType", "Other")
+        qty = float(_safe_get(ld, "Qty", 1) or 1)
+        va_each = float(_safe_get(ld, "VA_each", 0.0) or 0.0)
+        va_direct = float(_safe_get(ld, "VA_direct", 0.0) or 0.0)
+
+        # Rules:
+        # - If VA_direct > 0, use it
+        # - Else use qty * VA_each
+        va = va_direct if va_direct > 0 else (qty * va_each)
+
+        # Demand factor (per load)
+        df = float(_safe_get(ld, "DemandFactor", 1.0) or 1.0)
+        va_eff = va * df
+
+        agg[key]["VA_total"] += va_eff
+
+        # Buckets
+        if lt == "Receptacle180":
+            agg[key]["VA_recp180"] += va_eff
+        elif lt == "Receptacle300":
+            agg[key]["VA_recp300"] += va_eff
+        elif lt == "Lighting":
+            agg[key]["VA_lighting"] += va_eff
+        elif lt == "HVAC":
+            agg[key]["VA_hvac"] += va_eff
+        elif lt == "Equipment":
+            agg[key]["VA_equip"] += va_eff
+        else:
+            agg[key]["VA_other"] += va_eff
+
+        # Basic description accumulation
+        d = (_safe_get(ld, "Description", "") or "").strip()
+        if d:
+            if not agg[key]["Desc"]:
+                agg[key]["Desc"] = d
+            else:
+                # keep short
+                pass
+
+        # PF: keep minimum as conservative
+        pf = float(_safe_get(ld, "PF", 1.0) or 1.0)
+        agg[key]["PF"] = min(agg[key]["PF"], pf)
+
+    # Merge circuit properties (phase, poles, voltage, length, demand)
+    for key, data in agg.items():
+        c = ckt_map.get(key, None)
+        if c:
+            data["Phase"] = (_safe_get(c, "Phase", "") or "").strip()
+            data["Poles"] = int(_safe_get(c, "Poles", 1) or 1)
+            data["Voltage"] = float(_safe_get(c, "Voltage", 120.0) or 120.0)
+            data["Length_m"] = float(_safe_get(c, "Length_m", 0.0) or 0.0)
+            data["Demand"] = float(_safe_get(c, "DemandFactor", 1.0) or 1.0)
+            # If circuit demand is used globally, apply it here (optional)
+            data["VA_total"] = data["VA_total"] * data["Demand"]
+            # Keep PF conservative (also compare with circuit PF)
+            cpf = float(_safe_get(c, "PF", 1.0) or 1.0)
+            data["PF"] = min(data["PF"], cpf)
+            if not data["Desc"]:
+                data["Desc"] = (_safe_get(c, "Description", "") or "").strip()
+
+    # Write spreadsheet
+    _clear_sheet(ss, max_rows=400, max_cols=26)
+
+    headers = [
+        "Panel",
+        "CircuitId",
+        "Kind",
+        "Description",
+        "VA_Recp180",
+        "VA_Recp300",
+        "VA_Light",
+        "VA_HVAC",
+        "VA_Equip",
+        "VA_Other",
+        "VA_Total",
+        "PF",
+        "Voltage",
+        "Poles",
+        "Phase",
+        "I_nom_A",
+        "Length_m",
+        "Vdrop_pct",
+        "Breaker_A",
+        "Cond_Phase",
+        "Cond_Neutral",
+        "Cond_Ground",
+        "Conduit",
+        "Notes",
+    ]
+
+    # Header row
+    for i, h in enumerate(headers):
+        col = chr(ord("A") + i) if i < 26 else "A" + chr(ord("A") + (i - 26))
+        _set_cell(ss, col + "1", h)
+
+    # Sort keys by panel then circuitid
+    keys_sorted = sorted(list(agg.keys()), key=lambda k: (k[0], k[1]))
+
+    # Phase totals for imbalance indicator
+    phase_totals = {"A": 0.0, "B": 0.0, "C": 0.0}
+
+    row = 2
+    for key in keys_sorted:
+        data = agg[key]
+        panel, cid = key[0], key[1]
+        if panel_filter and panel != panel_filter:
+            continue
+
+        poles = int(data.get("Poles", 1) or 1)
+        voltage = float(data.get("Voltage", 120.0) or 120.0)
+        va_total = float(data.get("VA_total", 0.0) or 0.0)
+        i_nom = _current_nominal(va_total, voltage, poles)
+
+        phase_code = (data.get("Phase", "") or "").strip()
+        contrib = _phase_contribution(phase_code, va_total)
+        for ph in ["A", "B", "C"]:
+            phase_totals[ph] += contrib[ph]
+
+        # Placeholders for later: vdrop, breaker, conductors, conduit
+        vdrop_pct = ""  # later implement from Tables + length + conductor
+        breaker_a = ""  # later implement from Tables
+        cond_p = ""
+        cond_n = ""
+        cond_g = ""
+        conduit = ""
+
+        kind = "Branch"
+        c = ckt_map.get(key, None)
+        if c:
+            kind = _safe_get(c, "CircuitKind", "Branch")
+            # CircuitKind is enumeration, may come as string already
+            if isinstance(kind, (list, tuple)):
+                kind = "Branch"
+
+        values = [
+            panel,
+            cid,
+            str(kind),
+            data.get("Desc", ""),
+            round(data.get("VA_recp180", 0.0), 2),
+            round(data.get("VA_recp300", 0.0), 2),
+            round(data.get("VA_lighting", 0.0), 2),
+            round(data.get("VA_hvac", 0.0), 2),
+            round(data.get("VA_equip", 0.0), 2),
+            round(data.get("VA_other", 0.0), 2),
+            round(va_total, 2),
+            round(float(data.get("PF", 1.0) or 1.0), 3),
+            round(voltage, 2),
+            poles,
+            phase_code,
+            round(i_nom, 3),
+            round(float(data.get("Length_m", 0.0) or 0.0), 2),
+            vdrop_pct,
+            breaker_a,
+            cond_p,
+            cond_n,
+            cond_g,
+            conduit,
+            data.get("Notes", ""),
+        ]
+
+        for i, v in enumerate(values):
+            col = chr(ord("A") + i) if i < 26 else "A" + chr(ord("A") + (i - 26))
+            _set_cell(ss, col + str(row), v)
+
+        row += 1
+
+    # Imbalance indicator block (top right)
+    _set_cell(ss, "AA1", "Phase totals VA")
+    _set_cell(ss, "AA2", "A")
+    _set_cell(ss, "AB2", round(phase_totals["A"], 2))
+    _set_cell(ss, "AA3", "B")
+    _set_cell(ss, "AB3", round(phase_totals["B"], 2))
+    _set_cell(ss, "AA4", "C")
+    _set_cell(ss, "AB4", round(phase_totals["C"], 2))
+
+    # Calculate imbalance percent: (max - min) / avg
+    try:
+        a = phase_totals["A"]
+        b = phase_totals["B"]
+        c = phase_totals["C"]
+        mx = max(a, b, c)
+        mn = min(a, b, c)
+        avg = (a + b + c) / 3.0 if (a + b + c) > 0 else 0.0
+        imb = ((mx - mn) / avg) * 100.0 if avg > 0 else 0.0
+        _set_cell(ss, "AA6", "Imbalance_pct")
+        _set_cell(ss, "AB6", round(imb, 2))
+    except Exception as e:
+        App.Console.PrintError("Imbalance calc failed: {}\n".format(e))
+
+    ss.recompute()
+    doc.recompute()
+    App.Console.PrintMessage("build_panel_schedule done\n")
+
+
+# -----------------------------
+# Factory: create objects
+# -----------------------------
+
+def create_circuit(doc, panel="TA", circuit_id="TA-01", poles=1, voltage=120.0, phase="A", kind="Branch"):
+    obj = doc.addObject("App::FeaturePython", "Circuit_" + circuit_id.replace("-", "_"))
+    ElectricalCircuit(obj)
+    obj.Panel = panel
+    obj.CircuitId = circuit_id
+    obj.Poles = int(poles)
+    obj.Voltage = float(voltage)
+    obj.Phase = phase
+    try:
+        obj.CircuitKind = kind
+    except Exception:
+        pass
+    App.Console.PrintMessage("Created circuit: {} {}\n".format(panel, circuit_id))
+    return obj
+
+
+def create_load(
+    doc,
+    panel="TA",
+    circuit_id="TA-01",
+    load_type="Lighting",
+    qty=1,
+    va_each=0.0,
+    va_direct=0.0,
+    pf=1.0,
+    desc="",
+):
+    obj = doc.addObject("App::FeaturePython", "Load_" + circuit_id.replace("-", "_"))
+    ElectricalLoad(obj)
+    obj.Panel = panel
+    obj.CircuitId = circuit_id
+    try:
+        obj.LoadType = load_type
+    except Exception:
+        pass
+    obj.Qty = int(qty)
+    obj.VA_each = float(va_each)
+    obj.VA_direct = float(va_direct)
+    obj.PF = float(pf)
+    obj.Description = desc
+    App.Console.PrintMessage("Created load: {} {} {}\n".format(panel, circuit_id, load_type))
+    return obj
+
+
+# -----------------------------
+# Entry point (run)
+# -----------------------------
+
+doc = App.ActiveDocument
+if not doc:
+    doc = App.newDocument("ElectricalProject")
+
+# Example demo data (you can delete this block later)
+# Circuits
+create_circuit(doc, panel="TA", circuit_id="TA-01", poles=1, voltage=120.0, phase="A", kind="Branch")
+create_circuit(doc, panel="TA", circuit_id="TA-02", poles=1, voltage=120.0, phase="B", kind="Branch")
+create_circuit(doc, panel="TA", circuit_id="TA-03", poles=2, voltage=240.0, phase="AB", kind="Branch")
+
+# Loads
+# Receptacles normal: set VA_each=180 and qty = number of outlets
+create_load(
+    doc,
+    panel="TA",
+    circuit_id="TA-01",
+    load_type="Receptacle180",
+    qty=8,
+    va_each=180.0,
+    pf=1.0,
+    desc="Tomas generales",
+)
+# Lighting: each object can carry its own VA (use va_direct or va_each/qty)
+create_load(
+    doc,
+    panel="TA",
+    circuit_id="TA-02",
+    load_type="Lighting",
+    qty=1,
+    va_direct=420.0,
+    pf=0.95,
+    desc="Luminarias varias",
+)
+# HVAC: direct VA
+create_load(
+    doc,
+    panel="TA",
+    circuit_id="TA-03",
+    load_type="HVAC",
+    qty=1,
+    va_direct=3500.0,
+    pf=0.92,
+    desc="AA 1",
+)
+
+build_panel_schedule(doc, panel_filter=None)

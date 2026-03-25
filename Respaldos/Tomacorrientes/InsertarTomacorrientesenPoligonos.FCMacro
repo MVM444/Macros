@@ -1,0 +1,223 @@
+# -*- coding: utf-8 -*-
+"""
+InsertarTomacorrientesEnPoligonos.FCMacro
+Inserta tomacorrientes distribuidos sobre el contorno de cada poligono selec
+cionado.
+"""
+
+import math
+import os
+from pathlib import Path
+
+import FreeCAD as App
+import FreeCADGui as Gui
+import Part
+from FreeCAD import Vector
+from PySide2 import QtWidgets
+
+DISTANCIA_ENTRE_TOMAS = 1800.0  # mm
+OFFSET_DESDE_BORDE = 60.0       # mm
+ALTURA_MODELO_3D = 300.0        # mm
+INSERTAR_MODELO_3D = True
+
+MACRO_PATH = Path(App.ParamGet("User parameter:BaseApp/Preferences/Macro").GetString("MacroPath", ""))
+SCRIPT_DIR = Path(__file__).resolve().parent
+RESOURCE_BASES = [
+    MACRO_PATH / "Resources",
+    SCRIPT_DIR.parent / "Resources",
+    SCRIPT_DIR / "Resources",
+    SCRIPT_DIR.parent.parent / "Resources",
+]
+
+STEP_2D_NAME = "SimboloToma.step"
+STEP_3D_NAME = "tomacorriente-3D.step"
+
+_shape_cache = {}
+
+
+def _resolve_resource(file_name):
+    for base in RESOURCE_BASES:
+        try:
+            if base and base.exists():
+                candidate = base / file_name
+                if candidate.exists():
+                    return candidate
+        except Exception:
+            continue
+    fallback = MACRO_PATH / file_name
+    return fallback
+
+
+def _unit(vector):
+    v = Vector(vector)
+    length = v.Length
+    if length <= 1e-6:
+        return None
+    scale = 1.0 / length
+    return Vector(v.x * scale, v.y * scale, v.z * scale)
+
+
+def _expand_group(obj):
+    if hasattr(obj, "Group"):
+        out = []
+        for sub in getattr(obj, "Group", []) or []:
+            out.extend(_expand_group(sub))
+        return out
+    return [obj]
+
+
+def _ask_orientation():
+    answer = QtWidgets.QMessageBox.question(
+        None,
+        "Orientacion",
+        "Orientar tomacorrientes hacia dentro?",
+        QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+    )
+    return answer == QtWidgets.QMessageBox.Yes
+
+
+MIRAR_HACIA_ADENTRO = _ask_orientation()
+App.Console.PrintMessage(f"Intervalo: {DISTANCIA_ENTRE_TOMAS} mm | Orientacion: {'Dentro' if MIRAR_HACIA_ADENTRO else 'Fuera'}\n")
+
+
+def _load_step(resolved_path):
+    key = str(resolved_path)
+    if key in _shape_cache:
+        base = _shape_cache[key]
+        return base.copy() if base else None
+    resolved_syspath = Path(resolved_path)
+    if not resolved_syspath.exists():
+        App.Console.PrintError(f"No existe STEP: {resolved_syspath}\n")
+        _shape_cache[key] = None
+        return None
+    try:
+        shape = Part.read(str(resolved_syspath))
+    except Exception as ex:
+        App.Console.PrintError(f"No se pudo leer STEP '{resolved_syspath}': {ex}\n")
+        _shape_cache[key] = None
+        return None
+    _shape_cache[key] = shape
+    return shape.copy()
+
+
+def _build_shape():
+    shape2d = _load_step(_resolve_resource(STEP_2D_NAME))
+    if shape2d is None:
+        return None
+    if not INSERTAR_MODELO_3D:
+        return shape2d
+    shape3d = _load_step(_resolve_resource(STEP_3D_NAME))
+    if shape3d is None:
+        return None
+    shape3d.translate(Vector(0.0, 0.0, ALTURA_MODELO_3D))
+    try:
+        return Part.Compound([shape2d, shape3d])
+    except Exception:
+        return shape2d
+
+
+def _insert_single(doc, position, tangent, index):
+    direction = _unit(tangent)
+    if direction is None:
+        return index
+    normal_vec = Vector(-direction.y, direction.x, 0.0)
+    if not MIRAR_HACIA_ADENTRO:
+        normal_vec = Vector(-normal_vec.x, -normal_vec.y, -normal_vec.z)
+    normal = _unit(normal_vec)
+    if normal is None:
+        return index
+    offset_point = position.add(normal.multiply(OFFSET_DESDE_BORDE))
+    shape = _build_shape()
+    if shape is None:
+        return index
+    name = f"Toma_{index:03d}"
+    feature = doc.addObject("Part::Feature", name)
+    feature.Shape = shape
+    angle = math.degrees(math.atan2(normal.y, normal.x)) - 90.0
+    feature.Placement = App.Placement(offset_point, App.Rotation(Vector(0, 0, 1), angle))
+    App.Console.PrintMessage(f"Toma #{index} en {offset_point}\n")
+    return index + 1
+def _insert_on_wire(doc, wire, start_index):
+    index = start_index
+    for edge in wire.Edges:
+        length = edge.Length
+        if length <= 1e-3:
+            continue
+        count = max(1, int(length // DISTANCIA_ENTRE_TOMAS))
+        pattern = (count - 1) * DISTANCIA_ENTRE_TOMAS
+        start_offset = -pattern / 2.0
+        first_param = edge.FirstParameter
+        param_span = edge.LastParameter - first_param
+        for i in range(count):
+            offset = start_offset + i * DISTANCIA_ENTRE_TOMAS
+            u = 0.5 + (offset / length)
+            if u < 0.0:
+                u = 0.0
+            elif u > 1.0:
+                u = 1.0
+            param = first_param + u * param_span
+            point = edge.valueAt(param)
+            try:
+                tangent = edge.tangentAt(param)
+            except Exception:
+                tangent = edge.tangentAt(first_param)
+            index = _insert_single(doc, point, tangent, index)
+    return index
+
+
+def _bounding_wire(obj):
+    if not hasattr(obj, "Shape"):
+        return None
+    points = []
+    for wire in getattr(obj.Shape, "Wires", []) or []:
+        points.extend([vertex.Point for vertex in wire.Vertexes])
+    if not points:
+        return None
+    xs = [p.x for p in points]
+    ys = [p.y for p in points]
+    z = points[0].z
+    p1 = Vector(min(xs), min(ys), z)
+    p2 = Vector(max(xs), min(ys), z)
+    p3 = Vector(max(xs), max(ys), z)
+    p4 = Vector(min(xs), max(ys), z)
+    return Part.makePolygon([p1, p2, p3, p4, p1])
+
+
+def _iter_selected_objects():
+    selection = Gui.Selection.getSelection()
+    for obj in selection:
+        for expanded in _expand_group(obj):
+            yield expanded
+
+
+def procesar():
+    doc = App.ActiveDocument
+    if doc is None:
+        App.Console.PrintError("No hay documento activo.\n")
+        return
+    objects = list(_iter_selected_objects())
+    if not objects:
+        App.Console.PrintError("Seleccione al menos un objeto.\n")
+        return
+    index = 1
+    for obj in objects:
+        wires = [w for w in getattr(obj.Shape, "Wires", []) if getattr(w, "isClosed", lambda: False)()]
+        if not wires:
+            continue
+        if len(wires) == 1:
+            index = _insert_on_wire(doc, wires[0], index)
+        else:
+            wire = _bounding_wire(obj)
+            if wire is not None:
+                index = _insert_on_wire(doc, wire, index)
+    doc.recompute()
+    App.Console.PrintMessage("Proceso finalizado.\n")
+
+
+def main():
+    App.Console.PrintMessage("Iniciando macro InsertarTomacorrientesEnPoligonos...\n")
+    procesar()
+
+
+if __name__ == "__main__":
+    main()

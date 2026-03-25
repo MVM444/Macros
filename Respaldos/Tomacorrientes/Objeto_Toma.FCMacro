@@ -1,0 +1,86 @@
+# -*- coding: utf-8 -*-
+import os, sys, importlib
+import FreeCAD as App
+
+def dlog(m): App.Console.PrintMessage(f"[BOOT][INFO] {m}\n")
+def derr(m): App.Console.PrintError(f"[BOOT][ERROR] {m}\n")
+
+def _this_dir():
+    try: return os.path.dirname(os.path.abspath(__file__))
+    except: return ""
+
+def _candidate_pkg_roots():
+    here = _this_dir()
+    out = []
+    if here:
+        mdf = os.path.dirname(here)  # .../Macros-de-Freecad
+        out.append(os.path.join(mdf, "ElectricCR"))                  # paquete local
+        out.append(os.path.join(os.path.dirname(mdf), "ElectricCR")) # por si moviste
+    # posible destino futuro (Workbench)
+    out.append(os.path.join(App.getUserAppDataDir(), "Mod", "ElectricCR"))
+    # quitar duplicados
+    seen=set(); res=[]
+    for p in out:
+        if p and p not in seen:
+            res.append(p); seen.add(p)
+    return res
+
+def _ensure_paths():
+    added = False
+    found = False
+    for root in _candidate_pkg_roots():
+        if os.path.isdir(root):
+            found = True
+            if root not in sys.path:
+                sys.path.insert(0, root)
+                added = True
+                dlog("added to sys.path: " + root)
+            else:
+                dlog("already in sys.path: " + root)
+        else:
+            dlog("not a dir (skip): " + root)
+    if not found:
+        derr("no candidate dir added; verify ElectricCR folder placement")
+
+def _fallback_direct_loader():
+    """Busca el archivo objeto_toma_uno.py y lo carga directo si no hay paquete."""
+    from importlib.machinery import SourceFileLoader
+    for root in _candidate_pkg_roots():
+        cand = os.path.join(root, "electriccr", "features", "objeto_toma_uno.py")
+        if os.path.isfile(cand):
+            dlog("fallback loader: "+cand)
+            loader = SourceFileLoader("objeto_toma_uno_boot", cand)
+            mod = importlib.util.module_from_spec(importlib.machinery.ModuleSpec("objeto_toma_uno_boot", loader))
+            loader.exec_module(mod)
+            return mod
+    return None
+
+def run():
+    dlog("bootstrap start")
+    _ensure_paths()
+
+    mod = None
+    try:
+        import electriccr.features.objeto_toma_uno as toma1
+        importlib.reload(toma1)
+        dlog("imported: electriccr.features.objeto_toma_uno")
+        mod = toma1
+    except Exception as ex:
+        derr(f"import failed: {ex}")
+        dlog("trying fallback direct loader...")
+        mod = _fallback_direct_loader()
+        if not mod:
+            derr("fallback failed; check folder structure (__init__.py y ubicacion)")
+            raise
+
+    try:
+        obj = mod.crear_toma_uno()
+        if obj: dlog("created: "+obj.Name)
+    except Exception as ex:
+        derr(f"crear_toma_uno failed: {ex}")
+        raise
+
+    dlog("bootstrap end")
+
+if __name__ == "__main__":
+    run()

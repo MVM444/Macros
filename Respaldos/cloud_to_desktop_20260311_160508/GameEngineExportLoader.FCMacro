@@ -1,0 +1,302 @@
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+
+# GameEngineExportLoader Macro
+# Description: Reload and activate the GameEngineExportWB workbench from the FreeCAD macro directory.
+# Usage: Place the repository inside the FreeCAD macro directory and run this macro to refresh the workbench without restarting FreeCAD.
+# Only ASCII strings are used. All logs are prefixed with [GAMEEXPORT].
+# Version: 2025-10-13 19:55 UTC
+=======
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+# GameEngineExportLoader Macro
+# Description: Reload and activate the GameEngineExportWB workbench from the FreeCAD macro directory.
+# Important instructions: keep ASCII only strings, maintain [GAMEEXPORT] prefixed logs, and ensure code stays inside the FreeCAD macro tree.
+# Usage: place the repository inside the FreeCAD macro directory, run this macro to refresh the workbench without restarting FreeCAD.
+# Version timestamp: 2025-10-13 19:55 UTC
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+
+import FreeCAD
+import FreeCADGui
+import sys
+import os
+import importlib
+
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+_ICON_NAME = "GameEngineExportLoader.svg"
+
+LOG_PREFIX = "[GAMEEXPORT] "
+CANDIDATE_WORKBENCH_NAMES = (
+    "GameEngineExportWorkbench",
+    "GameEngineExportWB",
+    "Game Engine Export WB",
+)
+MODULES_TO_RELOAD = (
+    "Mod.GameEngineExportWB.commands.cmd_open_config",
+    "Mod.GameEngineExportWB.commands.cmd_open_panel",
+    "Mod.GameEngineExportWB.core.exporter_x3d",
+    "Mod.GameEngineExportWB.core.gamestart",
+    "Mod.GameEngineExportWB.core.lights",
+    "Mod.GameEngineExportWB.core.persist",
+    "Mod.GameEngineExportWB.ui.panel_config",
+    "Mod.GameEngineExportWB.ui.panel_export",
+    "Mod.GameEngineExportWB.Init",
+    "Mod.GameEngineExportWB.InitGui",
+)
+
+
+def _resolve_icon_path(icon_name):
+    base_dir = os.path.dirname(__file__)
+    candidates = [
+        os.path.join(base_dir, icon_name),
+        os.path.join(base_dir, "iconos", icon_name),
+        os.path.join(os.path.dirname(base_dir), "iconos", icon_name),
+    ]
+    try:
+        pref = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Macro").GetString("MacroPath", "")
+        if pref:
+            sep = ";" if os.name == "nt" else ":"
+            for entry in pref.split(sep):
+                entry = entry.strip()
+                if entry:
+                    candidates.extend(
+                        [
+                            os.path.join(entry, icon_name),
+                            os.path.join(entry, "iconos", icon_name),
+                            os.path.join(entry, "icons", icon_name),
+                            os.path.join(entry, "Resources", icon_name),
+                            os.path.join(entry, "Resources", "iconos", icon_name),
+                            os.path.join(entry, "Resources", "icons", icon_name),
+                        ]
+                    )
+    except Exception:
+        pass
+    seen = set()
+    for candidate in candidates:
+        norm = os.path.normpath(os.path.abspath(candidate))
+        if norm in seen:
+            continue
+        seen.add(norm)
+        if os.path.exists(norm):
+            return norm
+    return ""
+
+
+__Icon__ = _resolve_icon_path(_ICON_NAME)
+__icon__ = __Icon__
+
+
+def log_info(message):
+    FreeCAD.Console.PrintMessage(LOG_PREFIX + str(message) + "\n")
+
+
+def log_error(message):
+    FreeCAD.Console.PrintError(LOG_PREFIX + str(message) + "\n")
+=======
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+LOG_PREFIX = "[GAMEEXPORT] "
+
+
+def log_info(message):
+    FreeCAD.Console.PrintMessage(f"{LOG_PREFIX}{message}\n")
+
+
+def log_error(message):
+    FreeCAD.Console.PrintError(f"{LOG_PREFIX}{message}\n")
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+
+
+def ensure_repo_on_path(repo_root):
+    if repo_root not in sys.path:
+        sys.path.insert(0, repo_root)
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+        log_info("Added repo path: " + repo_root)
+
+
+def reload_module(module_name):
+    try:
+        if module_name in sys.modules:
+            importlib.reload(sys.modules[module_name])
+            log_info("Reloaded module: " + module_name)
+        else:
+            importlib.import_module(module_name)
+            log_info("Imported module: " + module_name)
+    except Exception as e:
+        log_error("Error reloading module " + module_name + ": " + str(e))
+        raise
+
+
+def activate_workbench():
+    last_error = None
+    for wb_name in CANDIDATE_WORKBENCH_NAMES:
+        try:
+            FreeCADGui.activateWorkbench(wb_name)
+            log_info("Activated workbench: " + wb_name)
+            return
+        except Exception as exc:
+            last_error = exc
+            log_info("Workbench activation attempt failed: " + wb_name)
+    if last_error is not None:
+        log_error("Error activating workbench: " + str(last_error))
+        raise last_error
+=======
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+        log_info(f"Added repo path: {repo_root}")
+
+
+def reload_module(module_name):
+    if module_name in sys.modules:
+        importlib.reload(sys.modules[module_name])
+        log_info(f"Reloaded module: {module_name}")
+    else:
+        importlib.import_module(module_name)
+        log_info(f"Imported module: {module_name}")
+
+
+def activate_workbench(wb_name):
+    FreeCADGui.activateWorkbench(wb_name)
+    log_info(f"Activated workbench: {wb_name}")
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+
+
+def main():
+    this_dir = os.path.dirname(__file__)
+    repo_root = os.path.abspath(this_dir)
+    ensure_repo_on_path(repo_root)
+
+    try:
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+        for module_name in MODULES_TO_RELOAD:
+            reload_module(module_name)
+        activate_workbench()
+        log_info("Workbench loaded successfully")
+    except Exception as exc:
+        log_error("Failed to load workbench: " + str(exc))
+=======
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+        reload_module("Mod.GameEngineExportWB.Init")
+        reload_module("Mod.GameEngineExportWB.InitGui")
+        activate_workbench("Game Engine Export WB")
+        log_info("Workbench loaded successfully")
+    except Exception as exc:
+        log_error(f"Failed to load workbench: {exc}")
+        raise
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+
+
+if __name__ == "__main__":
+    main()

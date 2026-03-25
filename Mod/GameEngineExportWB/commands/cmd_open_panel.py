@@ -1,37 +1,45 @@
-"""Command to open the Game Engine Export panel.
+"""Command to open the export TaskPanel.
 
-Descripcion rapida: comando principal para mostrar la interfaz del workbench.
-Fecha y hora: 2025-10-13 13:54 UTC.
+Descripcion rapida: comando para seleccionar objetos y exportar a X3D.
+Fecha y hora: 2026-03-11 17:40 UTC.
 Instrucciones clave:
-- Mantener logs con prefijo [GAMEEXPORT].
-- No ejecutar logica pesada aqui, solo abrir TaskPanel.
-- Asegurar compatibilidad ASCII.
+- Registrar logs con prefijo [GAMEEXPORT].
+- Abrir el panel de exportacion cuando exista documento activo.
+- Mantener cadenas ASCII.
 """
+
+import os
 
 import FreeCAD
 import FreeCADGui
 
-from ..ui import panel_scene
+from ..ui import panel_export
+
+ICON_PATH = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..", "resources", "icons", "gameexport.svg")
+).replace(os.sep, "/")
 
 
 class CommandClass:
-    """FreeCAD command wrapper for the TaskPanel."""
+    """FreeCAD command wrapper for the export TaskPanel."""
 
-    CommandName = "GameEngineExport_Open"
+    CommandName = "GameEngineExport_Export"
 
     def GetResources(self):  # noqa: N802 (FreeCAD API)
-        """Return metadata for menus and toolbars."""
         return {
-            "MenuText": "Game Engine Export",
-            "ToolTip": "Open the Game Engine Export panel",
-            "Pixmap": "Mod/GameEngineExportWB/resources/icons/gameexport.svg",
+            "MenuText": "Exportar X3D",
+            "ToolTip": "Seleccionar objetos y exportar a X3D",
+            "Pixmap": ICON_PATH,
         }
 
     def Activated(self):  # noqa: N802
-        """Show the TaskPanel when the command runs."""
-        FreeCAD.Console.PrintMessage("[GAMEEXPORT] Opening TaskPanel\n")
-        FreeCADGui.Control.showDialog(panel_scene.TaskPanel())
+        FreeCAD.Console.PrintMessage("[GAMEEXPORT] Opening export panel\n")
+        try:
+            if hasattr(FreeCADGui.Control, "activeDialog") and FreeCADGui.Control.activeDialog():
+                FreeCADGui.Control.closeDialog()
+        except Exception as exc:  # pragma: no cover - runtime guard
+            FreeCAD.Console.PrintWarning(f"[GAMEEXPORT] Could not close active dialog: {exc}\n")
+        FreeCADGui.Control.showDialog(panel_export.ExportTaskPanel())
 
     def IsActive(self):  # noqa: N802
-        """Enable the command only when a document is open."""
         return FreeCAD.ActiveDocument is not None
