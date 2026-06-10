@@ -1,0 +1,4578 @@
+{
+  "context_light": {
+    "conexiones": [
+      {
+        "destino": "HVAC_Air_Ventilation",
+        "origen": "HVAC_Project",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Air_Ventilation",
+        "origen": "HVAC_Internal",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Internal",
+        "origen": "HVAC_Port003",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Internal",
+        "origen": "HVAC_Port002",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Internal",
+        "origen": "HVAC_Port001",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Internal",
+        "origen": "HVAC_Port",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Internal",
+        "origen": "HVAC_EvapMaster_Pared_12000_H2000_S450_VAmbos",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Internal",
+        "origen": "HVAC_EvapMaster_Cassette_60000_H2500_S450_VAmbos",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Internal",
+        "origen": "HVAC_EvapMaster_Cassette_60000_H2500_S450_VSolo3D",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Air_Ventilation",
+        "origen": "HVAC_Equipos",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Equipos",
+        "origen": "HVAC_Evap2D056",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Equipos",
+        "origen": "HVAC_Evap2D055",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Equipos",
+        "origen": "HVAC_Evap2D054",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Equipos",
+        "origen": "HVAC_Evap2D053",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Equipos",
+        "origen": "HVAC_Evap2D052",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Equipos",
+        "origen": "HVAC_Evap2D051",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Equipos",
+        "origen": "HVAC_Evap2D050",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Equipos",
+        "origen": "HVAC_Evap2D049",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Equipos",
+        "origen": "HVAC_Evap2D048",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Equipos",
+        "origen": "HVAC_Evap2D047",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Equipos",
+        "origen": "HVAC_Evap2D046",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Equipos",
+        "origen": "HVAC_Evap2D045",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Equipos",
+        "origen": "HVAC_Evap2D044",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Equipos",
+        "origen": "HVAC_Evap2D043",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Equipos",
+        "origen": "HVAC_Evap2D042",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Equipos",
+        "origen": "HVAC_Evap2D041",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Equipos",
+        "origen": "HVAC_Evaporator011",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_EvapMaster_Cassette_60000_H2500_S450_VAmbos",
+        "origen": "HVAC_Evaporator011",
+        "tipo": "link_a"
+      },
+      {
+        "destino": "HVAC_Equipos",
+        "origen": "HVAC_Evaporator010",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_EvapMaster_Cassette_60000_H2500_S450_VAmbos",
+        "origen": "HVAC_Evaporator010",
+        "tipo": "link_a"
+      },
+      {
+        "destino": "HVAC_Equipos",
+        "origen": "HVAC_Evaporator009",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_EvapMaster_Pared_12000_H2000_S450_VAmbos",
+        "origen": "HVAC_Evaporator009",
+        "tipo": "link_a"
+      },
+      {
+        "destino": "HVAC_Equipos",
+        "origen": "HVAC_Evaporator008",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_EvapMaster_Pared_12000_H2000_S450_VAmbos",
+        "origen": "HVAC_Evaporator008",
+        "tipo": "link_a"
+      },
+      {
+        "destino": "HVAC_Equipos",
+        "origen": "HVAC_Evaporator007",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_EvapMaster_Pared_12000_H2000_S450_VAmbos",
+        "origen": "HVAC_Evaporator007",
+        "tipo": "link_a"
+      },
+      {
+        "destino": "HVAC_Equipos",
+        "origen": "HVAC_Evaporator006",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_EvapMaster_Pared_12000_H2000_S450_VAmbos",
+        "origen": "HVAC_Evaporator006",
+        "tipo": "link_a"
+      },
+      {
+        "destino": "HVAC_Equipos",
+        "origen": "HVAC_Evaporator005",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_EvapMaster_Pared_12000_H2000_S450_VAmbos",
+        "origen": "HVAC_Evaporator005",
+        "tipo": "link_a"
+      },
+      {
+        "destino": "HVAC_Equipos",
+        "origen": "HVAC_Evaporator004",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_EvapMaster_Pared_12000_H2000_S450_VAmbos",
+        "origen": "HVAC_Evaporator004",
+        "tipo": "link_a"
+      },
+      {
+        "destino": "HVAC_Equipos",
+        "origen": "HVAC_Evaporator003",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_EvapMaster_Pared_12000_H2000_S450_VAmbos",
+        "origen": "HVAC_Evaporator003",
+        "tipo": "link_a"
+      },
+      {
+        "destino": "HVAC_Equipos",
+        "origen": "HVAC_Evaporator002",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_EvapMaster_Pared_12000_H2000_S450_VAmbos",
+        "origen": "HVAC_Evaporator002",
+        "tipo": "link_a"
+      },
+      {
+        "destino": "HVAC_Equipos",
+        "origen": "HVAC_Evaporator001",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_EvapMaster_Pared_12000_H2000_S450_VAmbos",
+        "origen": "HVAC_Evaporator001",
+        "tipo": "link_a"
+      },
+      {
+        "destino": "HVAC_Equipos",
+        "origen": "HVAC_Evaporator",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_EvapMaster_Pared_12000_H2000_S450_VAmbos",
+        "origen": "HVAC_Evaporator",
+        "tipo": "link_a"
+      },
+      {
+        "destino": "HVAC_Air_Ventilation",
+        "origen": "HVAC_Espacios",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Espacios",
+        "origen": "HVAC_Space035",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Espacios",
+        "origen": "HVAC_Space034",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Espacios",
+        "origen": "HVAC_Space033",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Espacios",
+        "origen": "HVAC_Space032",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Espacios",
+        "origen": "HVAC_Space031",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Espacios",
+        "origen": "HVAC_Space030",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Espacios",
+        "origen": "HVAC_Space029",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Espacios",
+        "origen": "HVAC_Space028",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Espacios",
+        "origen": "HVAC_Space027",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Espacios",
+        "origen": "HVAC_Space026",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Espacios",
+        "origen": "HVAC_Space025",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Espacios",
+        "origen": "HVAC_Space024",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Espacios",
+        "origen": "HVAC_Space023",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Espacios",
+        "origen": "HVAC_Space022",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Espacios",
+        "origen": "HVAC_Space021",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Espacios",
+        "origen": "HVAC_Space020",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Espacios",
+        "origen": "HVAC_Space019",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Espacios",
+        "origen": "HVAC_Space018",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Espacios",
+        "origen": "HVAC_Space017",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Espacios",
+        "origen": "HVAC_Space016",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Espacios",
+        "origen": "HVAC_Space015",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Espacios",
+        "origen": "HVAC_Space014",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Espacios",
+        "origen": "HVAC_Space013",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Espacios",
+        "origen": "HVAC_Space012",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Espacios",
+        "origen": "HVAC_Space011",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Espacios",
+        "origen": "HVAC_Space010",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Espacios",
+        "origen": "HVAC_Space009",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Espacios",
+        "origen": "HVAC_Space008",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Espacios",
+        "origen": "HVAC_Space007",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Espacios",
+        "origen": "HVAC_Space006",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Espacios",
+        "origen": "HVAC_Space005",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Espacios",
+        "origen": "HVAC_Space004",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Espacios",
+        "origen": "HVAC_Space003",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Espacios",
+        "origen": "HVAC_Space002",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Espacios",
+        "origen": "HVAC_Space001",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Espacios",
+        "origen": "HVAC_Space",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Air_Ventilation",
+        "origen": "HVAC_Labels",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text074",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text086",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text085",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text084",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text083",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text082",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text081",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text080",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text079",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text078",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text077",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text076",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text075",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text073",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text072",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text071",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text070",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text069",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text068",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text067",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text066",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text065",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text064",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text063",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text062",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text061",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text060",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text059",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text058",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text057",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text056",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text055",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text054",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text053",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text052",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text051",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text050",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text049",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text048",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text047",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text046",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text045",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text044",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text043",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text042",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text041",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text040",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text039",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text038",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text037",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text036",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "HVAC_Labels",
+        "origen": "Text035",
+        "tipo": "pertenece_a"
+      }
+    ],
+    "debug": {
+      "connections_count": 140,
+      "exported_object_count": 129,
+      "raw_doc_object_count": 1331,
+      "source_after_filter_count": 129,
+      "source_before_filter_count": 129,
+      "source_before_limit_count": 129,
+      "source_info": {
+        "grupo": "HVAC",
+        "modo_resuelto": "grupo",
+        "source_count": 129
+      },
+      "source_object_count": 129,
+      "truncated": false
+    },
+    "intencion": {
+      "nota": "Light context for AI, no heavy geometry"
+    },
+    "meta": {
+      "document_file": "C:/Users/marco/OneDrive - Caja Costarricense de Seguro Social/2026/04-Abril-2026/La Cruz/La Cruz 4.FCStd",
+      "document_label": "La Cruz 4",
+      "document_name": "La_Cruz_4",
+      "freecad_version": [
+        "1",
+        "1",
+        "0",
+        "20260325 (Git shallow)",
+        "Unknown",
+        "2026/03/25 02:17:53",
+        "(HEAD detached at 34a971666)",
+        "34a9716668b1ddeb55b914f1c5be644826bdbbbf"
+      ],
+      "grupo": "HVAC",
+      "modo": "grupo",
+      "nivel": "tecnico",
+      "schema": "freecad-cad-light-v1",
+      "timestamp": "2026-04-18T21:34:59.869417Z",
+      "tipos_funcionales": []
+    },
+    "objetos": [
+      {
+        "id": "HVAC_Air_Ventilation",
+        "label": "HVAC Air and Ventilation",
+        "posicion": null,
+        "propiedades": {
+          "MEPType": "HVACRootGroup"
+        },
+        "rotacion": null,
+        "ruta_contenedor": [],
+        "tipo_funcional": "equipo_hvac",
+        "typeid": "App::DocumentObjectGroup",
+        "visible": false
+      },
+      {
+        "id": "HVAC_Project",
+        "label": "HVAC_Project",
+        "posicion": null,
+        "propiedades": {
+          "MEPType": "HVACProject"
+        },
+        "rotacion": null,
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation"
+        ],
+        "tipo_funcional": "equipo_hvac",
+        "typeid": "App::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "HVAC_Internal",
+        "label": "HVAC Internal",
+        "posicion": null,
+        "propiedades": {
+          "MEPType": "HVACInternalGroup"
+        },
+        "rotacion": null,
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation"
+        ],
+        "tipo_funcional": "equipo_hvac",
+        "typeid": "App::DocumentObjectGroup",
+        "visible": false
+      },
+      {
+        "id": "HVAC_Port003",
+        "label": "EVAP_Pared_12005_Drain",
+        "posicion": null,
+        "propiedades": {
+          "CapacityBTU": 12000.0,
+          "MEPType": "HVACPort",
+          "Model": "Pared_12000",
+          "Space": null,
+          "SystemType": "Mini-split",
+          "Type": "Wall"
+        },
+        "rotacion": null,
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Internal"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "App::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "HVAC_Port002",
+        "label": "EVAP_Pared_12005_Electric",
+        "posicion": null,
+        "propiedades": {
+          "CapacityBTU": 12000.0,
+          "MEPType": "HVACPort",
+          "Model": "Pared_12000",
+          "Space": null,
+          "SystemType": "Mini-split",
+          "Type": "Wall"
+        },
+        "rotacion": null,
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Internal"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "App::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "HVAC_Port001",
+        "label": "EVAP_Pared_12005_Liquid",
+        "posicion": null,
+        "propiedades": {
+          "CapacityBTU": 12000.0,
+          "MEPType": "HVACPort",
+          "Model": "Pared_12000",
+          "Space": null,
+          "SystemType": "Mini-split",
+          "Type": "Wall"
+        },
+        "rotacion": null,
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Internal"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "App::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "HVAC_Port",
+        "label": "EVAP_Pared_12005_Gas",
+        "posicion": null,
+        "propiedades": {
+          "CapacityBTU": 12000.0,
+          "MEPType": "HVACPort",
+          "Model": "Pared_12000",
+          "Space": null,
+          "SystemType": "Mini-split",
+          "Type": "Wall"
+        },
+        "rotacion": null,
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Internal"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "App::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "HVAC_EvapMaster_Pared_12000_H2000_S450_VAmbos",
+        "label": "MASTER_EVAP_Pared_12003",
+        "posicion": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 2029.6468811709701
+        },
+        "propiedades": {
+          "MEPType": "HVACEvaporatorMaster",
+          "Model": "Pared_12000"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Internal"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "Part::Feature",
+        "visible": false
+      },
+      {
+        "id": "HVAC_EvapMaster_Cassette_60000_H2500_S450_VAmbos",
+        "label": "MASTER_EVAP_Cassette_60005",
+        "posicion": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 2520.0
+        },
+        "propiedades": {
+          "MEPType": "HVACEvaporatorMaster",
+          "Model": "Cassette_60000"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Internal"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "Part::Feature",
+        "visible": false
+      },
+      {
+        "id": "HVAC_EvapMaster_Cassette_60000_H2500_S450_VSolo3D",
+        "label": "MASTER_EVAP_Cassette_60003",
+        "posicion": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 2520.0
+        },
+        "propiedades": {
+          "MEPType": "HVACEvaporatorMaster",
+          "Model": "Cassette_60000"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Internal"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "Part::Feature",
+        "visible": false
+      },
+      {
+        "id": "HVAC_Equipos",
+        "label": "Equipos",
+        "posicion": null,
+        "propiedades": {
+          "MEPType": "HVACEquipmentsGroup"
+        },
+        "rotacion": null,
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation"
+        ],
+        "tipo_funcional": "equipo_hvac",
+        "typeid": "App::DocumentObjectGroup",
+        "visible": false
+      },
+      {
+        "id": "HVAC_Evap2D056",
+        "label": "HVAC_2D_EVAP_EVAP_Pared_12005_Drain",
+        "posicion": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACEquipment2D"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Equipos"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "Part::Feature",
+        "visible": false
+      },
+      {
+        "id": "HVAC_Evap2D055",
+        "label": "HVAC_2D_EVAP_EVAP_Pared_12005_Electric",
+        "posicion": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACEquipment2D"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Equipos"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "Part::Feature",
+        "visible": false
+      },
+      {
+        "id": "HVAC_Evap2D054",
+        "label": "HVAC_2D_EVAP_EVAP_Pared_12005_Liquid",
+        "posicion": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACEquipment2D"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Equipos"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "Part::Feature",
+        "visible": false
+      },
+      {
+        "id": "HVAC_Evap2D053",
+        "label": "HVAC_2D_EVAP_EVAP_Pared_12005_Gas",
+        "posicion": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACEquipment2D"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Equipos"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "Part::Feature",
+        "visible": false
+      },
+      {
+        "id": "HVAC_Evap2D052",
+        "label": "HVAC_2D_EVAP_EVAP_Cassette_60001",
+        "posicion": {
+          "x": 10387.595,
+          "y": 12072.578333333333,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACEquipment2D"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Equipos"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "Part::Feature",
+        "visible": true
+      },
+      {
+        "id": "HVAC_Evap2D051",
+        "label": "HVAC_2D_EVAP_EVAP_Cassette_60000",
+        "posicion": {
+          "x": 7568.146500000001,
+          "y": 9511.929666666667,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACEquipment2D"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Equipos"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "Part::Feature",
+        "visible": true
+      },
+      {
+        "id": "HVAC_Evap2D050",
+        "label": "HVAC_2D_EVAP_EVAP_Pared_12009",
+        "posicion": {
+          "x": 14238.257000012933,
+          "y": 11533.916719726289,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACEquipment2D"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Equipos"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "Part::Feature",
+        "visible": true
+      },
+      {
+        "id": "HVAC_Evap2D049",
+        "label": "HVAC_2D_EVAP_EVAP_Pared_12008",
+        "posicion": {
+          "x": 14238.25699998655,
+          "y": 11413.916719725268,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACEquipment2D"
+        },
+        "rotacion": {
+          "angle_deg": 3.141592653589793,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": -1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Equipos"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "Part::Feature",
+        "visible": true
+      },
+      {
+        "id": "HVAC_Evap2D048",
+        "label": "HVAC_2D_EVAP_EVAP_Pared_12007",
+        "posicion": {
+          "x": 21532.824,
+          "y": 9341.893,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACEquipment2D"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Equipos"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "Part::Feature",
+        "visible": true
+      },
+      {
+        "id": "HVAC_Evap2D047",
+        "label": "HVAC_2D_EVAP_EVAP_Pared_12006",
+        "posicion": {
+          "x": 20601.566,
+          "y": 6099.8002929822005,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACEquipment2D"
+        },
+        "rotacion": {
+          "angle_deg": 1.5707963267948966,
+          "axis": {
+            "x": 0.0,
+            "y": -0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Equipos"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "Part::Feature",
+        "visible": true
+      },
+      {
+        "id": "HVAC_Evap2D046",
+        "label": "HVAC_2D_EVAP_EVAP_Pared_12005",
+        "posicion": {
+          "x": 12609.29429688845,
+          "y": 3860.969,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACEquipment2D"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Equipos"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "Part::Feature",
+        "visible": true
+      },
+      {
+        "id": "HVAC_Evap2D045",
+        "label": "HVAC_2D_EVAP_EVAP_Pared_12004",
+        "posicion": {
+          "x": 17833.435,
+          "y": 10077.41956222959,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACEquipment2D"
+        },
+        "rotacion": {
+          "angle_deg": 1.570796326800161,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Equipos"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "Part::Feature",
+        "visible": true
+      },
+      {
+        "id": "HVAC_Evap2D044",
+        "label": "HVAC_2D_EVAP_EVAP_Pared_12003",
+        "posicion": {
+          "x": 14973.252,
+          "y": 16503.8525,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACEquipment2D"
+        },
+        "rotacion": {
+          "angle_deg": 1.5707963267948966,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": -1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Equipos"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "Part::Feature",
+        "visible": true
+      },
+      {
+        "id": "HVAC_Evap2D043",
+        "label": "HVAC_2D_EVAP_EVAP_Pared_12002",
+        "posicion": {
+          "x": 14852.035972861804,
+          "y": 16503.852500026176,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACEquipment2D"
+        },
+        "rotacion": {
+          "angle_deg": 1.5707963267948966,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Equipos"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "Part::Feature",
+        "visible": true
+      },
+      {
+        "id": "HVAC_Evap2D042",
+        "label": "HVAC_2D_EVAP_EVAP_Pared_12001",
+        "posicion": {
+          "x": 9101.115,
+          "y": 16503.852499986584,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACEquipment2D"
+        },
+        "rotacion": {
+          "angle_deg": 4.712388980384943,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Equipos"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "Part::Feature",
+        "visible": true
+      },
+      {
+        "id": "HVAC_Evap2D041",
+        "label": "HVAC_2D_EVAP_EVAP_Pared_12000",
+        "posicion": {
+          "x": 8981.115000000002,
+          "y": 16503.852500012996,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACEquipment2D"
+        },
+        "rotacion": {
+          "angle_deg": 1.5707963267946403,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Equipos"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "Part::Feature",
+        "visible": true
+      },
+      {
+        "id": "HVAC_Evaporator011",
+        "label": "EVAP_Cassette_60001",
+        "linked_object": "HVAC_EvapMaster_Cassette_60000_H2500_S450_VAmbos",
+        "posicion": {
+          "x": 10387.595,
+          "y": 12072.578333333333,
+          "z": 0.0
+        },
+        "propiedades": {
+          "CapacityBTU": 60000.0,
+          "MEPType": "HVACEquipment",
+          "Model": "Cassette_60000",
+          "Space": "<Part::Feature>",
+          "SystemType": "Mini-split",
+          "Type": "Cassette"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Equipos"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "App::Link",
+        "visible": true
+      },
+      {
+        "id": "HVAC_Evaporator010",
+        "label": "EVAP_Cassette_60000",
+        "linked_object": "HVAC_EvapMaster_Cassette_60000_H2500_S450_VAmbos",
+        "posicion": {
+          "x": 7568.146500000001,
+          "y": 9511.929666666667,
+          "z": 0.0
+        },
+        "propiedades": {
+          "CapacityBTU": 60000.0,
+          "MEPType": "HVACEquipment",
+          "Model": "Cassette_60000",
+          "Space": "<Part::Feature>",
+          "SystemType": "Mini-split",
+          "Type": "Cassette"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Equipos"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "App::Link",
+        "visible": true
+      },
+      {
+        "id": "HVAC_Evaporator009",
+        "label": "EVAP_Pared_12009",
+        "linked_object": "HVAC_EvapMaster_Pared_12000_H2000_S450_VAmbos",
+        "posicion": {
+          "x": 14238.257000012933,
+          "y": 11533.916719726289,
+          "z": 0.0
+        },
+        "propiedades": {
+          "CapacityBTU": 12000.0,
+          "MEPType": "HVACEquipment",
+          "Model": "Pared_12000",
+          "Space": "<Part::Feature>",
+          "SystemType": "Mini-split",
+          "Type": "Wall"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Equipos"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "App::Link",
+        "visible": true
+      },
+      {
+        "id": "HVAC_Evaporator008",
+        "label": "EVAP_Pared_12008",
+        "linked_object": "HVAC_EvapMaster_Pared_12000_H2000_S450_VAmbos",
+        "posicion": {
+          "x": 14238.25699998655,
+          "y": 11413.916719725268,
+          "z": 0.0
+        },
+        "propiedades": {
+          "CapacityBTU": 12000.0,
+          "MEPType": "HVACEquipment",
+          "Model": "Pared_12000",
+          "Space": "<Part::Feature>",
+          "SystemType": "Mini-split",
+          "Type": "Wall"
+        },
+        "rotacion": {
+          "angle_deg": 3.141592653589793,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": -1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Equipos"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "App::Link",
+        "visible": true
+      },
+      {
+        "id": "HVAC_Evaporator007",
+        "label": "EVAP_Pared_12007",
+        "linked_object": "HVAC_EvapMaster_Pared_12000_H2000_S450_VAmbos",
+        "posicion": {
+          "x": 21532.824,
+          "y": 9341.893,
+          "z": 0.0
+        },
+        "propiedades": {
+          "CapacityBTU": 12000.0,
+          "MEPType": "HVACEquipment",
+          "Model": "Pared_12000",
+          "Space": "<Part::Feature>",
+          "SystemType": "Mini-split",
+          "Type": "Wall"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Equipos"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "App::Link",
+        "visible": true
+      },
+      {
+        "id": "HVAC_Evaporator006",
+        "label": "EVAP_Pared_12006",
+        "linked_object": "HVAC_EvapMaster_Pared_12000_H2000_S450_VAmbos",
+        "posicion": {
+          "x": 20601.566,
+          "y": 6099.8002929822005,
+          "z": 0.0
+        },
+        "propiedades": {
+          "CapacityBTU": 12000.0,
+          "MEPType": "HVACEquipment",
+          "Model": "Pared_12000",
+          "Space": "<Part::Feature>",
+          "SystemType": "Mini-split",
+          "Type": "Wall"
+        },
+        "rotacion": {
+          "angle_deg": 1.5707963267948966,
+          "axis": {
+            "x": 0.0,
+            "y": -0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Equipos"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "App::Link",
+        "visible": true
+      },
+      {
+        "id": "HVAC_Evaporator005",
+        "label": "EVAP_Pared_12005",
+        "linked_object": "HVAC_EvapMaster_Pared_12000_H2000_S450_VAmbos",
+        "posicion": {
+          "x": 12609.29429688845,
+          "y": 3860.969,
+          "z": 0.0
+        },
+        "propiedades": {
+          "CapacityBTU": 12000.0,
+          "MEPType": "HVACEquipment",
+          "Model": "Pared_12000",
+          "Space": "<Part::Feature>",
+          "SystemType": "Mini-split",
+          "Type": "Wall"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Equipos"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "App::Link",
+        "visible": true
+      },
+      {
+        "id": "HVAC_Evaporator004",
+        "label": "EVAP_Pared_12004",
+        "linked_object": "HVAC_EvapMaster_Pared_12000_H2000_S450_VAmbos",
+        "posicion": {
+          "x": 17833.435,
+          "y": 10077.41956222959,
+          "z": 0.0
+        },
+        "propiedades": {
+          "CapacityBTU": 18000.0,
+          "MEPType": "HVACEquipment",
+          "Model": "Pared_12000",
+          "Space": "<Part::Feature>",
+          "SystemType": "Mini-split",
+          "Type": "Wall"
+        },
+        "rotacion": {
+          "angle_deg": 1.570796326800161,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Equipos"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "App::Link",
+        "visible": true
+      },
+      {
+        "id": "HVAC_Evaporator003",
+        "label": "EVAP_Pared_12003",
+        "linked_object": "HVAC_EvapMaster_Pared_12000_H2000_S450_VAmbos",
+        "posicion": {
+          "x": 14973.252,
+          "y": 16503.8525,
+          "z": 0.0
+        },
+        "propiedades": {
+          "CapacityBTU": 9000.0,
+          "MEPType": "HVACEquipment",
+          "Model": "Pared_12000",
+          "Space": "<Part::Feature>",
+          "SystemType": "Multi-split",
+          "Type": "Wall"
+        },
+        "rotacion": {
+          "angle_deg": 1.5707963267948966,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": -1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Equipos"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "App::Link",
+        "visible": true
+      },
+      {
+        "id": "HVAC_Evaporator002",
+        "label": "EVAP_Pared_12002",
+        "linked_object": "HVAC_EvapMaster_Pared_12000_H2000_S450_VAmbos",
+        "posicion": {
+          "x": 14852.035972861804,
+          "y": 16503.852500026176,
+          "z": 0.0
+        },
+        "propiedades": {
+          "CapacityBTU": 9000.0,
+          "MEPType": "HVACEquipment",
+          "Model": "Pared_12000",
+          "Space": "<Part::Feature>",
+          "SystemType": "Multi-split",
+          "Type": "Wall"
+        },
+        "rotacion": {
+          "angle_deg": 1.5707963267948966,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Equipos"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "App::Link",
+        "visible": true
+      },
+      {
+        "id": "HVAC_Evaporator001",
+        "label": "EVAP_Pared_12001",
+        "linked_object": "HVAC_EvapMaster_Pared_12000_H2000_S450_VAmbos",
+        "posicion": {
+          "x": 9101.115,
+          "y": 16503.852499986584,
+          "z": 0.0
+        },
+        "propiedades": {
+          "CapacityBTU": 9000.0,
+          "MEPType": "HVACEquipment",
+          "Model": "Pared_12000",
+          "Space": "<Part::Feature>",
+          "SystemType": "Multi-split",
+          "Type": "Wall"
+        },
+        "rotacion": {
+          "angle_deg": 4.712388980384943,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Equipos"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "App::Link",
+        "visible": true
+      },
+      {
+        "id": "HVAC_Evaporator",
+        "label": "EVAP_Pared_12000",
+        "linked_object": "HVAC_EvapMaster_Pared_12000_H2000_S450_VAmbos",
+        "posicion": {
+          "x": 8981.115000000002,
+          "y": 16503.852500012996,
+          "z": 0.0
+        },
+        "propiedades": {
+          "CapacityBTU": 9000.0,
+          "MEPType": "HVACEquipment",
+          "Model": "Pared_12000",
+          "Space": "<Part::Feature>",
+          "SystemType": "Multi-split",
+          "Type": "Wall"
+        },
+        "rotacion": {
+          "angle_deg": 1.5707963267946403,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Equipos"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "App::Link",
+        "visible": true
+      },
+      {
+        "id": "HVAC_Espacios",
+        "label": "Espacios",
+        "posicion": null,
+        "propiedades": {
+          "MEPType": "HVACSpacesGroup"
+        },
+        "rotacion": null,
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation"
+        ],
+        "tipo_funcional": "area",
+        "typeid": "App::DocumentObjectGroup",
+        "visible": false
+      },
+      {
+        "id": "HVAC_Space035",
+        "label": "HVAC_Plataforma001",
+        "posicion": {
+          "x": 11693.257,
+          "y": 6864.461,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACSpace"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Espacios"
+        ],
+        "tipo_funcional": "area",
+        "typeid": "Part::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "HVAC_Space034",
+        "label": "HVAC_Entrada Jefatura",
+        "posicion": {
+          "x": 9081.932999999999,
+          "y": 5574.461,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACSpace"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Espacios"
+        ],
+        "tipo_funcional": "area",
+        "typeid": "Part::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "HVAC_Space033",
+        "label": "HVAC_Archivo005",
+        "posicion": {
+          "x": 25898.7109375,
+          "y": 9400.0,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACSpace"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Espacios"
+        ],
+        "tipo_funcional": "area",
+        "typeid": "Part::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "HVAC_Space032",
+        "label": "HVAC_Archivo004",
+        "posicion": {
+          "x": 23883.0,
+          "y": 9400.0,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACSpace"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Espacios"
+        ],
+        "tipo_funcional": "area",
+        "typeid": "Part::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "HVAC_Space031",
+        "label": "HVAC_Archivo002",
+        "posicion": {
+          "x": 29796.0,
+          "y": 9400.0,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACSpace"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Espacios"
+        ],
+        "tipo_funcional": "area",
+        "typeid": "Part::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "HVAC_Space030",
+        "label": "HVAC_Archivo001",
+        "posicion": {
+          "x": 28500.0,
+          "y": 9400.0,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACSpace"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Espacios"
+        ],
+        "tipo_funcional": "area",
+        "typeid": "Part::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "HVAC_Space029",
+        "label": "HVAC_Archivo",
+        "posicion": {
+          "x": 27200.0,
+          "y": 9400.0,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACSpace"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Espacios"
+        ],
+        "tipo_funcional": "area",
+        "typeid": "Part::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "HVAC_Space028",
+        "label": "HVAC_Salida Trasera",
+        "posicion": {
+          "x": 17993.43,
+          "y": 7801.665,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACSpace"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Espacios"
+        ],
+        "tipo_funcional": "area",
+        "typeid": "Part::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "HVAC_Space027",
+        "label": "HVAC_Pasillo005",
+        "posicion": {
+          "x": 11693.257,
+          "y": 6864.461,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACSpace"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Espacios"
+        ],
+        "tipo_funcional": "area",
+        "typeid": "Part::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "HVAC_Space026",
+        "label": "HVAC_Pasillo004",
+        "posicion": {
+          "x": 13663.257,
+          "y": 6864.461,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACSpace"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Espacios"
+        ],
+        "tipo_funcional": "area",
+        "typeid": "Part::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "HVAC_Space025",
+        "label": "HVAC_Suministros 2",
+        "posicion": {
+          "x": 17993.43,
+          "y": 9322.712,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACSpace"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Espacios"
+        ],
+        "tipo_funcional": "area",
+        "typeid": "Part::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "HVAC_Space024",
+        "label": "HVAC_Pasillo003",
+        "posicion": {
+          "x": 11733.257479858246,
+          "y": 13333.916719726287,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACSpace"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Espacios"
+        ],
+        "tipo_funcional": "area",
+        "typeid": "Part::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "HVAC_Space023",
+        "label": "HVAC_Sala de Espera",
+        "posicion": {
+          "x": 6155.178,
+          "y": 6951.281,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACSpace"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Espacios"
+        ],
+        "tipo_funcional": "area",
+        "typeid": "Part::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "HVAC_Space022",
+        "label": "HVAC_Frente de Platafoma",
+        "posicion": {
+          "x": 9081.932999999999,
+          "y": 6951.281,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACSpace"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Espacios"
+        ],
+        "tipo_funcional": "area",
+        "typeid": "Part::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "HVAC_Space021",
+        "label": "HVAC_Egresos",
+        "posicion": {
+          "x": 11733.257000000052,
+          "y": 8093.916719724942,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACSpace"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Espacios"
+        ],
+        "tipo_funcional": "area",
+        "typeid": "Part::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "HVAC_Space020",
+        "label": "HVAC_Ingresos",
+        "posicion": {
+          "x": 11733.257000000052,
+          "y": 9813.916719725268,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACSpace"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Espacios"
+        ],
+        "tipo_funcional": "area",
+        "typeid": "Part::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "HVAC_Space019",
+        "label": "HVAC_Caja",
+        "posicion": {
+          "x": 11733.257479858246,
+          "y": 11533.916719726289,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACSpace"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Espacios"
+        ],
+        "tipo_funcional": "area",
+        "typeid": "Part::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "HVAC_Space018",
+        "label": "HVAC_S.S. Familiar",
+        "posicion": {
+          "x": 6215.1759999999995,
+          "y": 3860.969,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACSpace"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Espacios"
+        ],
+        "tipo_funcional": "area",
+        "typeid": "Part::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "HVAC_Space017",
+        "label": "HVAC_Jefatura",
+        "posicion": {
+          "x": 10701.933,
+          "y": 3860.969,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACSpace"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Espacios"
+        ],
+        "tipo_funcional": "area",
+        "typeid": "Part::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "HVAC_Space016",
+        "label": "HVAC_B\u00f3veda",
+        "posicion": {
+          "x": 9081.932999999999,
+          "y": 3860.969,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACSpace"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Espacios"
+        ],
+        "tipo_funcional": "area",
+        "typeid": "Part::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "HVAC_Space015",
+        "label": "HVAC_Suministros",
+        "posicion": {
+          "x": 14973.252,
+          "y": 3860.969,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACSpace"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Espacios"
+        ],
+        "tipo_funcional": "area",
+        "typeid": "Part::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "HVAC_Space014",
+        "label": "HVAC_Tableros El\u00e9ctricos",
+        "posicion": {
+          "x": 17993.43,
+          "y": 6631.291,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACSpace"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Espacios"
+        ],
+        "tipo_funcional": "area",
+        "typeid": "Part::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "HVAC_Space013",
+        "label": "HVAC_Servidor",
+        "posicion": {
+          "x": 16603.885,
+          "y": 3860.969,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACSpace"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Espacios"
+        ],
+        "tipo_funcional": "area",
+        "typeid": "Part::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "HVAC_Space012",
+        "label": "HVAC_Comedor",
+        "posicion": {
+          "x": 19792.824,
+          "y": 9341.893,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACSpace"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Espacios"
+        ],
+        "tipo_funcional": "area",
+        "typeid": "Part::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "HVAC_Space011",
+        "label": "HVAC_Pasillo001",
+        "posicion": {
+          "x": 17993.43,
+          "y": 12632.195,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACSpace"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Espacios"
+        ],
+        "tipo_funcional": "area",
+        "typeid": "Part::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "HVAC_Space010",
+        "label": "HVAC_Pasillo002",
+        "posicion": {
+          "x": 16143.082,
+          "y": 13101.391,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACSpace"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Espacios"
+        ],
+        "tipo_funcional": "area",
+        "typeid": "Part::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "HVAC_Space009",
+        "label": "HVAC_Apoyo",
+        "posicion": {
+          "x": 14973.252,
+          "y": 6791.286,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACSpace"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Espacios"
+        ],
+        "tipo_funcional": "area",
+        "typeid": "Part::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "HVAC_Space008",
+        "label": "HVAC_Pasillo S.S.",
+        "posicion": {
+          "x": 19792.824,
+          "y": 14793.247,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACSpace"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Espacios"
+        ],
+        "tipo_funcional": "area",
+        "typeid": "Part::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "HVAC_Space007",
+        "label": "HVAC_S.S. Funcionarias",
+        "posicion": {
+          "x": 21592.824,
+          "y": 15963.247000000001,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACSpace"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Espacios"
+        ],
+        "tipo_funcional": "area",
+        "typeid": "Part::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "HVAC_Space006",
+        "label": "HVAC_S.S. Funcionarios",
+        "posicion": {
+          "x": 19792.824,
+          "y": 15963.247000000001,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACSpace"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Espacios"
+        ],
+        "tipo_funcional": "area",
+        "typeid": "Part::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "HVAC_Space005",
+        "label": "HVAC_Cuarto de Aseo",
+        "posicion": {
+          "x": 17462.492000000002,
+          "y": 14784.455,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACSpace"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Espacios"
+        ],
+        "tipo_funcional": "area",
+        "typeid": "Part::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "HVAC_Space004",
+        "label": "HVAC_Sala de Lactancia",
+        "posicion": {
+          "x": 14973.252,
+          "y": 14784.455,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACSpace"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Espacios"
+        ],
+        "tipo_funcional": "area",
+        "typeid": "Part::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "HVAC_Space003",
+        "label": "HVAC_Pensiones",
+        "posicion": {
+          "x": 12027.592999999999,
+          "y": 14784.455,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACSpace"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Espacios"
+        ],
+        "tipo_funcional": "area",
+        "typeid": "Part::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "HVAC_Space002",
+        "label": "HVAC_Cobros",
+        "posicion": {
+          "x": 9101.115,
+          "y": 14784.455,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACSpace"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Espacios"
+        ],
+        "tipo_funcional": "area",
+        "typeid": "Part::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "HVAC_Space001",
+        "label": "HVAC_Inspecci\u00f3n",
+        "posicion": {
+          "x": 6170.178,
+          "y": 14734.045999999998,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACSpace"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Espacios"
+        ],
+        "tipo_funcional": "area",
+        "typeid": "Part::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "HVAC_Space",
+        "label": "HVAC_Cochera",
+        "posicion": {
+          "x": 6313.803,
+          "y": 18383.245,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACSpace"
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Espacios"
+        ],
+        "tipo_funcional": "area",
+        "typeid": "Part::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "HVAC_Labels",
+        "label": "HVAC Labels",
+        "posicion": null,
+        "propiedades": {
+          "MEPType": "HVACLabelGroup"
+        },
+        "rotacion": null,
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation"
+        ],
+        "tipo_funcional": "etiqueta",
+        "typeid": "App::DocumentObjectGroup",
+        "visible": false
+      },
+      {
+        "id": "Text074",
+        "label": "HVAC_INFO2D_EVAP_Pared_12003",
+        "posicion": {
+          "x": 15807.627,
+          "y": 16503.8525,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACEquipmentInfo2D",
+          "Text": [
+            "EVAPORADORA TIPO PARED",
+            "SISTEMA MULTI SPLIT",
+            "9 000 BTU/H"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "App::FeaturePython",
+        "visible": true
+      },
+      {
+        "id": "Text086",
+        "label": "HVAC_INFO2D_EVAP_Pared_12005_Drain",
+        "posicion": {
+          "x": 0.0,
+          "y": 562.875,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACEquipmentInfo2D",
+          "Text": [
+            "EVAPORADORA TIPO PARED",
+            "SISTEMA MINI SPLIT",
+            "12 000 BTU/H"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "App::FeaturePython",
+        "visible": true
+      },
+      {
+        "id": "Text085",
+        "label": "HVAC_INFO2D_EVAP_Pared_12005_Electric",
+        "posicion": {
+          "x": 0.0,
+          "y": 562.875,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACEquipmentInfo2D",
+          "Text": [
+            "EVAPORADORA TIPO PARED",
+            "SISTEMA MINI SPLIT",
+            "12 000 BTU/H"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "App::FeaturePython",
+        "visible": true
+      },
+      {
+        "id": "Text084",
+        "label": "HVAC_INFO2D_EVAP_Pared_12005_Liquid",
+        "posicion": {
+          "x": 0.0,
+          "y": 562.875,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACEquipmentInfo2D",
+          "Text": [
+            "EVAPORADORA TIPO PARED",
+            "SISTEMA MINI SPLIT",
+            "12 000 BTU/H"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "App::FeaturePython",
+        "visible": true
+      },
+      {
+        "id": "Text083",
+        "label": "HVAC_INFO2D_EVAP_Pared_12005_Gas",
+        "posicion": {
+          "x": 0.0,
+          "y": 562.875,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACEquipmentInfo2D",
+          "Text": [
+            "EVAPORADORA TIPO PARED",
+            "SISTEMA MINI SPLIT",
+            "12 000 BTU/H"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "App::FeaturePython",
+        "visible": true
+      },
+      {
+        "id": "Text082",
+        "label": "HVAC_INFO2D_EVAP_Cassette_60001",
+        "posicion": {
+          "x": 10387.595,
+          "y": 12981.953333333333,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACEquipmentInfo2D",
+          "Text": [
+            "EVAPORADORA TIPO CASSETTE",
+            "SISTEMA MINI SPLIT",
+            "60 000 BTU/H"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "App::FeaturePython",
+        "visible": true
+      },
+      {
+        "id": "Text081",
+        "label": "HVAC_INFO2D_EVAP_Cassette_60000",
+        "posicion": {
+          "x": 7568.146500000001,
+          "y": 10421.304666666667,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACEquipmentInfo2D",
+          "Text": [
+            "EVAPORADORA TIPO CASSETTE",
+            "SISTEMA MINI SPLIT",
+            "60 000 BTU/H"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "App::FeaturePython",
+        "visible": true
+      },
+      {
+        "id": "Text080",
+        "label": "HVAC_INFO2D_EVAP_Pared_12009",
+        "posicion": {
+          "x": 14238.257000012933,
+          "y": 12096.791719726289,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACEquipmentInfo2D",
+          "Text": [
+            "EVAPORADORA TIPO PARED",
+            "SISTEMA MINI SPLIT",
+            "12 000 BTU/H"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "App::FeaturePython",
+        "visible": true
+      },
+      {
+        "id": "Text079",
+        "label": "HVAC_INFO2D_EVAP_Pared_12008",
+        "posicion": {
+          "x": 14238.25699998655,
+          "y": 10851.041719725268,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACEquipmentInfo2D",
+          "Text": [
+            "EVAPORADORA TIPO PARED",
+            "SISTEMA MINI SPLIT",
+            "12 000 BTU/H"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "App::FeaturePython",
+        "visible": true
+      },
+      {
+        "id": "Text078",
+        "label": "HVAC_INFO2D_EVAP_Pared_12007",
+        "posicion": {
+          "x": 21532.824,
+          "y": 9904.768,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACEquipmentInfo2D",
+          "Text": [
+            "EVAPORADORA TIPO PARED",
+            "SISTEMA MINI SPLIT",
+            "12 000 BTU/H"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "App::FeaturePython",
+        "visible": true
+      },
+      {
+        "id": "Text077",
+        "label": "HVAC_INFO2D_EVAP_Pared_12006",
+        "posicion": {
+          "x": 19767.191,
+          "y": 6099.8002929822005,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACEquipmentInfo2D",
+          "Text": [
+            "EVAPORADORA TIPO PARED",
+            "SISTEMA MINI SPLIT",
+            "12 000 BTU/H"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "App::FeaturePython",
+        "visible": true
+      },
+      {
+        "id": "Text076",
+        "label": "HVAC_INFO2D_EVAP_Pared_12005",
+        "posicion": {
+          "x": 12609.29429688845,
+          "y": 4423.844,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACEquipmentInfo2D",
+          "Text": [
+            "EVAPORADORA TIPO PARED",
+            "SISTEMA MINI SPLIT",
+            "12 000 BTU/H"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "App::FeaturePython",
+        "visible": true
+      },
+      {
+        "id": "Text075",
+        "label": "HVAC_INFO2D_EVAP_Pared_12004",
+        "posicion": {
+          "x": 16999.05999999938,
+          "y": 10077.419562225197,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACEquipmentInfo2D",
+          "Text": [
+            "EVAPORADORA TIPO PARED",
+            "SISTEMA MINI SPLIT",
+            "18 000 BTU/H"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "App::FeaturePython",
+        "visible": true
+      },
+      {
+        "id": "Text073",
+        "label": "HVAC_INFO2D_EVAP_Pared_12002",
+        "posicion": {
+          "x": 14017.660972861804,
+          "y": 16503.852500026176,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACEquipmentInfo2D",
+          "Text": [
+            "EVAPORADORA TIPO PARED",
+            "SISTEMA MULTI SPLIT",
+            "9 000 BTU/H"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "App::FeaturePython",
+        "visible": true
+      },
+      {
+        "id": "Text072",
+        "label": "HVAC_INFO2D_EVAP_Pared_12001",
+        "posicion": {
+          "x": 9935.49000000003,
+          "y": 16503.852499986795,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACEquipmentInfo2D",
+          "Text": [
+            "EVAPORADORA TIPO PARED",
+            "SISTEMA MULTI SPLIT",
+            "9 000 BTU/H"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "App::FeaturePython",
+        "visible": true
+      },
+      {
+        "id": "Text071",
+        "label": "HVAC_INFO2D_EVAP_Pared_12000",
+        "posicion": {
+          "x": 8146.739999999972,
+          "y": 16503.85250001321,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACEquipmentInfo2D",
+          "Text": [
+            "EVAPORADORA TIPO PARED",
+            "SISTEMA MULTI SPLIT",
+            "9 000 BTU/H"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "evaporadora",
+        "typeid": "App::FeaturePython",
+        "visible": true
+      },
+      {
+        "id": "Text070",
+        "label": "HVAC_Label_PLATAFORMA001",
+        "posicion": {
+          "x": 13253.257,
+          "y": 9139.188859862636,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACLabel",
+          "Space": "<Part::Feature>",
+          "Text": [
+            "PLATAFORMA001",
+            "11964 BTU/h",
+            "EQ: 0 (0%)"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "etiqueta",
+        "typeid": "App::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "Text069",
+        "label": "HVAC_Label_ENTRADA JEFATURA",
+        "posicion": {
+          "x": 9891.932999999999,
+          "y": 6159.461,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACLabel",
+          "Space": "<Part::Feature>",
+          "Text": [
+            "ENTRADA JEFATURA",
+            "1357 BTU/h",
+            "EQ: 0 (0%)"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "etiqueta",
+        "typeid": "App::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "Text068",
+        "label": "HVAC_Label_ARCHIVO005",
+        "posicion": {
+          "x": 26278.7109375,
+          "y": 11612.5,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACLabel",
+          "Space": "<Part::Feature>",
+          "Text": [
+            "ARCHIVO005",
+            "4817 BTU/h",
+            "EQ: 0 (0%)"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "etiqueta",
+        "typeid": "App::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "Text067",
+        "label": "HVAC_Label_ARCHIVO004",
+        "posicion": {
+          "x": 24633.0,
+          "y": 11612.5,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACLabel",
+          "Space": "<Part::Feature>",
+          "Text": [
+            "ARCHIVO004",
+            "9506 BTU/h",
+            "EQ: 0 (0%)"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "etiqueta",
+        "typeid": "App::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "Text066",
+        "label": "HVAC_Label_ARCHIVO002",
+        "posicion": {
+          "x": 30176.0,
+          "y": 11612.5,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACLabel",
+          "Space": "<Part::Feature>",
+          "Text": [
+            "ARCHIVO002",
+            "4817 BTU/h",
+            "EQ: 0 (0%)"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "etiqueta",
+        "typeid": "App::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "Text065",
+        "label": "HVAC_Label_ARCHIVO001",
+        "posicion": {
+          "x": 28880.0,
+          "y": 11612.5,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACLabel",
+          "Space": "<Part::Feature>",
+          "Text": [
+            "ARCHIVO001",
+            "4817 BTU/h",
+            "EQ: 0 (0%)"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "etiqueta",
+        "typeid": "App::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "Text064",
+        "label": "HVAC_Label_ARCHIVO",
+        "posicion": {
+          "x": 27580.0,
+          "y": 11612.5,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACLabel",
+          "Space": "<Part::Feature>",
+          "Text": [
+            "ARCHIVO",
+            "4817 BTU/h",
+            "EQ: 0 (0%)"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "etiqueta",
+        "typeid": "App::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "Text063",
+        "label": "HVAC_Label_SALIDA TRASERA",
+        "posicion": {
+          "x": 18813.129500000003,
+          "y": 8511.779,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACLabel",
+          "Space": "<Part::Feature>",
+          "Text": [
+            "SALIDA TRASERA",
+            "1667 BTU/h",
+            "EQ: 0 (0%)"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "etiqueta",
+        "typeid": "App::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "Text062",
+        "label": "HVAC_Label_PASILLO005",
+        "posicion": {
+          "x": 12678.257,
+          "y": 7419.188859862548,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACLabel",
+          "Space": "<Part::Feature>",
+          "Text": [
+            "PASILLO005",
+            "1565 BTU/h",
+            "EQ: 0 (0%)"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "etiqueta",
+        "typeid": "App::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "Text061",
+        "label": "HVAC_Label_PASILLO004",
+        "posicion": {
+          "x": 14238.257,
+          "y": 9139.188859862636,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACLabel",
+          "Space": "<Part::Feature>",
+          "Text": [
+            "PASILLO004",
+            "3747 BTU/h",
+            "EQ: 12000 (320%)"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "etiqueta",
+        "typeid": "App::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "Text060",
+        "label": "HVAC_Label_SUMINISTROS 2",
+        "posicion": {
+          "x": 18813.129500000003,
+          "y": 10120.08275,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACLabel",
+          "Space": "<Part::Feature>",
+          "Text": [
+            "SUMINISTROS 2",
+            "3745 BTU/h",
+            "EQ: 0 (0%)"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "etiqueta",
+        "typeid": "App::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "Text059",
+        "label": "HVAC_Label_PASILLO003",
+        "posicion": {
+          "x": 13898.169979858247,
+          "y": 13983.571859863143,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACLabel",
+          "Space": "<Part::Feature>",
+          "Text": [
+            "PASILLO003",
+            "4029 BTU/h",
+            "EQ: 0 (0%)"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "etiqueta",
+        "typeid": "App::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "Text058",
+        "label": "HVAC_Label_SALA DE ESPERA",
+        "posicion": {
+          "x": 7568.146500000001,
+          "y": 13352.902666666667,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACLabel",
+          "Space": "<Part::Feature>",
+          "Text": [
+            "SALA DE ESPERA",
+            "22746 BTU/h",
+            "EQ: 60000 (264%)"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "etiqueta",
+        "typeid": "App::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "Text057",
+        "label": "HVAC_Label_FRENTE DE PLATAFOMA",
+        "posicion": {
+          "x": 10387.595,
+          "y": 13352.902666666667,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACLabel",
+          "Space": "<Part::Feature>",
+          "Text": [
+            "FRENTE DE PLATAFOMA",
+            "21565 BTU/h",
+            "EQ: 60000 (278%)"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "etiqueta",
+        "typeid": "App::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "Text056",
+        "label": "HVAC_Label_EGRESOS",
+        "posicion": {
+          "x": 12698.257000000052,
+          "y": 8893.916719724943,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACLabel",
+          "Space": "<Part::Feature>",
+          "Text": [
+            "EGRESOS",
+            "2811 BTU/h",
+            "EQ: 0 (0%)"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "etiqueta",
+        "typeid": "App::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "Text055",
+        "label": "HVAC_Label_INGRESOS",
+        "posicion": {
+          "x": 12698.257000000052,
+          "y": 10613.916719725268,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACLabel",
+          "Space": "<Part::Feature>",
+          "Text": [
+            "INGRESOS",
+            "2811 BTU/h",
+            "EQ: 0 (0%)"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "etiqueta",
+        "typeid": "App::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "Text054",
+        "label": "HVAC_Label_CAJA",
+        "posicion": {
+          "x": 12503.257479858246,
+          "y": 12433.916719726287,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACLabel",
+          "Space": "<Part::Feature>",
+          "Text": [
+            "CAJA",
+            "4570 BTU/h",
+            "EQ: 12000 (263%)"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "etiqueta",
+        "typeid": "App::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "Text053",
+        "label": "HVAC_Label_S.S. FAMILIAR",
+        "posicion": {
+          "x": 7598.1455000000005,
+          "y": 5346.125,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACLabel",
+          "Space": "<Part::Feature>",
+          "Text": [
+            "S.S. FAMILIAR",
+            "5884 BTU/h",
+            "EQ: 0 (0%)"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "etiqueta",
+        "typeid": "App::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "Text052",
+        "label": "HVAC_Label_JEFATURA",
+        "posicion": {
+          "x": 11387.153666666667,
+          "y": 5302.715,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACLabel",
+          "Space": "<Part::Feature>",
+          "Text": [
+            "JEFATURA",
+            "10289 BTU/h",
+            "EQ: 12000 (117%)"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "etiqueta",
+        "typeid": "App::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "Text051",
+        "label": "HVAC_Label_B\u00d3VEDA",
+        "posicion": {
+          "x": 9831.932999999999,
+          "y": 4717.715,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACLabel",
+          "Space": "<Part::Feature>",
+          "Text": [
+            "B\u00d3VEDA",
+            "1840 BTU/h",
+            "EQ: 0 (0%)"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "etiqueta",
+        "typeid": "App::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "Text050",
+        "label": "HVAC_Label_SUMINISTROS",
+        "posicion": {
+          "x": 15708.571,
+          "y": 5246.13,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACLabel",
+          "Space": "<Part::Feature>",
+          "Text": [
+            "SUMINISTROS",
+            "2917 BTU/h",
+            "EQ: 0 (0%)"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "etiqueta",
+        "typeid": "App::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "Text049",
+        "label": "HVAC_Label_TABLEROS EL\u00c9CTRICOS",
+        "posicion": {
+          "x": 19297.498,
+          "y": 7136.480500000001,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACLabel",
+          "Space": "<Part::Feature>",
+          "Text": [
+            "TABLEROS EL\u00c9CTRICOS",
+            "1887 BTU/h",
+            "EQ: 0 (0%)"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "etiqueta",
+        "typeid": "App::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "Text048",
+        "label": "HVAC_Label_SERVIDOR",
+        "posicion": {
+          "x": 17603.305249999998,
+          "y": 5246.13,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACLabel",
+          "Space": "<Part::Feature>",
+          "Text": [
+            "SERVIDOR",
+            "7931 BTU/h",
+            "EQ: 12000 (151%)"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "etiqueta",
+        "typeid": "App::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "Text047",
+        "label": "HVAC_Label_COMEDOR",
+        "posicion": {
+          "x": 19792.824,
+          "y": 9341.893,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACLabel",
+          "Space": "<Part::Feature>",
+          "Text": [
+            "COMEDOR",
+            "6828 BTU/h",
+            "EQ: 12000 (176%)"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "etiqueta",
+        "typeid": "App::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "Text046",
+        "label": "HVAC_Label_PASILLO001",
+        "posicion": {
+          "x": 18813.129500000003,
+          "y": 13628.328,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACLabel",
+          "Space": "<Part::Feature>",
+          "Text": [
+            "PASILLO001",
+            "2339 BTU/h",
+            "EQ: 0 (0%)"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "etiqueta",
+        "typeid": "App::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "Text045",
+        "label": "HVAC_Label_PASILLO002",
+        "posicion": {
+          "x": 16988.2585,
+          "y": 13862.926,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACLabel",
+          "Space": "<Part::Feature>",
+          "Text": [
+            "PASILLO002",
+            "1844 BTU/h",
+            "EQ: 0 (0%)"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "etiqueta",
+        "typeid": "App::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "Text044",
+        "label": "HVAC_Label_APOYO",
+        "posicion": {
+          "x": 16403.343500000003,
+          "y": 7580.049125,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACLabel",
+          "Space": "<Part::Feature>",
+          "Text": [
+            "APOYO",
+            "14724 BTU/h",
+            "EQ: 18000 (122%)"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "etiqueta",
+        "typeid": "App::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "Text043",
+        "label": "HVAC_Label_PASILLO S.S.",
+        "posicion": {
+          "x": 20662.824,
+          "y": 15318.247,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACLabel",
+          "Space": "<Part::Feature>",
+          "Text": [
+            "PASILLO S.S.",
+            "2617 BTU/h",
+            "EQ: 0 (0%)"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "etiqueta",
+        "typeid": "App::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "Text042",
+        "label": "HVAC_Label_S.S. FUNCIONARIAS",
+        "posicion": {
+          "x": 22432.824,
+          "y": 17103.247,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACLabel",
+          "Space": "<Part::Feature>",
+          "Text": [
+            "S.S. FUNCIONARIAS",
+            "2743 BTU/h",
+            "EQ: 0 (0%)"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "etiqueta",
+        "typeid": "App::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "Text041",
+        "label": "HVAC_Label_S.S. FUNCIONARIOS",
+        "posicion": {
+          "x": 20632.824,
+          "y": 17103.247,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACLabel",
+          "Space": "<Part::Feature>",
+          "Text": [
+            "S.S. FUNCIONARIOS",
+            "2743 BTU/h",
+            "EQ: 0 (0%)"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "etiqueta",
+        "typeid": "App::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "Text040",
+        "label": "HVAC_Label_CUARTO DE ASEO",
+        "posicion": {
+          "x": 18547.6605,
+          "y": 16503.8525,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACLabel",
+          "Space": "<Part::Feature>",
+          "Text": [
+            "CUARTO DE ASEO",
+            "5344 BTU/h",
+            "EQ: 0 (0%)"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "etiqueta",
+        "typeid": "App::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "Text039",
+        "label": "HVAC_Label_SALA DE LACTANCIA",
+        "posicion": {
+          "x": 16157.872,
+          "y": 16503.8525,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACLabel",
+          "Space": "<Part::Feature>",
+          "Text": [
+            "SALA DE LACTANCIA",
+            "5834 BTU/h",
+            "EQ: 12000 (206%)"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "etiqueta",
+        "typeid": "App::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "Text038",
+        "label": "HVAC_Label_PENSIONES",
+        "posicion": {
+          "x": 13440.422499999999,
+          "y": 15644.153750000001,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACLabel",
+          "Space": "<Part::Feature>",
+          "Text": [
+            "PENSIONES",
+            "6958 BTU/h",
+            "EQ: 12000 (172%)"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "etiqueta",
+        "typeid": "App::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "Text037",
+        "label": "HVAC_Label_COBROS",
+        "posicion": {
+          "x": 10504.354,
+          "y": 15644.153750000001,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACLabel",
+          "Space": "<Part::Feature>",
+          "Text": [
+            "COBROS",
+            "6911 BTU/h",
+            "EQ: 9000 (130%)"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "etiqueta",
+        "typeid": "App::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "Text036",
+        "label": "HVAC_Label_INSPECCI\u00d3N",
+        "posicion": {
+          "x": 7575.646500000001,
+          "y": 15606.346999999998,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACLabel",
+          "Space": "<Part::Feature>",
+          "Text": [
+            "INSPECCI\u00d3N",
+            "7024 BTU/h",
+            "EQ: 9000 (128%)"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "etiqueta",
+        "typeid": "App::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "Text035",
+        "label": "HVAC_Label_COCHERA",
+        "posicion": {
+          "x": 8999.055250000001,
+          "y": 20475.143,
+          "z": 0.0
+        },
+        "propiedades": {
+          "MEPType": "HVACLabel",
+          "Space": "<Part::Feature>",
+          "Text": [
+            "COCHERA",
+            "32181 BTU/h",
+            "EQ: 0 (0%)"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "HVAC_Air_Ventilation",
+          "HVAC_Labels"
+        ],
+        "tipo_funcional": "etiqueta",
+        "typeid": "App::FeaturePython",
+        "visible": false
+      }
+    ]
+  },
+  "debug": {
+    "counters": {
+      "external_log_lines": 0,
+      "functional_area": 37,
+      "functional_equipo_hvac": 4,
+      "functional_etiqueta": 37,
+      "functional_evaporadora": 51,
+      "objects_exported": 129
+    },
+    "errors": [],
+    "events": [
+      {
+        "data": {
+          "task": "my_main_macro_task"
+        },
+        "level": "INFO",
+        "message": "Protected execution start",
+        "ts": "2026-04-18T21:34:59.869417Z"
+      },
+      {
+        "level": "INFO",
+        "message": "Task completed without exception",
+        "ts": "2026-04-18T21:34:59.869417Z"
+      },
+      {
+        "data": {
+          "label": "HVAC Air and Ventilation",
+          "name": "HVAC_Air_Ventilation",
+          "query": "HVAC"
+        },
+        "level": "INFO",
+        "message": "Group matched partial",
+        "ts": "2026-04-18T21:34:59.885124Z"
+      },
+      {
+        "data": {
+          "reason": "no_lines_matching_prefixes"
+        },
+        "level": "INFO",
+        "message": "External log capture note",
+        "ts": "2026-04-18T21:34:59.900837Z"
+      }
+    ],
+    "external_logs": {
+      "captured": true,
+      "line_count": 0,
+      "lines": [],
+      "prefixes": [
+        "[MEP-HVAC]"
+      ],
+      "reason": "no_lines_matching_prefixes"
+    },
+    "imports": {
+      "App": true,
+      "Gui": true,
+      "requests": true
+    },
+    "timers_ms": {
+      "light_context": 24,
+      "task_exec": 0
+    },
+    "warnings": []
+  },
+  "error": null,
+  "fix_prompt": "Fix this FreeCAD issue from the JSON report. Return robust modular Python.",
+  "report_id": "4408e2cc-d9ba-4d44-9557-d0d8b17e4684",
+  "result": {
+    "document": "La_Cruz_4",
+    "object_count": 1331,
+    "ok": true
+  },
+  "state": "ok",
+  "task_name": "my_main_macro_task",
+  "timestamp": "2026-04-18T21:34:59.900837Z",
+  "traceback": null
+}

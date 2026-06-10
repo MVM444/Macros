@@ -1,0 +1,480 @@
+{
+  "context_light": {
+    "conexiones": [
+      {
+        "destino": "TAB_E42_MB_SUP",
+        "origen": "TAB_E42_MB_SUP_Simbolo2D",
+        "tipo": "pertenece_a"
+      },
+      {
+        "destino": "TAB_E42_MB_SUP",
+        "origen": "Text",
+        "tipo": "pertenece_a"
+      }
+    ],
+    "debug": {
+      "connections_count": 2,
+      "exported_object_count": 14,
+      "raw_doc_object_count": 14,
+      "source_after_filter_count": 14,
+      "source_before_filter_count": 14,
+      "source_before_limit_count": 14,
+      "source_info": {
+        "grupo": "HVAC",
+        "modo_resuelto": "documento",
+        "source_count": 14
+      },
+      "source_object_count": 14,
+      "truncated": false
+    },
+    "intencion": {
+      "nota": "Light context for AI, no heavy geometry"
+    },
+    "meta": {
+      "document_file": "C:/Users/marco/OneDrive - Caja Costarricense de Seguro Social/Documentos/FreeCAD/Prueba El\u00e9ctrico.FCStd",
+      "document_label": "Prueba El\u00e9ctrico",
+      "document_name": "Prueba_El\u00e9ctrico",
+      "freecad_version": [
+        "1",
+        "1",
+        "0",
+        "20260325 (Git shallow)",
+        "Unknown",
+        "2026/03/25 02:17:53",
+        "(HEAD detached at 34a971666)",
+        "34a9716668b1ddeb55b914f1c5be644826bdbbbf"
+      ],
+      "grupo": "HVAC",
+      "modo": "grupo",
+      "nivel": "tecnico",
+      "schema": "freecad-cad-light-v1",
+      "timestamp": "2026-04-20T20:28:05.063334Z",
+      "tipos_funcionales": []
+    },
+    "objetos": [
+      {
+        "id": "Rectangle",
+        "label": "Rectangle",
+        "posicion": {
+          "x": 296.26105870796994,
+          "y": 279.7841830694863,
+          "z": 0.0
+        },
+        "propiedades": {},
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [],
+        "tipo_funcional": "otro",
+        "typeid": "Part::Part2DObjectPython",
+        "visible": true
+      },
+      {
+        "id": "Wall",
+        "label": "Muro",
+        "posicion": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "propiedades": {},
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [],
+        "tipo_funcional": "otro",
+        "typeid": "Part::FeaturePython",
+        "visible": false
+      },
+      {
+        "id": "TAB_E42_MB_SUP",
+        "label": "TP-01",
+        "posicion": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "propiedades": {
+          "Type": ""
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [],
+        "tipo_funcional": "otro",
+        "typeid": "App::Part",
+        "visible": true
+      },
+      {
+        "id": "Origin",
+        "label": "Origen de Coordenadas001",
+        "posicion": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "propiedades": {},
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [],
+        "tipo_funcional": "otro",
+        "typeid": "App::Origin",
+        "visible": false
+      },
+      {
+        "id": "X_Axis",
+        "label": "Eje X",
+        "posicion": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "propiedades": {},
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [],
+        "tipo_funcional": "otro",
+        "typeid": "App::Line",
+        "visible": true
+      },
+      {
+        "id": "Y_Axis",
+        "label": "Eje Y",
+        "posicion": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "propiedades": {},
+        "rotacion": {
+          "angle_deg": 2.0943951023931953,
+          "axis": {
+            "x": 0.5773502691896258,
+            "y": 0.5773502691896258,
+            "z": 0.5773502691896258
+          }
+        },
+        "ruta_contenedor": [],
+        "tipo_funcional": "otro",
+        "typeid": "App::Line",
+        "visible": true
+      },
+      {
+        "id": "Z_Axis",
+        "label": "Eje Z",
+        "posicion": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "propiedades": {},
+        "rotacion": {
+          "angle_deg": 2.0943951023931953,
+          "axis": {
+            "x": 0.5773502691896258,
+            "y": -0.5773502691896258,
+            "z": 0.5773502691896258
+          }
+        },
+        "ruta_contenedor": [],
+        "tipo_funcional": "otro",
+        "typeid": "App::Line",
+        "visible": true
+      },
+      {
+        "id": "XY_Plane",
+        "label": "Plano XY",
+        "posicion": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "propiedades": {},
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [],
+        "tipo_funcional": "otro",
+        "typeid": "App::Plane",
+        "visible": true
+      },
+      {
+        "id": "XZ_Plane",
+        "label": "Plano XZ",
+        "posicion": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "propiedades": {},
+        "rotacion": {
+          "angle_deg": 1.5707963267948968,
+          "axis": {
+            "x": 1.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        },
+        "ruta_contenedor": [],
+        "tipo_funcional": "otro",
+        "typeid": "App::Plane",
+        "visible": true
+      },
+      {
+        "id": "YZ_Plane",
+        "label": "Plano YZ",
+        "posicion": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "propiedades": {},
+        "rotacion": {
+          "angle_deg": 2.0943951023931953,
+          "axis": {
+            "x": 0.5773502691896258,
+            "y": 0.5773502691896258,
+            "z": 0.5773502691896258
+          }
+        },
+        "ruta_contenedor": [],
+        "tipo_funcional": "otro",
+        "typeid": "App::Plane",
+        "visible": true
+      },
+      {
+        "id": "Origin001",
+        "label": "Origen de Coordenadas",
+        "posicion": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "propiedades": {},
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [],
+        "tipo_funcional": "otro",
+        "typeid": "App::Point",
+        "visible": true
+      },
+      {
+        "id": "TAB_E42_MB_SUP_Simbolo2D",
+        "label": "Simbolo2D",
+        "posicion": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "propiedades": {},
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "TAB_E42_MB_SUP"
+        ],
+        "tipo_funcional": "otro",
+        "typeid": "Part::Feature",
+        "visible": true
+      },
+      {
+        "id": "Text",
+        "label": "Texto",
+        "posicion": {
+          "x": 300.0,
+          "y": 100.0,
+          "z": 0.0
+        },
+        "propiedades": {
+          "Text": [
+            "TP-01"
+          ]
+        },
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [
+          "TAB_E42_MB_SUP"
+        ],
+        "tipo_funcional": "etiqueta",
+        "typeid": "App::FeaturePython",
+        "visible": true
+      },
+      {
+        "id": "Part__FeaturePython",
+        "label": "Apagador_FeaturePython",
+        "posicion": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "propiedades": {},
+        "rotacion": {
+          "angle_deg": 0.0,
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "ruta_contenedor": [],
+        "tipo_funcional": "apagador",
+        "typeid": "Part::FeaturePython",
+        "visible": true
+      }
+    ]
+  },
+  "debug": {
+    "counters": {
+      "external_log_lines": 0,
+      "functional_apagador": 1,
+      "functional_etiqueta": 1,
+      "functional_otro": 12,
+      "objects_exported": 14
+    },
+    "errors": [],
+    "events": [
+      {
+        "data": {
+          "task": "my_main_macro_task"
+        },
+        "level": "INFO",
+        "message": "Protected execution start",
+        "ts": "2026-04-20T20:28:05.063334Z"
+      },
+      {
+        "level": "INFO",
+        "message": "Task completed without exception",
+        "ts": "2026-04-20T20:28:05.063334Z"
+      },
+      {
+        "data": {
+          "group": "HVAC",
+          "hints": [
+            {
+              "label": "TP-01",
+              "name": "TAB_E42_MB_SUP",
+              "typeid": "App::Part"
+            },
+            {
+              "label": "Origen de Coordenadas001",
+              "name": "Origin",
+              "typeid": "App::Origin"
+            }
+          ]
+        },
+        "level": "WARN",
+        "message": "Group not found, fallback to documento",
+        "ts": "2026-04-20T20:28:05.063334Z"
+      },
+      {
+        "data": {
+          "reason": "no_lines_matching_prefixes"
+        },
+        "level": "INFO",
+        "message": "External log capture note",
+        "ts": "2026-04-20T20:28:05.063334Z"
+      }
+    ],
+    "external_logs": {
+      "captured": true,
+      "line_count": 0,
+      "lines": [],
+      "prefixes": [
+        "[MEP-HVAC]"
+      ],
+      "reason": "no_lines_matching_prefixes"
+    },
+    "imports": {
+      "App": true,
+      "Gui": true,
+      "requests": true
+    },
+    "timers_ms": {
+      "light_context": 1,
+      "task_exec": 0
+    },
+    "warnings": [
+      {
+        "data": {
+          "group": "HVAC",
+          "hints": [
+            {
+              "label": "TP-01",
+              "name": "TAB_E42_MB_SUP",
+              "typeid": "App::Part"
+            },
+            {
+              "label": "Origen de Coordenadas001",
+              "name": "Origin",
+              "typeid": "App::Origin"
+            }
+          ]
+        },
+        "level": "WARN",
+        "message": "Group not found, fallback to documento",
+        "ts": "2026-04-20T20:28:05.063334Z"
+      }
+    ]
+  },
+  "error": null,
+  "fix_prompt": "Fix this FreeCAD issue from the JSON report. Return robust modular Python.",
+  "report_id": "6f154109-a084-45de-aa20-3260eaa8352e",
+  "result": {
+    "document": "Prueba_El\u00e9ctrico",
+    "object_count": 14,
+    "ok": true
+  },
+  "state": "ok",
+  "task_name": "my_main_macro_task",
+  "timestamp": "2026-04-20T20:28:05.063334Z",
+  "traceback": null
+}

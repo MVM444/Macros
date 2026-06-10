@@ -1,0 +1,12 @@
+﻿nombre;area_m2;min_m2;max_m2;tipo;prefer_frente;adyacente_a;prioridad
+Vestibulo;22;16;30;publico;si;Espera|Cajas;3
+Espera;35;28;45;publico;si;Vestibulo|Cajas;3
+Cajas;30;24;38;publico;si;Vestibulo|Espera|BackOffice;4
+BackOffice;28;22;35;administrativo;no;Cajas|Gerencia;2
+Gerencia;18;14;24;administrativo;no;BackOffice|SalaReuniones;2
+SalaReuniones;20;14;30;administrativo;no;Gerencia;1.5
+Archivo;16;12;24;soporte;no;BackOffice;1
+Boveda;14;10;18;seguridad;no;Cajas;2
+CuartoTI;10;8;14;soporte;no;BackOffice;1
+SanitarioPublico;12;10;16;servicio;no;Espera;1
+SanitarioPersonal;10;8;14;servicio;no;BackOffice;1

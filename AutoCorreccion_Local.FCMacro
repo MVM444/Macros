@@ -1,0 +1,786 @@
+import os
+import json
+import uuid
+import time
+import traceback
+from datetime import datetime
+from collections import Counter
+
+try:
+    import FreeCAD as App
+except Exception:
+    App = None
+    print("[DEBUG][ERROR] FreeCAD App import failed")
+
+try:
+    import FreeCADGui as Gui
+except Exception:
+    Gui = None
+    print("[DEBUG][WARN] FreeCADGui import failed")
+
+try:
+    import requests
+except Exception:
+    requests = None
+    print("[DEBUG][WARN] requests import failed")
+
+
+CONFIG = {
+    "modo": "grupo",  # documento | seleccion | grupo
+    "nombre_grupo": "HVAC",
+    "nivel": "tecnico",  # minimo | tecnico
+    "tipos_funcionales": [],  # [] => all
+    "max_objetos": 300,
+    "max_propiedades": 16,
+    "max_eventos_debug": 250,
+    "imprimir_debug_consola": True,
+    "imprimir_json_resumen": True,
+    "imprimir_json_completo": False,
+    "guardar_reporte_local": True,
+    "enviar_api_en_ok": False,
+    "enviar_api_en_error": False,
+    "capturar_logs_externos": True,
+    "logs_prefixes": ["[MEP-HVAC]"],
+    "logs_max_lineas": 120,
+}
+
+DEFAULT_API_URL = "https://api.openai.com/v1/responses"
+DEFAULT_MODEL = "gpt-5.4"
+DEFAULT_FIX_PROMPT = "Fix this FreeCAD issue from the JSON report. Return robust modular Python."
+
+DEBUG_STATE = {
+    "events": [],
+    "warnings": [],
+    "errors": [],
+    "timers_ms": {},
+    "counters": Counter(),
+}
+_TIMERS = {}
+
+
+def utc_now():
+    return datetime.utcnow().isoformat() + "Z"
+
+
+def debug(level, msg, data=None):
+    event = {"ts": utc_now(), "level": level, "message": str(msg)}
+    if data is not None:
+        event["data"] = to_json_safe(data)
+    DEBUG_STATE["events"].append(event)
+    mx = int(CONFIG.get("max_eventos_debug", 250))
+    if mx > 0 and len(DEBUG_STATE["events"]) > mx:
+        DEBUG_STATE["events"] = DEBUG_STATE["events"][-mx:]
+    if CONFIG.get("imprimir_debug_consola", True):
+        print("[DEBUG][%s] %s" % (level, str(msg)))
+    if level == "WARN":
+        DEBUG_STATE["warnings"].append(event)
+    if level == "ERROR":
+        DEBUG_STATE["errors"].append(event)
+
+
+def tstart(name):
+    _TIMERS[name] = time.perf_counter()
+
+
+def tstop(name):
+    st = _TIMERS.pop(name, None)
+    if st is None:
+        return
+    DEBUG_STATE["timers_ms"][name] = int((time.perf_counter() - st) * 1000)
+
+
+def safe_get(obj, attr, default=None):
+    try:
+        return getattr(obj, attr)
+    except Exception:
+        return default
+
+
+def to_json_safe(v, depth=0, max_depth=5, max_items=100):
+    if depth > max_depth:
+        return "<max_depth>"
+    if v is None or isinstance(v, (bool, int, float, str)):
+        return v
+    if isinstance(v, bytes):
+        try:
+            return v.decode("utf-8", errors="replace")
+        except Exception:
+            return repr(v)
+    if isinstance(v, dict):
+        out = {}
+        for i, (k, val) in enumerate(v.items()):
+            if i >= max_items:
+                out["<truncated>"] = True
+                break
+            out[str(k)] = to_json_safe(val, depth + 1, max_depth, max_items)
+        return out
+    if isinstance(v, (list, tuple, set)):
+        out = []
+        for i, val in enumerate(v):
+            if i >= max_items:
+                out.append("<truncated>")
+                break
+            out.append(to_json_safe(val, depth + 1, max_depth, max_items))
+        return out
+    try:
+        return repr(v)
+    except Exception:
+        return "<not_serializable>"
+
+
+def qt_widgets_module():
+    # FreeCAD builds may use PySide, PySide2, or PySide6.
+    try:
+        from PySide6 import QtWidgets  # type: ignore
+
+        return QtWidgets
+    except Exception:
+        pass
+    try:
+        from PySide2 import QtWidgets  # type: ignore
+
+        return QtWidgets
+    except Exception:
+        pass
+    try:
+        from PySide import QtGui as QtWidgets  # type: ignore
+
+        return QtWidgets
+    except Exception:
+        return None
+
+
+def normalize_prefixes(prefixes):
+    out = []
+    for p in prefixes or []:
+        s = str(p or "").strip()
+        if s:
+            out.append(s)
+    return out
+
+
+def line_matches_prefixes(line, prefixes):
+    if not prefixes:
+        return True
+    for p in prefixes:
+        if p in line:
+            return True
+    return False
+
+
+def collect_external_logs_from_report_view(prefixes=None, max_lines=120):
+    # Returns a compact object:
+    # {
+    #   "captured": bool,
+    #   "reason": str|None,
+    #   "prefixes": [...],
+    #   "line_count": int,
+    #   "lines": [...]
+    # }
+    result = {
+        "captured": False,
+        "reason": None,
+        "prefixes": normalize_prefixes(prefixes),
+        "line_count": 0,
+        "lines": [],
+    }
+
+    if Gui is None:
+        result["reason"] = "gui_not_available"
+        return result
+
+    QtWidgets = qt_widgets_module()
+    if QtWidgets is None:
+        result["reason"] = "qt_module_not_available"
+        return result
+
+    try:
+        mw = Gui.getMainWindow()
+    except Exception as exc:
+        result["reason"] = "main_window_unavailable:%s" % str(exc)
+        return result
+
+    if mw is None:
+        result["reason"] = "main_window_none"
+        return result
+
+    widgets = []
+    try:
+        if hasattr(QtWidgets, "QPlainTextEdit"):
+            widgets.extend(list(mw.findChildren(QtWidgets.QPlainTextEdit)))
+    except Exception:
+        pass
+    try:
+        if hasattr(QtWidgets, "QTextEdit"):
+            widgets.extend(list(mw.findChildren(QtWidgets.QTextEdit)))
+    except Exception:
+        pass
+
+    if not widgets:
+        result["reason"] = "no_text_widgets_found"
+        return result
+
+    # Choose the best candidate by score:
+    # - has "report" in object/window title
+    # - contains prefix hits
+    # - longer text
+    best_text = ""
+    best_score = -1
+    best_meta = {}
+
+    for w in widgets:
+        text = ""
+        try:
+            if hasattr(w, "toPlainText"):
+                text = str(w.toPlainText() or "")
+            else:
+                text = str(getattr(w, "plainText", "") or "")
+        except Exception:
+            continue
+        if not text:
+            continue
+
+        obj_name = ""
+        win_title = ""
+        try:
+            obj_name = str(w.objectName() or "")
+        except Exception:
+            obj_name = ""
+        try:
+            win_title = str(w.windowTitle() or "")
+        except Exception:
+            win_title = ""
+
+        low_meta = (obj_name + " " + win_title).lower()
+        score = 0
+        if "report" in low_meta:
+            score += 4
+        if "python" in low_meta:
+            score += 1
+
+        prefix_hits = 0
+        if result["prefixes"]:
+            for line in text.splitlines():
+                if line_matches_prefixes(line, result["prefixes"]):
+                    prefix_hits += 1
+            if prefix_hits > 0:
+                score += 10 + min(prefix_hits, 50)
+        score += min(len(text) // 200, 20)
+
+        if score > best_score:
+            best_score = score
+            best_text = text
+            best_meta = {"object_name": obj_name, "window_title": win_title, "score": score, "prefix_hits": prefix_hits}
+
+    if not best_text:
+        result["reason"] = "no_text_content_found"
+        return result
+
+    lines = []
+    for line in best_text.splitlines():
+        s = line.strip()
+        if not s:
+            continue
+        if line_matches_prefixes(s, result["prefixes"]):
+            lines.append(s)
+
+    if not lines:
+        result["reason"] = "no_lines_matching_prefixes"
+        result["captured"] = True
+        return result
+
+    max_lines = int(max_lines or 120)
+    if max_lines > 0 and len(lines) > max_lines:
+        lines = lines[-max_lines:]
+
+    result["captured"] = True
+    result["line_count"] = len(lines)
+    result["lines"] = lines
+    result["source"] = best_meta
+    return result
+
+
+def vec_xyz(vec):
+    if vec is None:
+        return None
+    x, y, z = safe_get(vec, "x"), safe_get(vec, "y"), safe_get(vec, "z")
+    if x is None or y is None or z is None:
+        return None
+    try:
+        return {"x": float(x), "y": float(y), "z": float(z)}
+    except Exception:
+        return {"x": to_json_safe(x), "y": to_json_safe(y), "z": to_json_safe(z)}
+
+
+def classify_obj(obj):
+    token = " ".join(
+        [
+            str(safe_get(obj, "TypeId", "") or "").lower(),
+            str(safe_get(obj, "Label", "") or "").lower(),
+            str(safe_get(obj, "Name", "") or "").lower(),
+        ]
+    )
+    rules = [
+        ("luminaria", ["lumin", "light"]),
+        ("evaporadora", ["evap", "evaporator"]),
+        ("condensadora", ["cond", "condenser"]),
+        ("apagador", ["switch", "apagador", "interruptor"]),
+        ("toma", ["toma", "outlet", "socket"]),
+        ("area", ["area", "space", "espacio"]),
+        ("etiqueta", ["label", "text"]),
+        ("conector", ["connector", "conector", "port"]),
+        ("ruta", ["route", "duct", "pipe", "tray"]),
+        ("equipo_hvac", ["hvac", "fan", "air"]),
+    ]
+    for ft, words in rules:
+        if any(w in token for w in words):
+            return ft
+    return "otro"
+
+
+def build_parent_map(doc):
+    pm = {}
+    if doc is None:
+        return pm
+    for parent in list(safe_get(doc, "Objects", []) or []):
+        children = safe_get(parent, "Group")
+        if children is None:
+            continue
+        try:
+            for ch in list(children):
+                cname = safe_get(ch, "Name")
+                pname = safe_get(parent, "Name")
+                if cname and pname and cname not in pm:
+                    pm[cname] = pname
+        except Exception:
+            pass
+    return pm
+
+
+def path_from_parent(obj_name, pm):
+    out = []
+    seen = set()
+    cur = obj_name
+    for _ in range(32):
+        p = pm.get(cur)
+        if not p or p in seen:
+            break
+        out.append(p)
+        seen.add(p)
+        cur = p
+    out.reverse()
+    return out
+
+
+def object_payload(obj, level, pm):
+    oid = safe_get(obj, "Name")
+    pl = safe_get(obj, "Placement")
+    base = vec_xyz(safe_get(pl, "Base")) if pl is not None else None
+    rot = safe_get(pl, "Rotation") if pl is not None else None
+    rot_out = None
+    if rot is not None:
+        rot_out = {"axis": vec_xyz(safe_get(rot, "Axis")), "angle_deg": to_json_safe(safe_get(rot, "Angle"))}
+
+    out = {
+        "id": to_json_safe(oid),
+        "label": to_json_safe(safe_get(obj, "Label")),
+        "tipo_funcional": classify_obj(obj),
+        "typeid": to_json_safe(safe_get(obj, "TypeId")),
+        "posicion": base,
+    }
+    if level == "tecnico":
+        out["rotacion"] = rot_out
+        out["ruta_contenedor"] = path_from_parent(oid, pm)
+        out["visible"] = to_json_safe(safe_get(safe_get(obj, "ViewObject"), "Visibility"))
+        props = {}
+        for p in ["MEPType", "Model", "Type", "SystemType", "CapacityBTU", "ConnectedLoadBTU", "Space", "Text"]:
+            if len(props) >= int(CONFIG.get("max_propiedades", 16)):
+                break
+            if p in list(safe_get(obj, "PropertiesList", []) or []):
+                props[p] = to_json_safe(safe_get(obj, p))
+        out["propiedades"] = props
+        tid = str(safe_get(obj, "TypeId", "") or "")
+        if tid == "App::Link" or "Link" in tid:
+            linked = safe_get(obj, "LinkedObject")
+            if linked is None:
+                linked = safe_get(obj, "Link")
+            out["linked_object"] = to_json_safe(safe_get(linked, "Name", None) if linked is not None else None)
+
+    DEBUG_STATE["counters"]["objects_exported"] += 1
+    DEBUG_STATE["counters"]["functional_" + out["tipo_funcional"]] += 1
+    return out
+
+
+def unique_objs(objs):
+    seen, out = set(), []
+    for o in objs:
+        k = safe_get(o, "Name") or str(id(o))
+        if k in seen:
+            continue
+        seen.add(k)
+        out.append(o)
+    return out
+
+
+def normalize_text(value):
+    s = str(value or "").strip().lower()
+    s = s.replace("_", " ").replace("-", " ").replace("/", " ")
+    s = " ".join(s.split())
+    return s
+
+
+def group_hints(doc, limit=12):
+    hints = []
+    for o in list(safe_get(doc, "Objects", []) or []):
+        children = safe_get(o, "Group")
+        if children is None:
+            continue
+        hints.append(
+            {
+                "name": safe_get(o, "Name"),
+                "label": safe_get(o, "Label"),
+                "typeid": safe_get(o, "TypeId"),
+            }
+        )
+        if len(hints) >= limit:
+            break
+    return hints
+
+
+def find_group(doc, group_name):
+    tgt = normalize_text(group_name)
+    if not tgt:
+        return None
+
+    objects = list(safe_get(doc, "Objects", []) or [])
+
+    # Exact normalized match first.
+    for o in objects:
+        name_raw = str(safe_get(o, "Name", "") or "")
+        label_raw = str(safe_get(o, "Label", "") or "")
+        if normalize_text(name_raw) == tgt or normalize_text(label_raw) == tgt:
+            debug("INFO", "Group matched exact", {"query": group_name, "name": name_raw, "label": label_raw})
+            return o
+
+    # Partial match (contains) second.
+    for o in objects:
+        name_raw = str(safe_get(o, "Name", "") or "")
+        label_raw = str(safe_get(o, "Label", "") or "")
+        n = normalize_text(name_raw)
+        l = normalize_text(label_raw)
+        if tgt in n or tgt in l:
+            debug("INFO", "Group matched partial", {"query": group_name, "name": name_raw, "label": label_raw})
+            return o
+
+    # HVAC heuristic for common naming differences.
+    if "hvac" in tgt:
+        for o in objects:
+            name_raw = str(safe_get(o, "Name", "") or "")
+            label_raw = str(safe_get(o, "Label", "") or "")
+            token = normalize_text(name_raw + " " + label_raw + " " + str(safe_get(o, "TypeId", "") or ""))
+            if "hvac" in token and safe_get(o, "Group") is not None:
+                debug("INFO", "Group matched HVAC heuristic", {"query": group_name, "name": name_raw, "label": label_raw})
+                return o
+
+    return None
+
+
+def group_descendants(root):
+    out, st, seen = [], [root], set()
+    while st:
+        cur = st.pop()
+        key = safe_get(cur, "Name") or str(id(cur))
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(cur)
+        children = safe_get(cur, "Group")
+        if children is None:
+            continue
+        try:
+            st.extend(list(children))
+        except Exception:
+            pass
+    return unique_objs(out)
+
+
+def source_objects(doc, modo, nombre_grupo):
+    m = str(modo or "documento").strip().lower()
+    if m not in ("documento", "seleccion", "grupo"):
+        debug("WARN", "Invalid mode, fallback to documento", {"mode": m})
+        m = "documento"
+    if doc is None:
+        return [], {"modo_resuelto": m, "source_count": 0}
+
+    if m == "documento":
+        objs = list(safe_get(doc, "Objects", []) or [])
+    elif m == "seleccion":
+        if Gui is None:
+            objs = []
+        else:
+            try:
+                ex = Gui.Selection.getSelectionEx() or []
+                objs = [safe_get(i, "Object") for i in ex if safe_get(i, "Object") is not None]
+                if not objs:
+                    objs = list(Gui.Selection.getSelection() or [])
+            except Exception as exc:
+                debug("WARN", "Selection read failed", {"error": str(exc)})
+                objs = []
+    else:
+        g = find_group(doc, nombre_grupo)
+        if g is None:
+            debug(
+                "WARN",
+                "Group not found, fallback to documento",
+                {"group": nombre_grupo, "hints": group_hints(doc, limit=10)},
+            )
+            objs = list(safe_get(doc, "Objects", []) or [])
+            m = "documento"
+        else:
+            objs = group_descendants(g)
+
+    return unique_objs(objs), {"modo_resuelto": m, "source_count": len(objs), "grupo": nombre_grupo}
+
+
+def filter_functional(objs, types):
+    if not types:
+        return objs
+    allowed = set([str(t).strip().lower() for t in types if str(t).strip()])
+    if not allowed:
+        return objs
+    return [o for o in objs if classify_obj(o) in allowed]
+
+
+def extract_connections(exported, obj_map, pm):
+    conns = []
+    for e in exported:
+        oid = str(e.get("id"))
+        p = pm.get(oid)
+        if p:
+            conns.append({"tipo": "pertenece_a", "origen": oid, "destino": str(p)})
+        o = obj_map.get(oid)
+        if o is None:
+            continue
+        tid = str(safe_get(o, "TypeId", "") or "")
+        if tid == "App::Link" or "Link" in tid:
+            linked = safe_get(o, "LinkedObject")
+            if linked is None:
+                linked = safe_get(o, "Link")
+            lname = safe_get(linked, "Name", None) if linked is not None else None
+            if lname:
+                conns.append({"tipo": "link_a", "origen": oid, "destino": str(lname)})
+    return conns
+
+
+def light_context(doc, modo, nombre_grupo, nivel, tipos):
+    tstart("light_context")
+    meta = {
+        "schema": "freecad-cad-light-v1",
+        "timestamp": utc_now(),
+        "modo": modo,
+        "nivel": nivel,
+        "grupo": nombre_grupo,
+        "tipos_funcionales": to_json_safe(tipos),
+        "freecad_version": to_json_safe(App.Version()) if App is not None else None,
+        "document_name": to_json_safe(safe_get(doc, "Name")),
+        "document_label": to_json_safe(safe_get(doc, "Label")),
+        "document_file": to_json_safe(safe_get(doc, "FileName")),
+    }
+
+    if doc is None:
+        tstop("light_context")
+        return {"meta": meta, "objetos": [], "conexiones": [], "intencion": {"nota": "No active document"}, "debug": {}}
+
+    raw = list(safe_get(doc, "Objects", []) or [])
+    src, info = source_objects(doc, modo, nombre_grupo)
+    source_before_filter = len(src)
+    src = filter_functional(src, tipos)
+    source_after_filter = len(src)
+    source_before_limit = len(src)
+
+    truncated = False
+    mx = int(CONFIG.get("max_objetos", 300))
+    if mx > 0 and len(src) > mx:
+        src = src[:mx]
+        truncated = True
+        debug("WARN", "Objects truncated", {"max_objetos": mx})
+
+    pm = build_parent_map(doc)
+    obj_map = {}
+    exp = []
+    for o in src:
+        oid = safe_get(o, "Name")
+        if oid:
+            obj_map[str(oid)] = o
+        try:
+            exp.append(object_payload(o, nivel, pm))
+        except Exception as exc:
+            debug("ERROR", "Object export failed", {"object": to_json_safe(oid), "error": str(exc)})
+
+    conns = extract_connections(exp, obj_map, pm)
+    out = {
+        "meta": meta,
+        "objetos": exp,
+        "conexiones": conns,
+        "intencion": {"nota": "Light context for AI, no heavy geometry"},
+        "debug": {
+            "source_info": info,
+            "raw_doc_object_count": len(raw),
+            "source_before_filter_count": source_before_filter,
+            "source_after_filter_count": source_after_filter,
+            "source_before_limit_count": source_before_limit,
+            "source_object_count": len(src),
+            "exported_object_count": len(exp),
+            "connections_count": len(conns),
+            "truncated": truncated,
+        },
+    }
+    tstop("light_context")
+    return out
+
+
+def report_to_json(data):
+    return json.dumps(data, indent=2, ensure_ascii=True, sort_keys=True)
+
+
+def save_report(report, folder=None):
+    folder = folder or os.path.dirname(__file__)
+    if not os.path.isdir(folder):
+        os.makedirs(folder)
+    path = os.path.join(folder, "AutoCorreccionReport_%s.json" % datetime.utcnow().strftime("%Y%m%d_%H%M%S"))
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(report_to_json(report))
+    debug("INFO", "Local report saved", {"path": path})
+    return path
+
+
+def build_report(state, task_name, result=None, err=None, tb=None, modo="documento", nombre_grupo="", nivel="tecnico", tipos=None):
+    tstart("build_report")
+    doc = safe_get(App, "ActiveDocument") if App is not None else None
+    ctx = light_context(doc, modo, nombre_grupo, nivel, tipos or [])
+    external_logs = {
+        "captured": False,
+        "reason": "disabled",
+        "prefixes": normalize_prefixes(CONFIG.get("logs_prefixes", [])),
+        "line_count": 0,
+        "lines": [],
+    }
+    if CONFIG.get("capturar_logs_externos", True):
+        try:
+            external_logs = collect_external_logs_from_report_view(
+                prefixes=CONFIG.get("logs_prefixes", []),
+                max_lines=int(CONFIG.get("logs_max_lineas", 120)),
+            )
+            DEBUG_STATE["counters"]["external_log_lines"] = int(external_logs.get("line_count", 0))
+            if external_logs.get("reason"):
+                debug("INFO", "External log capture note", {"reason": external_logs.get("reason")})
+        except Exception as exc:
+            external_logs = {
+                "captured": False,
+                "reason": "capture_exception:%s" % str(exc),
+                "prefixes": normalize_prefixes(CONFIG.get("logs_prefixes", [])),
+                "line_count": 0,
+                "lines": [],
+            }
+            debug("WARN", "External log capture failed", {"error": str(exc)})
+
+    rep = {
+        "report_id": str(uuid.uuid4()),
+        "timestamp": utc_now(),
+        "state": state,
+        "task_name": task_name,
+        "result": to_json_safe(result),
+        "error": to_json_safe(err),
+        "traceback": to_json_safe(tb),
+        "context_light": ctx,
+        "fix_prompt": DEFAULT_FIX_PROMPT,
+        "debug": {
+            "timers_ms": to_json_safe(DEBUG_STATE["timers_ms"]),
+            "counters": to_json_safe(dict(DEBUG_STATE["counters"])),
+            "warnings": to_json_safe(DEBUG_STATE["warnings"]),
+            "errors": to_json_safe(DEBUG_STATE["errors"]),
+            "events": to_json_safe(DEBUG_STATE["events"]),
+            "imports": {"App": App is not None, "Gui": Gui is not None, "requests": requests is not None},
+            "external_logs": to_json_safe(external_logs),
+        },
+    }
+    tstop("build_report")
+    return rep
+
+
+def build_summary(report, report_path):
+    c = report.get("context_light", {})
+    m = c.get("meta", {})
+    d = c.get("debug", {})
+    return {
+        "timestamp": report.get("timestamp"),
+        "state": report.get("state"),
+        "task_name": report.get("task_name"),
+        "document": m.get("document_name"),
+        "modo": m.get("modo"),
+        "nivel": m.get("nivel"),
+        "source_before_limit_count": d.get("source_before_limit_count"),
+        "source_object_count": d.get("source_object_count"),
+        "exported_object_count": d.get("exported_object_count"),
+        "connections_count": d.get("connections_count"),
+        "warning_count": len(report.get("debug", {}).get("warnings", [])),
+        "error_count": len(report.get("debug", {}).get("errors", [])),
+        "report_path": report_path,
+    }
+
+
+def run_protected(task_fn, task_name, modo, nombre_grupo, nivel, tipos):
+    DEBUG_STATE["events"] = []
+    DEBUG_STATE["warnings"] = []
+    DEBUG_STATE["errors"] = []
+    DEBUG_STATE["timers_ms"] = {}
+    DEBUG_STATE["counters"] = Counter()
+    _TIMERS.clear()
+
+    debug("INFO", "Protected execution start", {"task": task_name})
+    state, result, err, tb = "ok", None, None, None
+    try:
+        tstart("task_exec")
+        result = task_fn()
+        tstop("task_exec")
+        debug("INFO", "Task completed without exception")
+    except Exception as exc:
+        tstop("task_exec")
+        state = "error"
+        err = str(exc)
+        tb = traceback.format_exc()
+        debug("ERROR", "Task failed", {"error": err})
+
+    rep = build_report(state, task_name, result=result, err=err, tb=tb, modo=modo, nombre_grupo=nombre_grupo, nivel=nivel, tipos=tipos)
+    path = None
+    if CONFIG.get("guardar_reporte_local", True):
+        path = save_report(rep, folder=os.path.dirname(__file__))
+
+    if CONFIG.get("imprimir_json_completo", False):
+        print(report_to_json(rep))
+    elif CONFIG.get("imprimir_json_resumen", True):
+        print(report_to_json(build_summary(rep, path)))
+
+    debug("INFO", "API send skipped by config")
+    debug("INFO", "Final state", {"state": state, "report_path": path})
+    return {"state": state, "result": result, "error": err, "traceback": tb, "report": rep, "report_path": path}
+
+
+def my_main_macro_task():
+    if App is None:
+        raise RuntimeError("FreeCAD App not available")
+    doc = safe_get(App, "ActiveDocument")
+    if doc is None:
+        raise RuntimeError("No active document")
+    objs = list(safe_get(doc, "Objects", []) or [])
+    return {"ok": True, "document": safe_get(doc, "Name"), "object_count": len(objs)}
+
+
+OUTPUT = run_protected(
+    task_fn=my_main_macro_task,
+    task_name="my_main_macro_task",
+    modo=CONFIG.get("modo", "documento"),
+    nombre_grupo=CONFIG.get("nombre_grupo", ""),
+    nivel=CONFIG.get("nivel", "tecnico"),
+    tipos=CONFIG.get("tipos_funcionales", []),
+)

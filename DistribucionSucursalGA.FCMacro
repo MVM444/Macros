@@ -1,0 +1,2213 @@
+# -*- coding: utf-8 -*-
+"""
+Macro: DistribucionSucursalGA
+Descripcion:
+Genera propuestas de distribucion arquitectonica para una sucursal usando
+algoritmo genetico sobre recintos rectangulares dentro de un contorno base.
+
+Flujo de uso:
+1) Seleccionar en FreeCAD el contorno base (Sketch/Face/Wire) como primer objeto.
+2) Seleccionar opcionalmente objetos auxiliares con etiquetas:
+   - FRENTE_*   -> segmento de frente/fachada
+   - PUERTA_*   -> punto de acceso principal
+   - SALIDA_*   -> punto de salida de emergencia
+   - FIJO_* / SS_* / SANITARIO_* -> zonas ocupadas (obstaculos)
+3) Ejecutar la macro y elegir un CSV/XLSX con el plan funcional.
+4) La macro genera N propuestas y las dibuja desplazadas en X.
+
+Notas:
+- Las areas del spreadsheet se asumen en m2, salvo deteccion automatica de mm2.
+- Este MVP trabaja en 2D (planta), con recintos rectangulares.
+"""
+
+import os
+import csv
+import re
+import math
+import time
+import random
+import colorsys
+import traceback
+import unicodedata
+
+import FreeCAD as App
+import FreeCADGui as Gui
+import Part
+
+try:
+    import Draft
+except Exception:
+    Draft = None
+
+try:
+    from PySide2 import QtWidgets
+except Exception:
+    try:
+        from PySide import QtGui as QtWidgets
+    except Exception:
+        QtWidgets = None
+
+AREA_M2_TO_MM2 = 1000000.0
+DEFAULT_POP_SIZE = 96
+DEFAULT_GENERATIONS = 140
+DEFAULT_PROPOSALS = 4
+DEFAULT_GA_RUNS = 4
+DEFAULT_TEXT_SIZE_MM = 150
+MIN_ROOM_GAP_MM = 100.0
+TEXT_VERTICAL_CENTER_OFFSET_FACTOR = 0.35
+DEFAULT_CLEAR_PREVIOUS = True
+DEFAULT_REALISTIC_ZONING = True
+DEFAULT_USE_DOC_FEATURES = True
+CIRCULATION_KINDS = {"circulacion", "circulation", "pasillo", "pasillos", "corredor"}
+ROLE_ALIASES = {
+    "frente": {"frente", "fachada", "front"},
+    "puerta": {"puerta", "acceso", "door", "entrada"},
+    "salida": {"salida", "emergencia", "exit"},
+    "fijo": {"fijo", "fija", "fixed", "obstacle", "obstaculo", "zona_fija"},
+}
+FIXED_PROP_KEYS = {"fija", "fijo", "fixed", "is_fixed", "isfixed", "es_fijo", "esfijo", "ga_fijo"}
+ROLE_PROP_KEYS = {"rol", "role", "tipo_zona", "zone_role", "ga_role", "feature_role", "tipo_feature"}
+SETTINGS_PATH = "User parameter:Plugins/DistribucionSucursalGA"
+RESULT_GROUP_PREFIX = "GA_Sucursal_"
+PANEL_OBJECT_KEY = "_distribucion_sucursal_ga_panel"
+
+
+def _msg(text):
+    App.Console.PrintMessage(str(text) + "\n")
+
+
+def _warn(text):
+    App.Console.PrintWarning(str(text) + "\n")
+
+
+def _err(text):
+    App.Console.PrintError(str(text) + "\n")
+
+
+def _norm_key(value):
+    raw = str(value or "").strip().lower()
+    raw = unicodedata.normalize("NFD", raw)
+    raw = "".join(ch for ch in raw if unicodedata.category(ch) != "Mn")
+    cleaned = []
+    for ch in raw:
+        if ch.isalnum():
+            cleaned.append(ch)
+        else:
+            cleaned.append("_")
+    key = "".join(cleaned)
+    while "__" in key:
+        key = key.replace("__", "_")
+    return key.strip("_")
+
+
+def _safe_name(value, prefix="Obj"):
+    base = _norm_key(value)
+    if not base:
+        base = prefix
+    if base[0].isdigit():
+        base = prefix + "_" + base
+    return base
+
+
+def _parse_float(value, default=0.0):
+    if value is None:
+        return float(default)
+    txt = str(value).strip()
+    if not txt:
+        return float(default)
+    txt = txt.replace(" ", "")
+    if txt.count(",") == 1 and txt.count(".") == 0:
+        txt = txt.replace(",", ".")
+    elif txt.count(",") > 0 and txt.count(".") > 0:
+        txt = txt.replace(",", "")
+    try:
+        return float(txt)
+    except Exception:
+        return float(default)
+
+
+def _parse_bool(value):
+    txt = _norm_key(value)
+    return txt in {"1", "true", "si", "s", "yes", "y", "x"}
+
+
+def _split_multi(value):
+    txt = str(value or "")
+    parts = []
+    token = ""
+    for ch in txt:
+        if ch in ",;|/":
+            item = token.strip()
+            if item:
+                parts.append(item)
+            token = ""
+        else:
+            token += ch
+    item = token.strip()
+    if item:
+        parts.append(item)
+    return parts
+
+
+def _point_in_polygon(pt, poly):
+    x, y = pt
+    inside = False
+    n = len(poly)
+    if n < 3:
+        return False
+    x1, y1 = poly[0]
+    for i in range(1, n + 1):
+        x2, y2 = poly[i % n]
+        intersects = ((y1 > y) != (y2 > y))
+        if intersects:
+            denom = (y2 - y1)
+            if abs(denom) < 1e-9:
+                x_cross = x1
+            else:
+                x_cross = (x2 - x1) * (y - y1) / denom + x1
+            if x < x_cross:
+                inside = not inside
+        x1, y1 = x2, y2
+    return inside
+
+
+def _distance(a, b):
+    dx = a[0] - b[0]
+    dy = a[1] - b[1]
+    return math.sqrt(dx * dx + dy * dy)
+
+
+def _distance_point_segment(p, a, b):
+    ax, ay = a
+    bx, by = b
+    px, py = p
+    vx = bx - ax
+    vy = by - ay
+    wx = px - ax
+    wy = py - ay
+    vv = vx * vx + vy * vy
+    if vv < 1e-12:
+        return _distance(p, a)
+    t = (wx * vx + wy * vy) / vv
+    if t < 0.0:
+        t = 0.0
+    elif t > 1.0:
+        t = 1.0
+    cx = ax + t * vx
+    cy = ay + t * vy
+    return _distance(p, (cx, cy))
+
+
+def _rect_bounds(rect):
+    cx, cy, w, h = rect
+    x0 = cx - w * 0.5
+    y0 = cy - h * 0.5
+    x1 = cx + w * 0.5
+    y1 = cy + h * 0.5
+    return x0, y0, x1, y1
+
+
+def _rect_corners(rect):
+    x0, y0, x1, y1 = _rect_bounds(rect)
+    return [(x0, y0), (x1, y0), (x1, y1), (x0, y1)]
+
+
+def _rect_area(rect):
+    return max(0.0, rect[2]) * max(0.0, rect[3])
+
+
+def _intersection_area(r1, r2):
+    a0, b0, a1, b1 = _rect_bounds(r1)
+    c0, d0, c1, d1 = _rect_bounds(r2)
+    ix = max(0.0, min(a1, c1) - max(a0, c0))
+    iy = max(0.0, min(b1, d1) - max(b0, d0))
+    return ix * iy
+
+
+def _rect_distance(r1, r2):
+    dx = max(0.0, abs(r1[0] - r2[0]) - 0.5 * (r1[2] + r2[2]))
+    dy = max(0.0, abs(r1[1] - r2[1]) - 0.5 * (r1[3] + r2[3]))
+    return math.sqrt(dx * dx + dy * dy)
+
+
+def _is_circulation_kind(kind):
+    return _norm_key(kind) in CIRCULATION_KINDS
+
+
+def _extract_points_from_shape(shape):
+    points = []
+    verts = getattr(shape, "Vertexes", None)
+    if verts:
+        for v in verts:
+            points.append((float(v.Point.x), float(v.Point.y)))
+    return points
+
+
+def _dedupe_points(points, tol=1e-6):
+    out = []
+    for x, y in points:
+        if not out:
+            out.append((x, y))
+            continue
+        px, py = out[-1]
+        if abs(px - x) > tol or abs(py - y) > tol:
+            out.append((x, y))
+    if len(out) > 1:
+        x0, y0 = out[0]
+        x1, y1 = out[-1]
+        if abs(x0 - x1) <= tol and abs(y0 - y1) <= tol:
+            out.pop()
+    return out
+
+
+def _bbox_polygon(shape):
+    bb = shape.BoundBox
+    return [
+        (float(bb.XMin), float(bb.YMin)),
+        (float(bb.XMax), float(bb.YMin)),
+        (float(bb.XMax), float(bb.YMax)),
+        (float(bb.XMin), float(bb.YMax)),
+    ]
+
+
+def _extract_envelope_polygon(shape):
+    try:
+        if hasattr(shape, "Faces") and shape.Faces:
+            wire = shape.Faces[0].OuterWire
+            verts = getattr(wire, "OrderedVertexes", None) or wire.Vertexes
+            pts = [(float(v.Point.x), float(v.Point.y)) for v in verts]
+            pts = _dedupe_points(pts)
+            if len(pts) >= 3:
+                return pts
+    except Exception:
+        pass
+
+    try:
+        if hasattr(shape, "Wires") and shape.Wires:
+            wire = shape.Wires[0]
+            verts = getattr(wire, "OrderedVertexes", None) or wire.Vertexes
+            pts = [(float(v.Point.x), float(v.Point.y)) for v in verts]
+            pts = _dedupe_points(pts)
+            if len(pts) >= 3:
+                return pts
+    except Exception:
+        pass
+
+    pts = _dedupe_points(_extract_points_from_shape(shape))
+    if len(pts) >= 3:
+        return pts
+
+    return _bbox_polygon(shape)
+
+
+def _poly_bbox(poly):
+    xs = [p[0] for p in poly]
+    ys = [p[1] for p in poly]
+    return min(xs), min(ys), max(xs), max(ys)
+
+
+def _poly_center(poly):
+    if not poly:
+        return (0.0, 0.0)
+    sx = sum(p[0] for p in poly)
+    sy = sum(p[1] for p in poly)
+    n = float(len(poly))
+    return (sx / n, sy / n)
+
+
+def _dot2(a, b):
+    return a[0] * b[0] + a[1] * b[1]
+
+
+def _normalize2(v):
+    mag = math.sqrt(v[0] * v[0] + v[1] * v[1])
+    if mag <= 1e-9:
+        return (0.0, 0.0)
+    return (v[0] / mag, v[1] / mag)
+
+
+def _build_zoning_reference(envelope_poly, fronts, bbox):
+    x0, y0, x1, y1 = bbox
+    center = _poly_center(envelope_poly)
+
+    if fronts:
+        # Usa el frente más largo como referencia principal.
+        best = None
+        best_len = -1.0
+        for seg in fronts:
+            a, b = seg
+            seg_len = _distance(a, b)
+            if seg_len > best_len:
+                best_len = seg_len
+                best = seg
+        if best is not None:
+            a, b = best
+            front_center = (0.5 * (a[0] + b[0]), 0.5 * (a[1] + b[1]))
+            tangent = _normalize2((b[0] - a[0], b[1] - a[1]))
+            n1 = _normalize2((-tangent[1], tangent[0]))
+            n2 = _normalize2((tangent[1], -tangent[0]))
+            to_center = (center[0] - front_center[0], center[1] - front_center[1])
+            normal = n1 if _dot2(to_center, n1) >= _dot2(to_center, n2) else n2
+            depth_values = [_dot2((p[0] - front_center[0], p[1] - front_center[1]), normal) for p in envelope_poly]
+            depth_max = max(depth_values) if depth_values else 0.0
+            if depth_max <= 1.0:
+                depth_max = max(1.0, max(x1 - x0, y1 - y0))
+            return {
+                "origin": front_center,
+                "normal": normal,
+                "depth_max": depth_max,
+            }
+
+    # Fallback cuando no hay frente: usa eje Y (frente en YMin).
+    origin = (0.5 * (x0 + x1), y0)
+    return {
+        "origin": origin,
+        "normal": (0.0, 1.0),
+        "depth_max": max(1.0, y1 - y0),
+    }
+
+
+def _zone_target_for_room(room):
+    kind = _norm_key(room.get("kind", ""))
+    if room.get("prefer_front"):
+        return (0.00, 0.38, 1.20)
+    if kind in {"publico", "atencion", "cajas", "espera"}:
+        return (0.00, 0.42, 1.00)
+    if kind in {"administrativo", "tecnico", "seguridad"}:
+        return (0.20, 0.72, 0.90)
+    if kind in {"servicio"}:
+        return (0.35, 0.92, 0.90)
+    if kind in {"logistica"}:
+        return (0.50, 1.00, 1.00)
+    return (0.18, 0.88, 0.55)
+
+
+def _extract_segment(shape):
+    pts = _dedupe_points(_extract_points_from_shape(shape))
+    if len(pts) >= 2:
+        best = (pts[0], pts[1])
+        best_d = _distance(best[0], best[1])
+        for i in range(len(pts)):
+            for j in range(i + 1, len(pts)):
+                d = _distance(pts[i], pts[j])
+                if d > best_d:
+                    best_d = d
+                    best = (pts[i], pts[j])
+        return best
+    bb = shape.BoundBox
+    x0, y0 = float(bb.XMin), float(bb.YMin)
+    x1, y1 = float(bb.XMax), float(bb.YMax)
+    if (x1 - x0) >= (y1 - y0):
+        return ((x0, y0), (x1, y0))
+    return ((x0, y0), (x0, y1))
+
+
+def _extract_point(shape):
+    bb = shape.BoundBox
+    return (float(0.5 * (bb.XMin + bb.XMax)), float(0.5 * (bb.YMin + bb.YMax)))
+
+
+def _obj_prop_value(obj, normalized_keys, default=None):
+    keys = set(_norm_key(k) for k in normalized_keys)
+    props = list(getattr(obj, "PropertiesList", []) or [])
+    for prop_name in props:
+        if _norm_key(prop_name) not in keys:
+            continue
+        try:
+            if hasattr(obj, "getPropertyByName"):
+                return obj.getPropertyByName(prop_name)
+            return getattr(obj, prop_name)
+        except Exception:
+            continue
+    return default
+
+
+def _obj_bool_prop(obj, normalized_keys, default=False):
+    value = _obj_prop_value(obj, normalized_keys, default=None)
+    if value is None:
+        return bool(default)
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return bool(value)
+    return _parse_bool(value)
+
+
+def _obj_role(obj):
+    role = _obj_prop_value(obj, ROLE_PROP_KEYS, default="")
+    return _norm_key(role)
+
+
+def _extract_features(objs):
+    fronts = []
+    doors = []
+    exits = []
+    obstacles = []
+
+    for obj in objs:
+        shape = getattr(obj, "Shape", None)
+        if shape is None or shape.isNull():
+            continue
+
+        key = _norm_key(getattr(obj, "Label", ""))
+        if not key:
+            key = _norm_key(getattr(obj, "Name", ""))
+        role = _obj_role(obj)
+        is_fixed = _obj_bool_prop(obj, FIXED_PROP_KEYS, default=False)
+
+        def role_matches(name):
+            return role in ROLE_ALIASES.get(name, set())
+
+        if role_matches("frente") or ("frente" in key) or ("fachada" in key):
+            fronts.append(_extract_segment(shape))
+            continue
+
+        if role_matches("puerta") or ("puerta" in key) or ("acceso" in key):
+            doors.append(_extract_point(shape))
+            continue
+
+        if role_matches("salida") or ("salida" in key) or ("emergencia" in key):
+            exits.append(_extract_point(shape))
+            continue
+
+        # Obstaculos: exclusivamente por propiedad (IsFixed/Fija/etc) o rol=fijo.
+        if is_fixed or role_matches("fijo"):
+            bb = shape.BoundBox
+            obstacles.append((float(bb.XMin), float(bb.YMin), float(bb.XMax), float(bb.YMax)))
+
+    return {
+        "fronts": fronts,
+        "doors": doors,
+        "exits": exits,
+        "obstacles": obstacles,
+    }
+
+
+def _select_program_file():
+    if QtWidgets is None:
+        return ""
+    filt = "Tabla funcional (*.csv *.xlsx *.xlsm);;Todos los archivos (*.*)"
+    path, _ = QtWidgets.QFileDialog.getOpenFileName(None, "Seleccionar tabla funcional", "", filt)
+    return path or ""
+
+
+def _is_spreadsheet_obj(obj):
+    type_id = str(getattr(obj, "TypeId", ""))
+    if type_id.startswith("Spreadsheet::"):
+        return True
+    return hasattr(obj, "getNonEmptyCells") and hasattr(obj, "get")
+
+
+def _column_to_index(col_letters):
+    idx = 0
+    for ch in col_letters.upper():
+        if not ("A" <= ch <= "Z"):
+            return None
+        idx = idx * 26 + (ord(ch) - ord("A") + 1)
+    return idx
+
+
+def _parse_cell_ref(cell_ref):
+    m = re.match(r"^([A-Za-z]+)([0-9]+)$", str(cell_ref or "").strip())
+    if not m:
+        return None, None
+    col = _column_to_index(m.group(1))
+    row = int(m.group(2))
+    if col is None:
+        return None, None
+    return row, col
+
+
+def _read_fc_spreadsheet_rows(sheet_obj):
+    if not hasattr(sheet_obj, "getNonEmptyCells"):
+        raise RuntimeError("El objeto no soporta lectura de celdas de Spreadsheet.")
+
+    used_cells = list(sheet_obj.getNonEmptyCells())
+    if not used_cells:
+        return []
+
+    grid = {}
+    for cell in used_cells:
+        row, col = _parse_cell_ref(cell)
+        if row is None:
+            continue
+        try:
+            value = sheet_obj.get(cell)
+        except Exception:
+            value = ""
+        row_map = grid.setdefault(row, {})
+        row_map[col] = value
+
+    if not grid:
+        return []
+
+    header_row = min(grid.keys())
+    headers = {}
+    for col in sorted(grid.get(header_row, {}).keys()):
+        header = str(grid[header_row].get(col, "") or "").strip()
+        if header:
+            headers[col] = header
+
+    if not headers:
+        raise RuntimeError("La primera fila no contiene encabezados.")
+
+    out = []
+    for row in sorted(grid.keys()):
+        if row <= header_row:
+            continue
+        row_data = {}
+        has_values = False
+        row_map = grid.get(row, {})
+        for col, header in headers.items():
+            value = row_map.get(col, "")
+            if str(value or "").strip():
+                has_values = True
+            row_data[header] = value
+        if has_values:
+            out.append(row_data)
+    return out
+
+
+def _find_program_sheet(selection):
+    for obj in selection:
+        if _is_spreadsheet_obj(obj):
+            return obj
+
+    doc = App.ActiveDocument
+    if doc is None:
+        return None
+
+    tagged = []
+    sheets = []
+    for obj in doc.Objects:
+        if not _is_spreadsheet_obj(obj):
+            continue
+        sheets.append(obj)
+        key = _norm_key(getattr(obj, "Label", "") or getattr(obj, "Name", ""))
+        if "programa" in key or "funcional" in key or "areas" in key:
+            tagged.append(obj)
+
+    if tagged:
+        return tagged[0]
+    if len(sheets) == 1:
+        return sheets[0]
+    return None
+
+
+def _read_csv_rows(path):
+    with open(path, "r", encoding="utf-8-sig", newline="") as fh:
+        sample = fh.read(2048)
+        fh.seek(0)
+        try:
+            dialect = csv.Sniffer().sniff(sample, delimiters=",;")
+            delim = dialect.delimiter
+        except Exception:
+            delim = ";" if sample.count(";") > sample.count(",") else ","
+        reader = csv.DictReader(fh, delimiter=delim)
+        return [dict(r) for r in reader]
+
+
+def _read_xlsx_rows(path):
+    try:
+        import openpyxl
+    except Exception:
+        raise RuntimeError("Para XLSX se requiere openpyxl. Instalarlo o usar CSV.")
+
+    wb = openpyxl.load_workbook(path, data_only=True, read_only=True)
+    ws = wb[wb.sheetnames[0]]
+    rows = list(ws.iter_rows(values_only=True))
+    wb.close()
+    if not rows:
+        return []
+    headers = [str(v or "").strip() for v in rows[0]]
+    out = []
+    for row in rows[1:]:
+        data = {}
+        for i, h in enumerate(headers):
+            if not h:
+                continue
+            data[h] = row[i] if i < len(row) else ""
+        out.append(data)
+    return out
+
+
+def _load_program_rows(path):
+    ext = os.path.splitext(path)[1].lower()
+    if ext in {".xlsx", ".xlsm"}:
+        return _read_xlsx_rows(path)
+    return _read_csv_rows(path)
+
+
+def _pick(row, aliases, default=""):
+    for k, v in row.items():
+        nk = _norm_key(k)
+        if nk in aliases:
+            return v
+    return default
+
+
+def _parse_program(rows):
+    aliases = {
+        "name": {
+            "nombre", "recinto", "ambiente", "espacio", "room", "name"
+        },
+        "area": {
+            "area", "area_m2", "superficie", "m2", "target_area", "area_objetivo"
+        },
+        "min": {
+            "area_min", "min_m2", "area_minima", "min", "area_min_mm2"
+        },
+        "max": {
+            "area_max", "max_m2", "area_maxima", "max", "area_max_mm2"
+        },
+        "kind": {
+            "tipo", "categoria", "kind", "category"
+        },
+        "front": {
+            "prefer_frente", "frente", "prefer_front", "cerca_frente"
+        },
+        "adj": {
+            "adyacente_a", "adyacencias", "adj", "adjacent_to"
+        },
+        "priority": {
+            "prioridad", "peso", "weight"
+        },
+        "fixed": {
+            "fija", "fijo", "fixed", "is_fixed", "isfixed", "es_fijo"
+        },
+    }
+
+    program = []
+    for idx, row in enumerate(rows, start=2):
+        name = str(_pick(row, aliases["name"], "")).strip()
+        if not name:
+            name = "Recinto_%d" % (idx - 1)
+
+        area = _parse_float(_pick(row, aliases["area"], 0.0), 0.0)
+        if area <= 0.0:
+            continue
+
+        area_min = _parse_float(_pick(row, aliases["min"], 0.0), 0.0)
+        area_max = _parse_float(_pick(row, aliases["max"], 0.0), 0.0)
+        if area_min <= 0.0:
+            area_min = area * 0.80
+        if area_max <= 0.0:
+            area_max = area * 1.20
+        if area_max < area_min:
+            area_max = area_min
+
+        kind = _norm_key(_pick(row, aliases["kind"], "general")) or "general"
+        prefer_front = _parse_bool(_pick(row, aliases["front"], ""))
+        adj = [_norm_key(x) for x in _split_multi(_pick(row, aliases["adj"], ""))]
+        priority = _parse_float(_pick(row, aliases["priority"], 1.0), 1.0)
+        if priority <= 0.0:
+            priority = 1.0
+        is_fixed = _parse_bool(_pick(row, aliases["fixed"], ""))
+
+        name_key = _norm_key(name)
+        is_circulation = _is_circulation_kind(kind) or ("circulacion" in name_key) or ("pasillo" in name_key)
+
+        program.append({
+            "name": name,
+            "name_key": name_key,
+            "area": area,
+            "area_min": area_min,
+            "area_max": area_max,
+            "kind": kind,
+            "is_circulation": is_circulation,
+            "prefer_front": prefer_front,
+            "adj_keys": adj,
+            "priority": priority,
+            "is_fixed": is_fixed,
+        })
+
+    name_to_idx = {r["name_key"]: i for i, r in enumerate(program)}
+    pairs = set()
+    for i, room in enumerate(program):
+        for other_key in room["adj_keys"]:
+            j = name_to_idx.get(other_key)
+            if j is None or j == i:
+                continue
+            a, b = (i, j) if i < j else (j, i)
+            pairs.add((a, b))
+
+    return program, sorted(pairs)
+
+
+def _filter_rooms_for_layout(program, adjacency_pairs):
+    keep_indices = []
+    circulation_area = 0.0
+
+    for idx, room in enumerate(program):
+        if room.get("is_circulation"):
+            circulation_area += float(room.get("area", 0.0))
+            continue
+        keep_indices.append(idx)
+
+    if not keep_indices:
+        return [], [], circulation_area
+
+    old_to_new = {old_idx: new_idx for new_idx, old_idx in enumerate(keep_indices)}
+    filtered_rooms = [program[i] for i in keep_indices]
+    filtered_pairs = []
+    for a, b in adjacency_pairs:
+        if a in old_to_new and b in old_to_new:
+            filtered_pairs.append((old_to_new[a], old_to_new[b]))
+
+    return filtered_rooms, filtered_pairs, circulation_area
+
+
+def _detect_area_scale(program, shell_area_mm2):
+    total = sum(r["area"] for r in program)
+    if total <= 0.0:
+        return AREA_M2_TO_MM2
+    ratio = shell_area_mm2 / total
+    if ratio > 1000.0:
+        return AREA_M2_TO_MM2
+    return 1.0
+
+
+def _settings_store():
+    return App.ParamGet(SETTINGS_PATH)
+
+
+def _load_run_settings():
+    p = _settings_store()
+    return {
+        "proposals": int(p.GetInt("proposals", DEFAULT_PROPOSALS)),
+        "ga_runs": int(p.GetInt("ga_runs", DEFAULT_GA_RUNS)),
+        "generations": int(p.GetInt("generations", DEFAULT_GENERATIONS)),
+        "pop_size": int(p.GetInt("pop_size", DEFAULT_POP_SIZE)),
+        "text_size_mm": int(p.GetInt("text_size_mm", DEFAULT_TEXT_SIZE_MM)),
+        "clear_previous": bool(p.GetBool("clear_previous", DEFAULT_CLEAR_PREVIOUS)),
+        "realistic_zoning": bool(p.GetBool("realistic_zoning", DEFAULT_REALISTIC_ZONING)),
+        "use_doc_features": bool(p.GetBool("use_doc_features", DEFAULT_USE_DOC_FEATURES)),
+        "base_obj_name": str(p.GetString("base_obj_name", "")),
+        "sheet_obj_name": str(p.GetString("sheet_obj_name", "")),
+        "program_file_path": str(p.GetString("program_file_path", "")),
+    }
+
+
+def _save_run_settings(values):
+    p = _settings_store()
+    p.SetInt("proposals", int(values["proposals"]))
+    p.SetInt("ga_runs", int(values["ga_runs"]))
+    p.SetInt("generations", int(values["generations"]))
+    p.SetInt("pop_size", int(values["pop_size"]))
+    p.SetInt("text_size_mm", int(values["text_size_mm"]))
+    p.SetBool("clear_previous", bool(values["clear_previous"]))
+    p.SetBool("realistic_zoning", bool(values["realistic_zoning"]))
+    p.SetBool("use_doc_features", bool(values.get("use_doc_features", DEFAULT_USE_DOC_FEATURES)))
+    p.SetString("base_obj_name", str(values.get("base_obj_name", "") or ""))
+    p.SetString("sheet_obj_name", str(values.get("sheet_obj_name", "") or ""))
+    p.SetString("program_file_path", str(values.get("program_file_path", "") or ""))
+
+
+_RunSettingsBase = QtWidgets.QDialog if QtWidgets is not None else object
+
+
+class _RunSettingsDialog(_RunSettingsBase):
+    def __init__(self, initial, parent=None):
+        super(_RunSettingsDialog, self).__init__(parent)
+        self.setWindowTitle("DistribucionSucursalGA - Configuracion")
+        self.setModal(True)
+        self.setMinimumWidth(420)
+
+        layout = QtWidgets.QVBoxLayout(self)
+        form = QtWidgets.QFormLayout()
+
+        self.proposals = QtWidgets.QSpinBox()
+        self.proposals.setRange(2, 12)
+        self.proposals.setValue(int(initial["proposals"]))
+        form.addRow("Cantidad de propuestas", self.proposals)
+
+        self.ga_runs = QtWidgets.QSpinBox()
+        self.ga_runs.setRange(1, 30)
+        self.ga_runs.setValue(int(initial["ga_runs"]))
+        form.addRow("Corridas GA por ejecucion", self.ga_runs)
+
+        self.generations = QtWidgets.QSpinBox()
+        self.generations.setRange(20, 2000)
+        self.generations.setSingleStep(10)
+        self.generations.setValue(int(initial["generations"]))
+        form.addRow("Generaciones", self.generations)
+
+        self.pop_size = QtWidgets.QSpinBox()
+        self.pop_size.setRange(20, 1000)
+        self.pop_size.setSingleStep(10)
+        self.pop_size.setValue(int(initial["pop_size"]))
+        form.addRow("Poblacion", self.pop_size)
+
+        self.text_size_mm = QtWidgets.QSpinBox()
+        self.text_size_mm.setRange(100, 200)
+        self.text_size_mm.setSingleStep(10)
+        self.text_size_mm.setValue(int(initial["text_size_mm"]))
+        form.addRow("Tamano texto (mm)", self.text_size_mm)
+
+        self.clear_previous = QtWidgets.QCheckBox("Borrar propuestas GA anteriores al ejecutar")
+        self.clear_previous.setChecked(bool(initial["clear_previous"]))
+        form.addRow("", self.clear_previous)
+
+        self.realistic_zoning = QtWidgets.QCheckBox("Acomodo mas realista por zonas funcionales")
+        self.realistic_zoning.setChecked(bool(initial["realistic_zoning"]))
+        form.addRow("", self.realistic_zoning)
+
+        layout.addLayout(form)
+
+        buttons = QtWidgets.QDialogButtonBox(
+            QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel
+        )
+        buttons.accepted.connect(self.accept)
+        buttons.rejected.connect(self.reject)
+        layout.addWidget(buttons)
+
+    def values(self):
+        return {
+            "proposals": int(self.proposals.value()),
+            "ga_runs": int(self.ga_runs.value()),
+            "generations": int(self.generations.value()),
+            "pop_size": int(self.pop_size.value()),
+            "text_size_mm": int(self.text_size_mm.value()),
+            "clear_previous": bool(self.clear_previous.isChecked()),
+            "realistic_zoning": bool(self.realistic_zoning.isChecked()),
+        }
+
+
+def _ask_run_parameters():
+    initial = _load_run_settings()
+    if QtWidgets is None:
+        return initial
+
+    dlg = _RunSettingsDialog(initial)
+    if _dialog_exec(dlg) != QtWidgets.QDialog.Accepted:
+        return None
+
+    values = dlg.values()
+    _save_run_settings(values)
+    return values
+
+
+def _dialog_exec(dialog):
+    if hasattr(dialog, "exec"):
+        return dialog.exec()
+    return dialog.exec_()
+
+
+def _draft_make_text_obj(text_value, point):
+    if Draft is None:
+        return None
+
+    placement = App.Placement(point, App.Rotation())
+
+    if hasattr(Draft, "make_text"):
+        try:
+            return Draft.make_text(text_value, placement=placement)
+        except Exception:
+            pass
+
+    try:
+        return Draft.makeText([text_value], point=point)
+    except Exception:
+        return None
+
+
+class GeneticLayoutEngine(object):
+    def __init__(self, envelope_poly, rooms, adjacency_pairs, features, params):
+        self.envelope_poly = envelope_poly
+        self.rooms = rooms
+        self.adjacency_pairs = adjacency_pairs
+        self.features = features
+        self.params = params
+
+        self.bbox = _poly_bbox(envelope_poly)
+        x0, y0, x1, y1 = self.bbox
+        self.width = max(1.0, x1 - x0)
+        self.height = max(1.0, y1 - y0)
+        self.diag = math.sqrt(self.width * self.width + self.height * self.height)
+        self.envelope_area = max(1.0, self.width * self.height)
+        self.adjacency_set = set(adjacency_pairs)
+        self.min_clearance = max(1.0, float(self.params.get("min_room_gap_mm", MIN_ROOM_GAP_MM)))
+        self.realistic_zoning = bool(self.params.get("realistic_zoning", True))
+        self.zoning_ref = _build_zoning_reference(
+            self.envelope_poly,
+            self.features.get("fronts", []),
+            self.bbox,
+        )
+
+        self.weights = {
+            "outside": 2600.0,
+            "overlap": 12000.0,
+            "clearance": 3000.0,
+            "obstacle": 3200.0,
+            "area": 340.0,
+            "aspect": 55.0,
+            "front": 95.0,
+            "door": 42.0,
+            "exit": 55.0,
+            "adj": 140.0,
+            "spread": 220.0,
+            "zone": 260.0,
+        }
+
+    def _random_gene(self, room):
+        x0, y0, x1, y1 = self.bbox
+        area = random.uniform(room["area_min"], room["area_max"])
+        aspect = random.uniform(0.55, 1.90)
+        w = math.sqrt(max(1.0, area * aspect))
+        h = max(1.0, area / max(1.0, w))
+        w = min(w, self.width * 0.95)
+        h = min(h, self.height * 0.95)
+
+        cx_min = x0 + 0.5 * w
+        cx_max = x1 - 0.5 * w
+        cy_min = y0 + 0.5 * h
+        cy_max = y1 - 0.5 * h
+
+        if cx_max <= cx_min:
+            cx = 0.5 * (x0 + x1)
+        else:
+            cx = random.uniform(cx_min, cx_max)
+        if cy_max <= cy_min:
+            cy = 0.5 * (y0 + y1)
+        else:
+            cy = random.uniform(cy_min, cy_max)
+        return [cx, cy, w, h]
+
+    def _clamp_gene(self, gene, room):
+        cx, cy, w, h = gene
+        x0, y0, x1, y1 = self.bbox
+
+        min_w = max(1000.0, math.sqrt(max(1.0, room["area_min"] * 0.2)))
+        min_h = max(1000.0, math.sqrt(max(1.0, room["area_min"] * 0.2)))
+        max_w = self.width * 0.98
+        max_h = self.height * 0.98
+
+        w = min(max(w, min_w), max_w)
+        h = min(max(h, min_h), max_h)
+
+        area = w * h
+        if area < room["area_min"]:
+            factor = math.sqrt(room["area_min"] / max(1.0, area))
+            w *= factor
+            h *= factor
+        if area > room["area_max"]:
+            factor = math.sqrt(room["area_max"] / max(1.0, area))
+            w *= factor
+            h *= factor
+
+        w = min(max(w, min_w), max_w)
+        h = min(max(h, min_h), max_h)
+
+        cx = min(max(cx, x0 + 0.5 * w), x1 - 0.5 * w)
+        cy = min(max(cy, y0 + 0.5 * h), y1 - 0.5 * h)
+        return [cx, cy, w, h]
+
+    def _random_individual(self):
+        return [self._random_gene(room) for room in self.rooms]
+
+    def _mutate(self, individual):
+        x0, y0, x1, y1 = self.bbox
+        pos_sigma = 0.08
+        size_sigma = 0.15
+
+        for i, room in enumerate(self.rooms):
+            gene = list(individual[i])
+            if random.random() < 0.25:
+                gene[0] += random.gauss(0.0, self.width * pos_sigma)
+                gene[1] += random.gauss(0.0, self.height * pos_sigma)
+            if random.random() < 0.25:
+                scale = math.exp(random.gauss(0.0, size_sigma))
+                gene[2] *= scale
+                gene[3] /= max(1e-6, scale)
+            if random.random() < 0.10:
+                gene[2] *= math.exp(random.gauss(0.0, 0.08))
+            if random.random() < 0.10:
+                gene[3] *= math.exp(random.gauss(0.0, 0.08))
+            gene = self._clamp_gene(gene, room)
+            gene[0] = min(max(gene[0], x0 + 0.5 * gene[2]), x1 - 0.5 * gene[2])
+            gene[1] = min(max(gene[1], y0 + 0.5 * gene[3]), y1 - 0.5 * gene[3])
+            individual[i] = gene
+
+    def _crossover(self, a, b):
+        child = []
+        for i, room in enumerate(self.rooms):
+            ga = a[i]
+            gb = b[i]
+            alpha = random.random()
+            gene = [
+                ga[0] * alpha + gb[0] * (1.0 - alpha),
+                ga[1] * alpha + gb[1] * (1.0 - alpha),
+                ga[2] * alpha + gb[2] * (1.0 - alpha),
+                ga[3] * alpha + gb[3] * (1.0 - alpha),
+            ]
+            child.append(self._clamp_gene(gene, room))
+        return child
+
+    def _tournament(self, scored_pop, k=3):
+        picks = random.sample(scored_pop, min(k, len(scored_pop)))
+        picks.sort(key=lambda item: item[0])
+        return picks[0][1]
+
+    def _score(self, individual):
+        w = self.weights
+        penalty = 0.0
+
+        centers = []
+
+        for i, room in enumerate(self.rooms):
+            rect = individual[i]
+            corners = _rect_corners(rect)
+            inside_count = sum(1 for c in corners if _point_in_polygon(c, self.envelope_poly))
+            if inside_count < 4:
+                penalty += w["outside"] * (4 - inside_count) / 4.0
+
+            area = _rect_area(rect)
+            target = room["area"]
+            area_error = abs(area - target) / max(1.0, target)
+            penalty += w["area"] * area_error * room["priority"]
+
+            ratio = max(rect[2] / max(1.0, rect[3]), rect[3] / max(1.0, rect[2]))
+            if ratio > 3.0:
+                penalty += w["aspect"] * (ratio - 3.0)
+
+            centers.append((rect[0], rect[1]))
+
+        for i in range(len(individual)):
+            for j in range(i + 1, len(individual)):
+                overlap = _intersection_area(individual[i], individual[j])
+                if overlap > 0.0:
+                    ai = _rect_area(individual[i])
+                    aj = _rect_area(individual[j])
+                    overlap_ratio = overlap / max(1.0, min(ai, aj))
+                    penalty += w["overlap"] * overlap_ratio
+
+                dist = _rect_distance(individual[i], individual[j])
+                if dist < self.min_clearance:
+                    miss = (self.min_clearance - dist) / self.min_clearance
+                    penalty += w["clearance"] * (miss * miss)
+
+        obstacles = self.features.get("obstacles", [])
+        for rect in individual:
+            rect_area = _rect_area(rect)
+            for ox0, oy0, ox1, oy1 in obstacles:
+                obstacle_rect = [
+                    0.5 * (ox0 + ox1),
+                    0.5 * (oy0 + oy1),
+                    max(1.0, ox1 - ox0),
+                    max(1.0, oy1 - oy0),
+                ]
+                overlap = _intersection_area(rect, obstacle_rect)
+                if overlap > 0.0:
+                    penalty += w["obstacle"] * (overlap / max(1.0, rect_area))
+
+        fronts = self.features.get("fronts", [])
+        doors = self.features.get("doors", [])
+        exits = self.features.get("exits", [])
+
+        for i, room in enumerate(self.rooms):
+            center = centers[i]
+
+            wants_front = room["prefer_front"] or room["kind"] in {"publico", "atencion", "cajas", "espera"}
+            if wants_front and fronts:
+                d = min(_distance_point_segment(center, seg[0], seg[1]) for seg in fronts)
+                penalty += w["front"] * (d / max(1.0, self.diag))
+
+            if doors:
+                d = min(_distance(center, p) for p in doors)
+                mult = 1.4 if room["kind"] in {"publico", "atencion", "cajas", "espera"} else 1.0
+                penalty += mult * w["door"] * (d / max(1.0, self.diag))
+
+            if exits:
+                d = min(_distance(center, p) for p in exits)
+                penalty += w["exit"] * (d / max(1.0, self.diag))
+
+            if self.realistic_zoning:
+                origin = self.zoning_ref["origin"]
+                normal = self.zoning_ref["normal"]
+                depth_max = max(1.0, self.zoning_ref["depth_max"])
+                depth = _dot2((center[0] - origin[0], center[1] - origin[1]), normal) / depth_max
+                depth = max(0.0, min(1.0, depth))
+                lo, hi, zone_mult = _zone_target_for_room(room)
+                if depth < lo:
+                    penalty += w["zone"] * zone_mult * (lo - depth)
+                elif depth > hi:
+                    penalty += w["zone"] * zone_mult * (depth - hi)
+
+        for i, j in self.adjacency_pairs:
+            c1 = centers[i]
+            c2 = centers[j]
+            d = _distance(c1, c2)
+            ideal = 0.55 * (math.sqrt(self.rooms[i]["area"]) + math.sqrt(self.rooms[j]["area"]))
+            low = max(self.min_clearance * 0.6, ideal * 0.35)
+            high = ideal * 1.35
+            if d < low:
+                penalty += 0.75 * w["adj"] * ((low - d) / max(1.0, self.diag))
+            elif d > high:
+                penalty += w["adj"] * ((d - high) / max(1.0, self.diag))
+
+        if len(centers) > 1:
+            mean_x = sum(c[0] for c in centers) / len(centers)
+            mean_y = sum(c[1] for c in centers) / len(centers)
+            spread = sum(_distance((mean_x, mean_y), c) for c in centers) / len(centers)
+            target_spread = 0.22 * self.diag
+            if spread < target_spread:
+                penalty += w["spread"] * ((target_spread - spread) / target_spread)
+
+        return penalty
+
+    def evolve(self, run_index=1, total_runs=1):
+        pop_size = int(self.params["pop_size"])
+        generations = int(self.params["generations"])
+        elite_count = max(2, int(0.10 * pop_size))
+
+        population = [self._random_individual() for _ in range(pop_size)]
+
+        for gen in range(generations):
+            scored = [(self._score(ind), ind) for ind in population]
+            scored.sort(key=lambda item: item[0])
+            best_score = scored[0][0]
+
+            if gen % max(1, generations // 10) == 0 or gen == generations - 1:
+                if total_runs > 1:
+                    _msg(
+                        "GA Run %d/%d | Gen %d/%d -> penalidad %.3f"
+                        % (run_index, total_runs, gen + 1, generations, best_score)
+                    )
+                else:
+                    _msg("GA Gen %d/%d -> penalidad %.3f" % (gen + 1, generations, best_score))
+
+            new_pop = [
+                [list(g) for g in scored[i][1]]
+                for i in range(elite_count)
+            ]
+
+            while len(new_pop) < pop_size:
+                p1 = self._tournament(scored)
+                p2 = self._tournament(scored)
+                if random.random() < 0.78:
+                    child = self._crossover(p1, p2)
+                else:
+                    child = [list(g) for g in (p1 if random.random() < 0.5 else p2)]
+                if random.random() < 0.72:
+                    self._mutate(child)
+                new_pop.append(child)
+
+            population = new_pop
+
+        final_scored = [(self._score(ind), ind) for ind in population]
+        final_scored.sort(key=lambda item: item[0])
+        return final_scored
+
+
+def _layout_distance(a, b, diag):
+    if not a:
+        return 0.0
+    acc = 0.0
+    for i in range(len(a)):
+        center_dist = _distance((a[i][0], a[i][1]), (b[i][0], b[i][1]))
+        size_diff = 0.35 * abs(a[i][2] - b[i][2]) + 0.35 * abs(a[i][3] - b[i][3])
+        acc += center_dist + size_diff
+    return acc / (len(a) * max(1.0, diag))
+
+
+def _clone_individual(individual):
+    return [list(g) for g in individual]
+
+
+def _pick_diverse_solutions(scored, count, diag, min_dist=0.11):
+    chosen = []
+    for score, ind in scored:
+        if not chosen:
+            chosen.append((score, _clone_individual(ind)))
+        else:
+            far_enough = True
+            for _, other in chosen:
+                if _layout_distance(ind, other, diag) < min_dist:
+                    far_enough = False
+                    break
+            if far_enough:
+                chosen.append((score, _clone_individual(ind)))
+        if len(chosen) >= count:
+            break
+
+    if len(chosen) < count:
+        for score, ind in scored:
+            if len(chosen) >= count:
+                break
+            chosen.append((score, _clone_individual(ind)))
+
+    return chosen
+
+
+def _enforce_layout_min_gap(individual, bbox, min_gap_mm, iterations=120):
+    if not individual:
+        return []
+
+    x0, y0, x1, y1 = bbox
+    out = _clone_individual(individual)
+    min_gap = max(0.0, float(min_gap_mm))
+
+    for _ in range(max(1, int(iterations))):
+        moved = False
+        for i in range(len(out)):
+            for j in range(i + 1, len(out)):
+                ri = out[i]
+                rj = out[j]
+                req_x = 0.5 * (ri[2] + rj[2]) + min_gap
+                req_y = 0.5 * (ri[3] + rj[3]) + min_gap
+                dx = rj[0] - ri[0]
+                dy = rj[1] - ri[1]
+                adx = abs(dx)
+                ady = abs(dy)
+
+                if adx >= req_x or ady >= req_y:
+                    continue
+
+                def_x = req_x - adx
+                def_y = req_y - ady
+
+                if def_x <= def_y:
+                    sign = 1.0 if dx >= 0.0 else -1.0
+                    shift = 0.5 * def_x + 1e-3
+                    ri[0] -= sign * shift
+                    rj[0] += sign * shift
+                else:
+                    sign = 1.0 if dy >= 0.0 else -1.0
+                    shift = 0.5 * def_y + 1e-3
+                    ri[1] -= sign * shift
+                    rj[1] += sign * shift
+
+                ri[0] = min(max(ri[0], x0 + 0.5 * ri[2]), x1 - 0.5 * ri[2])
+                ri[1] = min(max(ri[1], y0 + 0.5 * ri[3]), y1 - 0.5 * ri[3])
+                rj[0] = min(max(rj[0], x0 + 0.5 * rj[2]), x1 - 0.5 * rj[2])
+                rj[1] = min(max(rj[1], y0 + 0.5 * rj[3]), y1 - 0.5 * rj[3])
+                moved = True
+
+        if not moved:
+            break
+
+    return out
+
+
+def _collect_multistart_candidates(poly, rooms, adjacency_pairs, features, params, base_seed):
+    proposals = int(params.get("proposals", DEFAULT_PROPOSALS))
+    runs = int(params.get("ga_runs", proposals))
+    runs = max(proposals, max(1, runs))
+
+    candidate_pool = []
+    diag = max(1.0, math.sqrt((_poly_bbox(poly)[2] - _poly_bbox(poly)[0]) ** 2 + (_poly_bbox(poly)[3] - _poly_bbox(poly)[1]) ** 2))
+
+    for run_idx in range(runs):
+        run_seed = int(base_seed + (run_idx + 1) * 104729)
+        random.seed(run_seed)
+        engine = GeneticLayoutEngine(poly, rooms, adjacency_pairs, features, params)
+        scored = engine.evolve(run_index=run_idx + 1, total_runs=runs)
+        if not scored:
+            continue
+        diag = engine.diag
+        keep = min(8, len(scored))
+        for j in range(keep):
+            score, ind = scored[j]
+            candidate_pool.append((float(score) + run_idx * 1e-6 + j * 1e-9, _clone_individual(ind)))
+
+    candidate_pool.sort(key=lambda item: item[0])
+    return candidate_pool, diag
+
+
+def _color_for_name(name):
+    h = (abs(hash(name)) % 360) / 360.0
+    s = 0.58
+    v = 0.86
+    return colorsys.hsv_to_rgb(h, s, v)
+
+
+def _draw_outline(doc, group, poly, offset_x, name):
+    pts = [App.Vector(x + offset_x, y, 0.0) for x, y in poly]
+    if pts:
+        pts.append(pts[0])
+    wire = Part.makePolygon(pts)
+    obj = doc.addObject("Part::Feature", _safe_name(name, "Contorno"))
+    obj.Label = name
+    obj.Shape = wire
+    try:
+        obj.ViewObject.LineColor = (0.12, 0.12, 0.12)
+        obj.ViewObject.PointColor = (0.12, 0.12, 0.12)
+        obj.ViewObject.LineWidth = 2.0
+    except Exception:
+        pass
+    group.addObject(obj)
+    return obj
+
+
+def _set_obj_property(obj, prop_type, prop_name, prop_group, tip, value):
+    try:
+        if prop_name not in getattr(obj, "PropertiesList", []):
+            obj.addProperty(prop_type, prop_name, prop_group, tip)
+    except Exception:
+        pass
+    try:
+        setattr(obj, prop_name, value)
+    except Exception:
+        pass
+
+
+class _RoomLabelFollowerProxy(object):
+    def __init__(self, obj=None):
+        if obj is not None:
+            self.attach(obj)
+
+    def attach(self, obj):
+        obj.Proxy = self
+        self._ensure_properties(obj)
+
+    def _ensure_properties(self, obj):
+        _set_obj_property(obj, "App::PropertyLink", "RoomObj", "GA", "Recinto asociado", None)
+        _set_obj_property(obj, "App::PropertyLink", "TextObj", "GA", "Etiqueta asociada", None)
+        _set_obj_property(obj, "App::PropertyFloat", "ZOffset", "GA", "Desfase en Z de la etiqueta", 5.0)
+        _set_obj_property(
+            obj,
+            "App::PropertyFloat",
+            "VerticalOffsetFactor",
+            "GA",
+            "Factor de ajuste vertical para centrar visualmente el texto",
+            float(TEXT_VERTICAL_CENTER_OFFSET_FACTOR),
+        )
+
+    def onDocumentRestored(self, obj):
+        self.attach(obj)
+
+    def execute(self, obj):
+        room_obj = getattr(obj, "RoomObj", None)
+        text_obj = getattr(obj, "TextObj", None)
+        if room_obj is None or text_obj is None:
+            return
+
+        shape = getattr(room_obj, "Shape", None)
+        if shape is None:
+            return
+        try:
+            if shape.isNull():
+                return
+        except Exception:
+            return
+
+        center = shape.BoundBox.Center
+        text_size = 150.0
+        try:
+            text_size = float(getattr(text_obj.ViewObject, "FontSize", 150.0))
+        except Exception:
+            pass
+
+        z_offset = float(getattr(obj, "ZOffset", 5.0))
+        v_factor = float(getattr(obj, "VerticalOffsetFactor", TEXT_VERTICAL_CENTER_OFFSET_FACTOR))
+        target = App.Vector(float(center.x), float(center.y) - text_size * v_factor, z_offset)
+
+        try:
+            cur = text_obj.Placement.Base
+            if abs(cur.x - target.x) < 1e-6 and abs(cur.y - target.y) < 1e-6 and abs(cur.z - target.z) < 1e-6:
+                return
+        except Exception:
+            pass
+
+        try:
+            text_obj.Placement = App.Placement(target, App.Rotation())
+        except Exception:
+            pass
+
+
+def _create_label_follower(doc, link_group, room_obj, text_obj):
+    name = _safe_name("Vinculo_" + str(getattr(room_obj, "Name", "Recinto")), "Vinculo")
+    driver = doc.addObject("App::FeaturePython", name)
+    _RoomLabelFollowerProxy(driver)
+    driver.Label = "Vinculo " + str(getattr(room_obj, "Label", getattr(room_obj, "Name", "")))
+    driver.RoomObj = room_obj
+    driver.TextObj = text_obj
+    driver.ZOffset = 5.0
+    driver.VerticalOffsetFactor = float(TEXT_VERTICAL_CENTER_OFFSET_FACTOR)
+    try:
+        driver.ViewObject.Visibility = False
+    except Exception:
+        pass
+    link_group.addObject(driver)
+    return driver
+
+
+def _draw_room(doc, room_group, label_group, link_group, room, rect, offset_x, z, text_size_mm):
+    room_name = str(room.get("name", "Recinto"))
+    x0, y0, x1, y1 = _rect_bounds(rect)
+    p1 = App.Vector(x0 + offset_x, y0, z)
+    p2 = App.Vector(x1 + offset_x, y0, z)
+    p3 = App.Vector(x1 + offset_x, y1, z)
+    p4 = App.Vector(x0 + offset_x, y1, z)
+    wire = Part.makePolygon([p1, p2, p3, p4, p1])
+    face = Part.Face(wire)
+
+    obj = doc.addObject("Part::Feature", _safe_name(room_name, "Recinto"))
+    obj.Label = room_name
+    obj.Shape = face
+
+    _set_obj_property(obj, "App::PropertyString", "RoomName", "GA", "Nombre del recinto", room_name)
+    _set_obj_property(obj, "App::PropertyString", "RoomKind", "GA", "Tipo de recinto", str(room.get("kind", "")))
+    _set_obj_property(obj, "App::PropertyBool", "IsFixed", "GA", "Indica si el recinto es fijo", bool(room.get("is_fixed", False)))
+    _set_obj_property(
+        obj,
+        "App::PropertyBool",
+        "IsCirculation",
+        "GA",
+        "Indica si es recinto de circulacion",
+        bool(room.get("is_circulation", False)),
+    )
+    _set_obj_property(
+        obj,
+        "App::PropertyFloat",
+        "TargetArea_m2",
+        "GA",
+        "Area objetivo en metros cuadrados",
+        float(room.get("area", 0.0)) / AREA_M2_TO_MM2,
+    )
+    _set_obj_property(
+        obj,
+        "App::PropertyFloat",
+        "Priority",
+        "GA",
+        "Prioridad de optimizacion",
+        float(room.get("priority", 1.0)),
+    )
+
+    color = _color_for_name(room_name)
+    try:
+        obj.ViewObject.ShapeColor = color
+        obj.ViewObject.Transparency = 65
+        obj.ViewObject.LineColor = (0.2, 0.2, 0.2)
+    except Exception:
+        pass
+
+    room_group.addObject(obj)
+
+    if Draft is not None:
+        try:
+            text_size = float(max(100.0, min(200.0, text_size_mm)))
+            cx = rect[0] + offset_x
+            cy = rect[1] - text_size * TEXT_VERTICAL_CENTER_OFFSET_FACTOR
+            txt = _draft_make_text_obj(room_name, App.Vector(cx, cy, z + 5.0))
+            if txt is not None:
+                txt.Label = "Etiqueta_" + room_name
+                try:
+                    txt.ViewObject.FontSize = text_size
+                    if hasattr(txt.ViewObject, "Justification"):
+                        txt.ViewObject.Justification = "Center"
+                    if hasattr(txt.ViewObject, "TextAlignment"):
+                        txt.ViewObject.TextAlignment = "Middle"
+                except Exception:
+                    pass
+                label_group.addObject(txt)
+                _create_label_follower(doc, link_group, obj, txt)
+        except Exception:
+            pass
+
+
+def _remove_object_tree(doc, obj):
+    children = []
+    if hasattr(obj, "Group"):
+        children = list(obj.Group)
+    for child in children:
+        _remove_object_tree(doc, child)
+    try:
+        doc.removeObject(obj.Name)
+    except Exception:
+        pass
+
+
+def _group_contains_any_name(group_obj, protected_names):
+    if not protected_names:
+        return False
+    stack = [group_obj]
+    while stack:
+        obj = stack.pop()
+        name = str(getattr(obj, "Name", ""))
+        if name in protected_names:
+            return True
+        if hasattr(obj, "Group"):
+            stack.extend(list(obj.Group))
+    return False
+
+
+def _clear_previous_ga_results(doc, protected_names=None):
+    protected_names = set(str(x) for x in (protected_names or []) if str(x))
+    roots = []
+    for obj in doc.Objects:
+        if str(getattr(obj, "TypeId", "")) != "App::DocumentObjectGroup":
+            continue
+        name = str(getattr(obj, "Name", ""))
+        label = str(getattr(obj, "Label", ""))
+        if name.startswith(RESULT_GROUP_PREFIX) or label.startswith(RESULT_GROUP_PREFIX):
+            if _group_contains_any_name(obj, protected_names):
+                continue
+            roots.append(obj)
+
+    for root in roots:
+        _remove_object_tree(doc, root)
+
+    return len(roots)
+
+
+def _draw_features(doc, group, features, offset_x):
+    for idx, seg in enumerate(features.get("fronts", []), start=1):
+        a, b = seg
+        wire = Part.makePolygon([
+            App.Vector(a[0] + offset_x, a[1], 0.0),
+            App.Vector(b[0] + offset_x, b[1], 0.0),
+        ])
+        obj = doc.addObject("Part::Feature", "Frente_%d" % idx)
+        obj.Label = "Frente"
+        obj.Shape = wire
+        try:
+            obj.ViewObject.LineColor = (0.85, 0.25, 0.1)
+            obj.ViewObject.LineWidth = 3.0
+        except Exception:
+            pass
+        group.addObject(obj)
+
+    for idx, p in enumerate(features.get("doors", []), start=1):
+        circle = Part.makeCircle(500.0, App.Vector(p[0] + offset_x, p[1], 0.0))
+        obj = doc.addObject("Part::Feature", "Puerta_%d" % idx)
+        obj.Label = "Puerta"
+        obj.Shape = circle
+        try:
+            obj.ViewObject.LineColor = (0.1, 0.55, 0.1)
+            obj.ViewObject.LineWidth = 2.0
+        except Exception:
+            pass
+        group.addObject(obj)
+
+    for idx, p in enumerate(features.get("exits", []), start=1):
+        circle = Part.makeCircle(500.0, App.Vector(p[0] + offset_x, p[1], 0.0))
+        obj = doc.addObject("Part::Feature", "Salida_%d" % idx)
+        obj.Label = "Salida"
+        obj.Shape = circle
+        try:
+            obj.ViewObject.LineColor = (0.85, 0.0, 0.0)
+            obj.ViewObject.LineWidth = 2.0
+        except Exception:
+            pass
+        group.addObject(obj)
+
+    for idx, obs in enumerate(features.get("obstacles", []), start=1):
+        x0, y0, x1, y1 = obs
+        wire = Part.makePolygon([
+            App.Vector(x0 + offset_x, y0, 0.0),
+            App.Vector(x1 + offset_x, y0, 0.0),
+            App.Vector(x1 + offset_x, y1, 0.0),
+            App.Vector(x0 + offset_x, y1, 0.0),
+            App.Vector(x0 + offset_x, y0, 0.0),
+        ])
+        face = Part.Face(wire)
+        obj = doc.addObject("Part::Feature", "Fijo_%d" % idx)
+        obj.Label = "Zona Fija"
+        obj.Shape = face
+        try:
+            obj.ViewObject.ShapeColor = (0.3, 0.3, 0.3)
+            obj.ViewObject.Transparency = 80
+        except Exception:
+            pass
+        group.addObject(obj)
+
+
+def _is_alive_qobject(obj):
+    if obj is None:
+        return False
+    try:
+        obj.objectName()
+        return True
+    except RuntimeError:
+        return False
+    except Exception:
+        return False
+
+
+def _set_combo_to_data(combo, value):
+    target = str(value or "")
+    for i in range(combo.count()):
+        if str(combo.itemData(i) or "") == target:
+            combo.setCurrentIndex(i)
+            return True
+    return False
+
+
+def _doc_shape_objects(doc):
+    out = []
+    for obj in getattr(doc, "Objects", []):
+        shape = getattr(obj, "Shape", None)
+        if shape is None:
+            continue
+        try:
+            if shape.isNull():
+                continue
+        except Exception:
+            continue
+        out.append(obj)
+    return out
+
+
+def _doc_spreadsheet_objects(doc):
+    return [obj for obj in getattr(doc, "Objects", []) if _is_spreadsheet_obj(obj)]
+
+
+def _find_base_from_selection(selection):
+    for obj in selection:
+        shape = getattr(obj, "Shape", None)
+        if shape is None:
+            continue
+        try:
+            if shape.isNull():
+                continue
+        except Exception:
+            continue
+        return obj
+    return None
+
+
+def _collect_feature_source_objects(doc, base_obj_name, sheet_obj_name, use_doc_features, selection):
+    if use_doc_features:
+        out = []
+        for obj in getattr(doc, "Objects", []):
+            name = str(getattr(obj, "Name", ""))
+            if not name:
+                continue
+            if name == str(base_obj_name or "") or name == str(sheet_obj_name or ""):
+                continue
+            if name.startswith(RESULT_GROUP_PREFIX):
+                continue
+            if str(getattr(obj, "TypeId", "")) == "App::DocumentObjectGroup":
+                continue
+            out.append(obj)
+        return out
+
+    # Fallback: auxiliares tomados de la seleccion actual.
+    return list(selection[1:]) if len(selection) > 1 else []
+
+
+def _resolve_program_rows(doc, selection, forced_sheet_name, forced_file_path):
+    program_source = ""
+    rows = None
+
+    sheet_obj = None
+    if forced_sheet_name:
+        sheet_obj = doc.getObject(str(forced_sheet_name))
+        if sheet_obj is not None and not _is_spreadsheet_obj(sheet_obj):
+            sheet_obj = None
+
+    if sheet_obj is None:
+        sheet_obj = _find_program_sheet(selection)
+
+    if sheet_obj is not None:
+        sheet_label = getattr(sheet_obj, "Label", getattr(sheet_obj, "Name", "Spreadsheet"))
+        try:
+            rows = _read_fc_spreadsheet_rows(sheet_obj)
+            program_source = "Spreadsheet interno: %s" % sheet_label
+            _msg("Programa funcional detectado en Spreadsheet '%s'." % sheet_label)
+        except Exception as exc:
+            _warn("No se pudo leer Spreadsheet '%s': %s" % (sheet_label, exc))
+            rows = None
+
+    if rows is None:
+        table_path = str(forced_file_path or "").strip()
+        if not table_path:
+            table_path = _select_program_file()
+        if not table_path:
+            return None, ""
+        try:
+            rows = _load_program_rows(table_path)
+            program_source = "Archivo: %s" % table_path
+        except Exception as exc:
+            _err("No se pudo leer la tabla funcional: %s" % exc)
+            return None, ""
+
+    return rows, program_source
+
+
+def _run_macro(options=None):
+    options = options or {}
+    selection = Gui.Selection.getSelection()
+    doc = App.ActiveDocument
+    if doc is None:
+        doc = App.newDocument("SucursalGA")
+
+    base_obj = None
+    forced_base_name = str(options.get("base_obj_name", "") or "")
+    if forced_base_name:
+        base_obj = doc.getObject(forced_base_name)
+    if base_obj is None:
+        base_obj = _find_base_from_selection(selection)
+    if base_obj is None:
+        _err("Define un objeto base (contorno) en el formulario o selecciónalo.")
+        return False
+
+    base_shape = getattr(base_obj, "Shape", None)
+    if base_shape is None or base_shape.isNull():
+        _err("El primer objeto seleccionado no tiene Shape valido.")
+        return False
+    base_label = str(getattr(base_obj, "Label", "")) or str(getattr(base_obj, "Name", "Base"))
+
+    poly = _extract_envelope_polygon(base_shape)
+    if len(poly) < 3:
+        _err("No se pudo extraer un contorno 2D valido del objeto base.")
+        return False
+
+    use_doc_features = bool(options.get("use_doc_features", DEFAULT_USE_DOC_FEATURES))
+    forced_sheet_name = str(options.get("sheet_obj_name", "") or "")
+    feature_source = _collect_feature_source_objects(
+        doc=doc,
+        base_obj_name=getattr(base_obj, "Name", ""),
+        sheet_obj_name=forced_sheet_name,
+        use_doc_features=use_doc_features,
+        selection=selection,
+    )
+    features = _extract_features(feature_source)
+
+    forced_file_path = str(options.get("program_file_path", "") or "")
+    rows, program_source = _resolve_program_rows(doc, selection, forced_sheet_name, forced_file_path)
+    if rows is None:
+        _warn("Operacion cancelada: no se selecciono tabla funcional.")
+        return False
+
+    all_rooms, all_adjacency_pairs = _parse_program(rows)
+    if not all_rooms:
+        _err("La tabla no contiene recintos validos con area > 0.")
+        return False
+
+    shape_area = float(getattr(base_shape, "Area", 0.0))
+    if shape_area <= 0.0:
+        x0, y0, x1, y1 = _poly_bbox(poly)
+        shape_area = max(1.0, (x1 - x0) * (y1 - y0))
+
+    area_scale = _detect_area_scale(all_rooms, shape_area)
+    if area_scale != 1.0:
+        for r in all_rooms:
+            r["area"] *= area_scale
+            r["area_min"] *= area_scale
+            r["area_max"] *= area_scale
+
+    rooms, adjacency_pairs, circulation_area = _filter_rooms_for_layout(all_rooms, all_adjacency_pairs)
+    if not rooms:
+        _err("Solo se detectaron filas de circulacion (sin recintos colocables).")
+        return
+
+    total_required = sum(r["area"] for r in rooms) + circulation_area
+    if total_required > shape_area * 1.05:
+        _warn(
+            "Area requerida (%.2f m2 aprox) supera el area del local (%.2f m2 aprox)."
+            % (total_required / AREA_M2_TO_MM2, shape_area / AREA_M2_TO_MM2)
+        )
+
+    if options:
+        params = _load_run_settings()
+        params.update(options)
+    else:
+        params = _ask_run_parameters()
+    if not params:
+        _warn("Operacion cancelada por el usuario.")
+        return False
+
+    if params.get("clear_previous"):
+        protected = [str(getattr(base_obj, "Name", "")), str(options.get("sheet_obj_name", "") or "")]
+        removed = _clear_previous_ga_results(doc, protected_names=protected)
+        if removed > 0:
+            _msg("Se eliminaron %d grupo(s) GA anteriores." % removed)
+
+    rng_seed = int(time.time())
+    random.seed(rng_seed)
+
+    _msg("--- DistribucionSucursalGA ---")
+    _msg("Base: %s" % base_label)
+    _msg("Fuente programa: %s" % program_source)
+    _msg(
+        "Recintos colocables: %d (filas totales: %d) | Adyacencias: %d"
+        % (len(rooms), len(all_rooms), len(adjacency_pairs))
+    )
+    if circulation_area > 0.0:
+        _msg("Circulacion reservada (no dibujada como bloque): %.2f m2" % (circulation_area / AREA_M2_TO_MM2))
+    _msg("Frentes: %d | Puertas: %d | Salidas: %d | Obstaculos: %d" % (
+        len(features["fronts"]), len(features["doors"]), len(features["exits"]), len(features["obstacles"])
+    ))
+    _msg("Texto etiquetas: %d mm | Zonas realistas: %s" % (
+        int(params.get("text_size_mm", DEFAULT_TEXT_SIZE_MM)),
+        "si" if params.get("realistic_zoning", True) else "no",
+    ))
+    _msg("Separacion minima entre recintos: %.0f mm" % float(params.get("min_room_gap_mm", MIN_ROOM_GAP_MM)))
+    _msg("Corridas GA por ejecucion: %d" % int(max(params.get("ga_runs", params.get("proposals", DEFAULT_PROPOSALS)), 1)))
+    _msg("Area scale aplicado: %s" % ("m2->mm2" if area_scale != 1.0 else "sin conversion"))
+    _msg("Semilla aleatoria: %d" % rng_seed)
+
+    candidates, diag = _collect_multistart_candidates(poly, rooms, adjacency_pairs, features, params, rng_seed)
+    diverse = _pick_diverse_solutions(candidates, params["proposals"], diag, min_dist=0.12)
+    if not diverse:
+        _err("No se pudieron generar soluciones.")
+        return False
+
+    root_name = RESULT_GROUP_PREFIX + str(int(time.time()))
+    root = doc.addObject("App::DocumentObjectGroup", root_name)
+    root.Label = root_name
+
+    x0, y0, x1, y1 = _poly_bbox(poly)
+    min_gap = float(params.get("min_room_gap_mm", MIN_ROOM_GAP_MM))
+    spacing = max(1.0, (x1 - x0)) * 1.25
+    for idx, (score, individual) in enumerate(diverse, start=1):
+        grp = doc.addObject("App::DocumentObjectGroup", "Propuesta_%d" % idx)
+        grp.Label = "Propuesta %d | penalidad %.3f" % (idx, score)
+        root.addObject(grp)
+
+        rooms_grp = doc.addObject("App::DocumentObjectGroup", "Recintos_%d" % idx)
+        rooms_grp.Label = "Recintos"
+        grp.addObject(rooms_grp)
+
+        labels_grp = doc.addObject("App::DocumentObjectGroup", "Etiquetas_%d" % idx)
+        labels_grp.Label = "Etiquetas"
+        grp.addObject(labels_grp)
+
+        links_grp = doc.addObject("App::DocumentObjectGroup", "Vinculos_%d" % idx)
+        links_grp.Label = "Vinculos Etiquetas"
+        grp.addObject(links_grp)
+        try:
+            links_grp.ViewObject.Visibility = False
+        except Exception:
+            pass
+
+        offset_x = (idx - 1) * spacing
+        _draw_outline(doc, grp, poly, offset_x, "Contorno_%d" % idx)
+        _draw_features(doc, grp, features, offset_x)
+
+        clean_individual = _enforce_layout_min_gap(individual, (x0, y0, x1, y1), min_gap_mm=min_gap, iterations=140)
+        for r, rect in zip(rooms, clean_individual):
+            _draw_room(
+                doc,
+                rooms_grp,
+                labels_grp,
+                links_grp,
+                r,
+                rect,
+                offset_x,
+                0.0,
+                params.get("text_size_mm", DEFAULT_TEXT_SIZE_MM),
+            )
+
+    doc.recompute()
+
+    try:
+        Gui.ActiveDocument.ActiveView.viewAxonometric()
+        Gui.SendMsgToActiveView("ViewFit")
+    except Exception:
+        pass
+
+    _msg("Listo. Se generaron %d propuestas en el grupo '%s'." % (len(diverse), root_name))
+    return True
+
+
+def _obj_display(obj):
+    label = str(getattr(obj, "Label", "") or "")
+    name = str(getattr(obj, "Name", "") or "")
+    if label and label != name:
+        return "%s [%s]" % (label, name)
+    return name or label or "<obj>"
+
+
+class _PersistentGAPanel(_RunSettingsBase):
+    def __init__(self, parent=None):
+        super(_PersistentGAPanel, self).__init__(parent)
+        self.setWindowTitle("DistribucionSucursalGA")
+        self.setModal(False)
+        self.setMinimumWidth(560)
+
+        self._build_ui()
+        self._load_state_into_widgets()
+        self.refresh_doc_lists()
+        self._status("Listo.")
+
+    def _build_ui(self):
+        layout = QtWidgets.QVBoxLayout(self)
+
+        intro = QtWidgets.QLabel(
+            "Generaciones: ciclos de mejora. Poblacion: soluciones por ciclo.\n"
+            "Para mas diversidad entre propuestas, sube corridas GA."
+        )
+        intro.setWordWrap(True)
+        layout.addWidget(intro)
+
+        form = QtWidgets.QFormLayout()
+
+        self.base_combo = QtWidgets.QComboBox()
+        form.addRow("Objeto base", self.base_combo)
+
+        self.sheet_combo = QtWidgets.QComboBox()
+        form.addRow("Spreadsheet", self.sheet_combo)
+
+        file_row = QtWidgets.QHBoxLayout()
+        self.file_edit = QtWidgets.QLineEdit()
+        self.file_btn = QtWidgets.QPushButton("Buscar...")
+        self.file_btn.clicked.connect(self._on_browse_file)
+        file_row.addWidget(self.file_edit, 1)
+        file_row.addWidget(self.file_btn)
+        form.addRow("Archivo CSV/XLSX", file_row)
+
+        self.use_doc_features = QtWidgets.QCheckBox("Usar objetos etiquetados del documento (frente/puerta/salida/fijo)")
+        form.addRow("", self.use_doc_features)
+
+        self.proposals = QtWidgets.QSpinBox()
+        self.proposals.setRange(2, 12)
+        form.addRow("Propuestas", self.proposals)
+
+        self.ga_runs = QtWidgets.QSpinBox()
+        self.ga_runs.setRange(1, 30)
+        form.addRow("Corridas GA", self.ga_runs)
+
+        self.generations = QtWidgets.QSpinBox()
+        self.generations.setRange(20, 2000)
+        self.generations.setSingleStep(10)
+        form.addRow("Generaciones", self.generations)
+
+        self.pop_size = QtWidgets.QSpinBox()
+        self.pop_size.setRange(20, 1000)
+        self.pop_size.setSingleStep(10)
+        form.addRow("Poblacion", self.pop_size)
+
+        self.text_size_mm = QtWidgets.QSpinBox()
+        self.text_size_mm.setRange(100, 200)
+        self.text_size_mm.setSingleStep(10)
+        form.addRow("Texto (mm)", self.text_size_mm)
+
+        self.clear_previous = QtWidgets.QCheckBox("Borrar propuestas GA anteriores al ejecutar")
+        form.addRow("", self.clear_previous)
+
+        self.realistic_zoning = QtWidgets.QCheckBox("Acomodo mas realista por zonas funcionales")
+        form.addRow("", self.realistic_zoning)
+
+        layout.addLayout(form)
+
+        row = QtWidgets.QHBoxLayout()
+        self.capture_btn = QtWidgets.QPushButton("Capturar seleccion")
+        self.capture_btn.clicked.connect(self._on_capture_selection)
+        self.refresh_btn = QtWidgets.QPushButton("Actualizar listas")
+        self.refresh_btn.clicked.connect(self.refresh_doc_lists)
+        self.run_btn = QtWidgets.QPushButton("Ejecutar")
+        self.run_btn.clicked.connect(self._on_run)
+        self.close_btn = QtWidgets.QPushButton("Cerrar")
+        self.close_btn.clicked.connect(self.close)
+        row.addWidget(self.capture_btn)
+        row.addWidget(self.refresh_btn)
+        row.addStretch(1)
+        row.addWidget(self.run_btn)
+        row.addWidget(self.close_btn)
+        layout.addLayout(row)
+
+        tag_row = QtWidgets.QHBoxLayout()
+        self.tag_front_btn = QtWidgets.QPushButton("Marcar Frente")
+        self.tag_front_btn.clicked.connect(self._on_tag_front)
+        self.tag_door_btn = QtWidgets.QPushButton("Marcar Puerta")
+        self.tag_door_btn.clicked.connect(self._on_tag_door)
+        self.tag_exit_btn = QtWidgets.QPushButton("Marcar Salida")
+        self.tag_exit_btn.clicked.connect(self._on_tag_exit)
+        self.tag_fixed_btn = QtWidgets.QPushButton("Marcar Fijo")
+        self.tag_fixed_btn.clicked.connect(self._on_tag_fixed)
+        self.tag_clear_btn = QtWidgets.QPushButton("Limpiar Marca")
+        self.tag_clear_btn.clicked.connect(self._on_tag_clear)
+        tag_row.addWidget(self.tag_front_btn)
+        tag_row.addWidget(self.tag_door_btn)
+        tag_row.addWidget(self.tag_exit_btn)
+        tag_row.addWidget(self.tag_fixed_btn)
+        tag_row.addWidget(self.tag_clear_btn)
+        layout.addLayout(tag_row)
+
+        self.status_lbl = QtWidgets.QLabel("")
+        self.status_lbl.setWordWrap(True)
+        layout.addWidget(self.status_lbl)
+
+    def _load_state_into_widgets(self):
+        s = _load_run_settings()
+        self._state = dict(s)
+
+        self.file_edit.setText(str(s.get("program_file_path", "")))
+        self.use_doc_features.setChecked(bool(s.get("use_doc_features", DEFAULT_USE_DOC_FEATURES)))
+        self.proposals.setValue(int(s.get("proposals", DEFAULT_PROPOSALS)))
+        self.ga_runs.setValue(int(s.get("ga_runs", DEFAULT_GA_RUNS)))
+        self.generations.setValue(int(s.get("generations", DEFAULT_GENERATIONS)))
+        self.pop_size.setValue(int(s.get("pop_size", DEFAULT_POP_SIZE)))
+        self.text_size_mm.setValue(int(s.get("text_size_mm", DEFAULT_TEXT_SIZE_MM)))
+        self.clear_previous.setChecked(bool(s.get("clear_previous", DEFAULT_CLEAR_PREVIOUS)))
+        self.realistic_zoning.setChecked(bool(s.get("realistic_zoning", DEFAULT_REALISTIC_ZONING)))
+
+    def refresh_doc_lists(self):
+        doc = App.ActiveDocument
+        self.base_combo.clear()
+        self.sheet_combo.clear()
+        self.sheet_combo.addItem("<Auto>", "")
+
+        if doc is None:
+            self._status("No hay documento activo.")
+            return
+
+        for obj in _doc_shape_objects(doc):
+            name = str(getattr(obj, "Name", ""))
+            if name.startswith(RESULT_GROUP_PREFIX):
+                continue
+            self.base_combo.addItem(_obj_display(obj), name)
+
+        for obj in _doc_spreadsheet_objects(doc):
+            self.sheet_combo.addItem(_obj_display(obj), str(getattr(obj, "Name", "")))
+
+        _set_combo_to_data(self.base_combo, self._state.get("base_obj_name", ""))
+        _set_combo_to_data(self.sheet_combo, self._state.get("sheet_obj_name", ""))
+
+    def _collect_state(self):
+        base_name = str(self.base_combo.currentData() or "")
+        sheet_name = str(self.sheet_combo.currentData() or "")
+        file_path = str(self.file_edit.text() or "").strip()
+        if self.ga_runs.value() < self.proposals.value():
+            self.ga_runs.setValue(self.proposals.value())
+
+        return {
+            "base_obj_name": base_name,
+            "sheet_obj_name": sheet_name,
+            "program_file_path": file_path,
+            "use_doc_features": bool(self.use_doc_features.isChecked()),
+            "proposals": int(self.proposals.value()),
+            "ga_runs": int(self.ga_runs.value()),
+            "generations": int(self.generations.value()),
+            "pop_size": int(self.pop_size.value()),
+            "text_size_mm": int(self.text_size_mm.value()),
+            "clear_previous": bool(self.clear_previous.isChecked()),
+            "realistic_zoning": bool(self.realistic_zoning.isChecked()),
+        }
+
+    def _on_browse_file(self):
+        path = _select_program_file()
+        if path:
+            self.file_edit.setText(path)
+
+    def _on_capture_selection(self):
+        selection = Gui.Selection.getSelection()
+        if not selection:
+            self._status("No hay seleccion para capturar.")
+            return
+
+        base_obj = _find_base_from_selection(selection)
+        sheet_obj = None
+        for obj in selection:
+            if _is_spreadsheet_obj(obj):
+                sheet_obj = obj
+                break
+
+        if base_obj is not None:
+            _set_combo_to_data(self.base_combo, str(getattr(base_obj, "Name", "")))
+        if sheet_obj is not None:
+            _set_combo_to_data(self.sheet_combo, str(getattr(sheet_obj, "Name", "")))
+
+        self._status("Seleccion capturada.")
+
+    def _selected_shape_objects(self):
+        selection = list(Gui.Selection.getSelection() or [])
+        out = []
+        for obj in selection:
+            shape = getattr(obj, "Shape", None)
+            if shape is None:
+                continue
+            try:
+                if shape.isNull():
+                    continue
+            except Exception:
+                continue
+            out.append(obj)
+        return out
+
+    def _mark_selected(self, role=None, fixed=None):
+        objs = self._selected_shape_objects()
+        if not objs:
+            self._status("Selecciona uno o mas objetos con geometria.")
+            return
+
+        for obj in objs:
+            if role is not None:
+                _set_obj_property(obj, "App::PropertyString", "Role", "GA", "Rol para deteccion de features", str(role))
+                _set_obj_property(obj, "App::PropertyString", "GA_Role", "GA", "Rol para deteccion de features", str(role))
+            if fixed is not None:
+                _set_obj_property(obj, "App::PropertyBool", "IsFixed", "GA", "Marca el objeto como zona fija", bool(fixed))
+
+        try:
+            App.ActiveDocument.recompute()
+        except Exception:
+            pass
+
+        marks = []
+        if role is not None:
+            marks.append("Role=%s" % role)
+        if fixed is not None:
+            marks.append("IsFixed=%s" % ("True" if fixed else "False"))
+        self._status("Actualizados %d objeto(s): %s" % (len(objs), ", ".join(marks)))
+
+    def _on_tag_front(self):
+        self._mark_selected(role="frente", fixed=False)
+
+    def _on_tag_door(self):
+        self._mark_selected(role="puerta", fixed=False)
+
+    def _on_tag_exit(self):
+        self._mark_selected(role="salida", fixed=False)
+
+    def _on_tag_fixed(self):
+        self._mark_selected(role="fijo", fixed=True)
+
+    def _on_tag_clear(self):
+        self._mark_selected(role="", fixed=False)
+
+    def _status(self, text):
+        self.status_lbl.setText(str(text))
+        try:
+            QtWidgets.QApplication.processEvents()
+        except Exception:
+            pass
+
+    def _on_run(self):
+        state = self._collect_state()
+        _save_run_settings(state)
+        self._state = dict(state)
+
+        self._status("Ejecutando...")
+        ok = _run_macro(options=state)
+        if ok:
+            self._status("Ultima ejecucion completada.")
+        else:
+            self._status("Ejecucion finalizada con errores o cancelada.")
+
+    def closeEvent(self, event):
+        try:
+            if hasattr(Gui, PANEL_OBJECT_KEY):
+                setattr(Gui, PANEL_OBJECT_KEY, None)
+        except Exception:
+            pass
+        super(_PersistentGAPanel, self).closeEvent(event)
+
+
+def _show_main_panel():
+    if QtWidgets is None:
+        _run_macro()
+        return
+
+    existing = getattr(Gui, PANEL_OBJECT_KEY, None)
+    if _is_alive_qobject(existing):
+        try:
+            existing.close()
+        except Exception:
+            pass
+        setattr(Gui, PANEL_OBJECT_KEY, None)
+
+    panel = _PersistentGAPanel()
+    setattr(Gui, PANEL_OBJECT_KEY, panel)
+    panel.show()
+    panel.raise_()
+    panel.activateWindow()
+
+
+try:
+    _show_main_panel()
+except Exception as macro_exc:
+    _err("Error en DistribucionSucursalGA: %s" % macro_exc)
+    _err(traceback.format_exc())
