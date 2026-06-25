@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+# Icon: GameEngineExportLoader.svg
 # GameEngineExportLoader Macro
 # Description: Reload and activate GameEngineExportWB from this Macros repo.
 # Notes: Uses ElectricCR-like hot-reload flow (purge modules + re-register workbench).
@@ -12,7 +14,8 @@ import FreeCADGui as Gui
 
 LOG_PREFIX = "[GAMEEXPORT] "
 WB_CANDIDATES = ("GameEngineExportWorkbench", "Game Engine Export WB", "GameEngineExportWB")
-MODULE_PREFIXES = ("Mod.GameEngineExportWB", "GameEngineExportWB")
+MODULE_PREFIXES = ("GameEngineExportWB", "Mod.GameEngineExportWB")
+MODULE_CANDIDATES = ("GameEngineExportWB.InitGui", "Mod.GameEngineExportWB.InitGui")
 
 
 def log_info(message):
@@ -28,6 +31,16 @@ def ensure_repo_on_path(repo_root):
     if repo_root not in sys.path:
         sys.path.insert(0, repo_root)
         log_info("Added repo path: " + repo_root)
+
+
+def candidate_repo_roots():
+    here = os.path.dirname(__file__)
+    roots = []
+    for root in (os.path.join(here, "Macros-de-Freecad"), here):
+        root = os.path.normpath(os.path.abspath(root))
+        if os.path.isdir(root) and root not in roots:
+            roots.append(root)
+    return roots
 
 
 def purge_modules():
@@ -81,17 +94,28 @@ def activate_workbench():
         raise last_error
 
 
+def import_workbench_initgui():
+    last_error = None
+    for module_name in MODULE_CANDIDATES:
+        try:
+            module = importlib.import_module(module_name)
+            importlib.reload(module)
+            log_info("Loaded InitGui from: " + str(getattr(module, "__file__", "unknown")))
+            return module
+        except Exception as exc:
+            last_error = exc
+    if last_error:
+        raise last_error
+
+
 def main():
-    repo_root = os.path.dirname(__file__)
-    ensure_repo_on_path(repo_root)
+    for repo_root in candidate_repo_roots():
+        ensure_repo_on_path(repo_root)
     purge_modules()
     importlib.invalidate_caches()
     remove_old_workbench()
 
-    module = importlib.import_module("Mod.GameEngineExportWB.InitGui")
-    importlib.reload(module)
-    log_info("Loaded InitGui from: " + str(getattr(module, "__file__", "unknown")))
-
+    import_workbench_initgui()
     activate_workbench()
     log_info("Workbench reloaded successfully")
 

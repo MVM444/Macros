@@ -24,7 +24,15 @@ __pypackages__/
 .env
 .macro_*.json
 pyflow.lock
+Reportes/
+Respaldos/Caches_temporales/
+Respaldos/Archivos_vacios_o_obsoletos/
+Respaldos/Proyectos_prueba/
+Respaldos/Recursos_duplicados/
+Respaldos/Registros_antiguos/
+Respaldos/ElectricCR_root_shim_*/
+Markov/markov_*.dot
+Markov/markov_macros-de-freecad.*
 
 # Node/other
 node_modules/
-

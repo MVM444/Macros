@@ -140,7 +140,8 @@ def seleccionar_hoja_gui(hojas):
     botones.accepted.connect(aceptar)
     botones.rejected.connect(cancelar)
 
-    if dialog.exec_() == QtWidgets.QDialog.Accepted:
+    exec_dialog = getattr(dialog, "exec", None) or getattr(dialog, "exec_", None)
+    if exec_dialog() == QtWidgets.QDialog.Accepted:
         item = list_widget.currentItem()
         hoja_sel = item.data(QtCore.Qt.UserRole)
         return hoja_sel

@@ -1,0 +1,57 @@
+# -*- coding: utf-8 -*-
+# Icon: AbrirDirectorioDocumento.svg
+# MenuText: Abrir directorio del documento
+# ToolTip: Abre en el explorador la carpeta donde esta guardado el documento activo.
+"""
+Macro: AbrirDirectorioDocumento
+Descripcion: abre la carpeta del archivo FreeCAD actualmente activo.
+"""
+
+import os
+import subprocess
+import sys
+
+import FreeCAD as App
+
+
+def _active_document_path():
+    doc = App.ActiveDocument
+    if doc is None:
+        return ""
+    try:
+        filename = getattr(doc, "FileName", "") or ""
+    except Exception:
+        filename = ""
+    return os.path.normpath(os.path.abspath(filename)) if filename else ""
+
+
+def _open_folder(path):
+    if os.name == "nt":
+        os.startfile(path)  # type: ignore[attr-defined]
+    elif sys.platform == "darwin":
+        subprocess.Popen(["open", path])
+    else:
+        subprocess.Popen(["xdg-open", path])
+
+
+def main():
+    doc_path = _active_document_path()
+    if not doc_path:
+        App.Console.PrintError(
+            "El documento activo aun no esta guardado. Guardelo primero para poder abrir su carpeta.\n"
+        )
+        return
+
+    folder = os.path.dirname(doc_path)
+    if not folder or not os.path.isdir(folder):
+        App.Console.PrintError("No se encontro la carpeta del documento: {}\n".format(folder))
+        return
+
+    try:
+        _open_folder(folder)
+        App.Console.PrintMessage("Carpeta del documento abierta: {}\n".format(folder))
+    except Exception as err:
+        App.Console.PrintError("No se pudo abrir la carpeta del documento: {}\n".format(err))
+
+
+main()
