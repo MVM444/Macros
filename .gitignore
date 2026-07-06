@@ -23,6 +23,7 @@ __pypackages__/
 .tools/
 .env
 .macro_*.json
+auditoria_editorial_work/
 pyflow.lock
 Reportes/
 Respaldos/Caches_temporales/

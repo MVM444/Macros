@@ -1,0 +1,235 @@
+# -*- coding: utf-8 -*-
+"""
+Importa un IFC con opciones NativeIFC explicitas.
+
+Uso recomendado para archivos grandes:
+- Estrategia: todos los elementos
+- Representacion: Coin liviano
+- Capas: opcional
+"""
+
+import os
+import re
+
+import FreeCAD as App
+import FreeCADGui as Gui
+
+
+def _load_qt():
+    for binding in ("PySide6", "PySide2", "PySide"):
+        try:
+            if binding == "PySide":
+                from PySide import QtCore, QtGui
+
+                return QtCore, QtGui
+            module = __import__(binding, fromlist=["QtCore", "QtWidgets"])
+            return module.QtCore, module.QtWidgets
+        except Exception:
+            continue
+    raise RuntimeError("No se pudo cargar PySide/PySide2/PySide6.")
+
+
+QtCore, QtWidgets = _load_qt()
+
+
+NATIVE_IFC_PARAMS = "User parameter:BaseApp/Preferences/Mod/NativeIFC"
+DEFAULT_IFC = (
+    r"C:\Users\marco\OneDrive - Caja Costarricense de Seguro Social"
+    r"\Documentos\FreeCAD\Sucursales\Palmar Norte\Palmar Norte.ifc"
+)
+
+
+def _exec_dialog(dialog):
+    runner = getattr(dialog, "exec_", None) or getattr(dialog, "exec")
+    return runner()
+
+
+def _native_ifc_importer():
+    try:
+        from nativeifc import ifc_import
+
+        return ifc_import
+    except Exception:
+        pass
+    try:
+        import BIM.nativeifc.ifc_import as ifc_import
+
+        return ifc_import
+    except Exception as exc:
+        raise RuntimeError("No se pudo cargar el importador NativeIFC: {}".format(exc))
+
+
+def _safe_doc_name(path):
+    base = os.path.splitext(os.path.basename(path))[0] or "IFC"
+    base = re.sub(r"[^0-9A-Za-z_]+", "_", base).strip("_")
+    return base or "IFC"
+
+
+def _set_bool(params, key, value, previous):
+    previous[key] = params.GetBool(key, False)
+    params.SetBool(key, bool(value))
+
+
+def _restore_params(params, previous):
+    for key, value in previous.items():
+        if isinstance(value, bool):
+            params.SetBool(key, value)
+        elif isinstance(value, int):
+            params.SetInt(key, value)
+
+
+class ImportIfcDialog(QtWidgets.QDialog):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Importar IFC controlado")
+        self.setMinimumWidth(620)
+
+        self.path_edit = QtWidgets.QLineEdit()
+        default_path = DEFAULT_IFC if os.path.exists(DEFAULT_IFC) else ""
+        self.path_edit.setText(default_path.replace("\\", "/"))
+
+        browse = QtWidgets.QPushButton("Examinar...")
+        browse.clicked.connect(self._browse)
+
+        self.strategy_combo = QtWidgets.QComboBox()
+        self.strategy_combo.addItem("Todos los elementos (recomendado)", 2)
+        self.strategy_combo.addItem("Solo estructura del edificio", 1)
+        self.strategy_combo.addItem("Raiz + capas solamente", 0)
+
+        self.shape_combo = QtWidgets.QComboBox()
+        self.shape_combo.addItem("Coin liviano (recomendado para archivos grandes)", 1)
+        self.shape_combo.addItem("Shape completo (pesado, geometria Part)", 0)
+        self.shape_combo.addItem("Sin representacion", 2)
+
+        self.single_doc_check = QtWidgets.QCheckBox("Usar documento unico NativeIFC")
+        self.single_doc_check.setChecked(True)
+
+        self.layers_check = QtWidgets.QCheckBox("Cargar capas IFC")
+        self.layers_check.setChecked(False)
+
+        self.psets_check = QtWidgets.QCheckBox("Cargar Property Sets")
+        self.psets_check.setChecked(False)
+
+        self.types_check = QtWidgets.QCheckBox("Cargar tipos")
+        self.types_check.setChecked(False)
+
+        self.materials_check = QtWidgets.QCheckBox("Cargar materiales")
+        self.materials_check.setChecked(False)
+
+        self.orphans_check = QtWidgets.QCheckBox("Cargar objetos huerfanos")
+        self.orphans_check.setChecked(True)
+
+        form = QtWidgets.QFormLayout()
+        path_row = QtWidgets.QHBoxLayout()
+        path_row.addWidget(self.path_edit, 1)
+        path_row.addWidget(browse)
+        form.addRow("Archivo IFC:", path_row)
+        form.addRow("Estrategia:", self.strategy_combo)
+        form.addRow("Representacion:", self.shape_combo)
+
+        checks = QtWidgets.QVBoxLayout()
+        for check in (
+            self.single_doc_check,
+            self.layers_check,
+            self.orphans_check,
+            self.materials_check,
+            self.types_check,
+            self.psets_check,
+        ):
+            checks.addWidget(check)
+
+        buttons = QtWidgets.QDialogButtonBox(
+            QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel
+        )
+        buttons.accepted.connect(self.accept)
+        buttons.rejected.connect(self.reject)
+
+        layout = QtWidgets.QVBoxLayout(self)
+        layout.addLayout(form)
+        layout.addLayout(checks)
+        layout.addWidget(buttons)
+
+    def _browse(self):
+        path, _filter = QtWidgets.QFileDialog.getOpenFileName(
+            self,
+            "Seleccionar IFC",
+            os.path.dirname(self.path_edit.text()) if self.path_edit.text() else "",
+            "IFC (*.ifc *.ifczip);;Todos los archivos (*.*)",
+        )
+        if path:
+            self.path_edit.setText(path.replace("\\", "/"))
+
+    def values(self):
+        return {
+            "path": os.path.normpath(self.path_edit.text().strip()),
+            "strategy": self.strategy_combo.currentData(),
+            "shapemode": self.shape_combo.currentData(),
+            "single_doc": self.single_doc_check.isChecked(),
+            "load_layers": self.layers_check.isChecked(),
+            "load_psets": self.psets_check.isChecked(),
+            "load_types": self.types_check.isChecked(),
+            "load_materials": self.materials_check.isChecked(),
+            "load_orphans": self.orphans_check.isChecked(),
+        }
+
+
+def _import_ifc(options):
+    filename = options["path"]
+    if not filename or not os.path.exists(filename):
+        raise FileNotFoundError("No existe el archivo IFC: {}".format(filename))
+
+    ifc_import = _native_ifc_importer()
+    params = App.ParamGet(NATIVE_IFC_PARAMS)
+    previous = {
+        "ImportStrategy": params.GetInt("ImportStrategy", 0),
+        "ShapeMode": params.GetInt("ShapeMode", 0),
+    }
+    _set_bool(params, "LoadLayers", options["load_layers"], previous)
+    _set_bool(params, "LoadPsets", options["load_psets"], previous)
+    _set_bool(params, "LoadTypes", options["load_types"], previous)
+    _set_bool(params, "LoadMaterials", options["load_materials"], previous)
+    _set_bool(params, "LoadOrphans", options["load_orphans"], previous)
+    _set_bool(params, "SingleDoc", options["single_doc"], previous)
+
+    params.SetInt("ImportStrategy", int(options["strategy"]))
+    params.SetInt("ShapeMode", int(options["shapemode"]))
+
+    try:
+        doc = App.newDocument(_safe_doc_name(filename))
+        App.setActiveDocument(doc.Name)
+        ifc_import.insert(
+            filename,
+            doc.Name,
+            strategy=int(options["strategy"]),
+            shapemode=int(options["shapemode"]),
+            switchwb=True,
+            silent=True,
+            singledoc=bool(options["single_doc"]),
+        )
+        doc.recompute()
+        Gui.SendMsgToActiveView("ViewFit")
+        return doc
+    finally:
+        _restore_params(params, previous)
+
+
+def main():
+    dialog = ImportIfcDialog()
+    if not _exec_dialog(dialog):
+        return
+
+    try:
+        doc = _import_ifc(dialog.values())
+    except Exception as exc:
+        QtWidgets.QMessageBox.critical(None, "Importar IFC", str(exc))
+        App.Console.PrintError("ImportarIFCControlado: {}\n".format(exc))
+        return
+
+    QtWidgets.QMessageBox.information(
+        None,
+        "Importar IFC",
+        "Importacion terminada en el documento: {}".format(doc.Label),
+    )
+
+
+main()
