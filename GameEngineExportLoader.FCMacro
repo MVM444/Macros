@@ -23,6 +23,7 @@ COMMAND_CANDIDATES = (
     "GameEngineExport_Export_Current",
     "GameEngineExport_Config",
     "GameEngineExport_AddLightProperties",
+    "GameEngineExport_QuickExample",
 )
 
 
@@ -64,7 +65,8 @@ def candidate_repo_roots():
 def purge_modules():
     removed = 0
     for name in list(sys.modules.keys()):
-        if any(name == prefix or name.startswith(prefix + ".") for prefix in MODULE_PREFIXES):
+        name_l = str(name).lower()
+        if any(name == prefix or name.startswith(prefix + ".") for prefix in MODULE_PREFIXES) or "gameengineexportwb" in name_l:
             sys.modules.pop(name, None)
             removed += 1
     log_info("Purged modules: " + str(removed))
@@ -94,8 +96,15 @@ def remove_old_commands():
     if not hasattr(Gui, "removeCommand"):
         log_info("removeCommand not available in this FreeCAD build")
         return
+    command_names = set(COMMAND_CANDIDATES)
+    try:
+        for command_name in getattr(Gui, "listCommands", lambda: [])() or []:
+            if str(command_name).startswith("GameEngineExport_"):
+                command_names.add(str(command_name))
+    except Exception:
+        pass
     removed = 0
-    for command_name in COMMAND_CANDIDATES:
+    for command_name in sorted(command_names):
         try:
             Gui.removeCommand(command_name)
             removed += 1
@@ -162,7 +171,8 @@ def activate_workbench():
 def main():
     log_info("Hot restart requested")
     close_active_dialog()
-    for repo_root in reversed(candidate_repo_roots()):
+    repo_roots = candidate_repo_roots()
+    for repo_root in reversed(repo_roots):
         ensure_repo_on_path(repo_root)
     deactivate_workbench()
     remove_old_workbench()

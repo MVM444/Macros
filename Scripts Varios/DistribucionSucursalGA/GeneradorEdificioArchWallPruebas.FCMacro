@@ -1,0 +1,1358 @@
+# -*- coding: utf-8 -*-
+"""Generador de edificios sinteticos usando Sketcher + Arch Wall.
+
+Esta macro crea plantas 2D de casa u oficina para pruebas de otras macros,
+pero organiza la geometria en sketches separados:
+
+- Concreto/exterior
+- Paredes interiores/livianas
+- Buques de puertas
+- Buques de ventanas
+- Referencia de recintos
+
+No usa API externa. Deja un documento de texto con JSON para copiar a una IA.
+"""
+
+from __future__ import annotations
+
+import json
+import math
+import random
+import time
+
+try:
+    import FreeCAD as App
+    import FreeCADGui as Gui
+    import Part
+    import Arch
+except Exception:  # Permite py_compile fuera de FreeCAD.
+    App = None
+    Gui = None
+    Part = None
+    Arch = None
+
+try:
+    from PySide2 import QtCore, QtWidgets
+except Exception:
+    try:
+        from PySide import QtCore
+        from PySide import QtGui as QtWidgets
+    except Exception:
+        QtCore = None
+        QtWidgets = None
+
+
+RESULT_PREFIX = "TEST_ArchWallEdificio_"
+SETTINGS_PATH = "User parameter:BaseApp/Preferences/Mod/GeneradorEdificioArchWallPruebas"
+
+DEFAULT_EXT_WALL_MM = 200
+DEFAULT_INT_WALL_MM = 100
+DEFAULT_DOOR_MM = 900
+DEFAULT_MAIN_DOOR_MM = 1200
+DEFAULT_WINDOW_MM = 1400
+DEFAULT_WALL_HEIGHT_MM = 3000
+DEFAULT_DOOR_HEIGHT_MM = 2100
+DEFAULT_WINDOW_SILL_MM = 900
+DEFAULT_WINDOW_HEIGHT_MM = 1200
+FLOOR_OFFSET_GAP_MM = 5000
+
+
+SKETCH_COLORS = {
+    "concreto": (0.05, 0.05, 0.05),
+    "liviana": (0.15, 0.42, 0.75),
+    "puerta": (0.65, 0.28, 0.08),
+    "ventana": (0.05, 0.62, 0.88),
+    "referencia": (0.55, 0.55, 0.55),
+}
+
+
+def _msg(text):
+    if App is not None:
+        App.Console.PrintMessage(str(text) + "\n")
+    else:
+        print(text)
+
+
+def _warn(text):
+    if App is not None:
+        App.Console.PrintWarning(str(text) + "\n")
+    else:
+        print("WARN:", text)
+
+
+def _error(text):
+    if App is not None:
+        App.Console.PrintError(str(text) + "\n")
+    else:
+        print("ERROR:", text)
+
+
+def _params():
+    if App is None:
+        return None
+    return App.ParamGet(SETTINGS_PATH)
+
+
+def _ensure_doc():
+    if App is None:
+        raise RuntimeError("Esta macro debe ejecutarse dentro de FreeCAD.")
+    doc = App.ActiveDocument
+    if doc is None:
+        doc = App.newDocument("Edificio_Sketch_Pruebas")
+    return doc
+
+
+def _safe_name(value):
+    text = str(value).strip()
+    repl = {
+        " ": "_",
+        "-": "_",
+        "/": "_",
+        "\\": "_",
+        ".": "_",
+        "(": "",
+        ")": "",
+        "á": "a",
+        "é": "e",
+        "í": "i",
+        "ó": "o",
+        "ú": "u",
+        "ñ": "n",
+        "Á": "A",
+        "É": "E",
+        "Í": "I",
+        "Ó": "O",
+        "Ú": "U",
+        "Ñ": "N",
+    }
+    for old, new in repl.items():
+        text = text.replace(old, new)
+    return "".join(ch for ch in text if ch.isalnum() or ch == "_") or "Objeto"
+
+
+def _set_prop(obj, prop_type, name, group, desc, value):
+    try:
+        if not hasattr(obj, name):
+            obj.addProperty(prop_type, name, group, desc)
+        setattr(obj, name, value)
+    except Exception:
+        pass
+
+
+def _set_view(obj, color=None, transparency=None, line_width=None):
+    try:
+        if color is not None:
+            obj.ViewObject.ShapeColor = color
+            obj.ViewObject.LineColor = color
+        if transparency is not None:
+            obj.ViewObject.Transparency = transparency
+        if line_width is not None:
+            obj.ViewObject.LineWidth = line_width
+    except Exception:
+        pass
+
+
+def _clear_previous(doc):
+    removed = 0
+    for obj in list(doc.Objects):
+        try:
+            if obj.Name.startswith(RESULT_PREFIX) or obj.Label.startswith(RESULT_PREFIX):
+                doc.removeObject(obj.Name)
+                removed += 1
+        except Exception:
+            pass
+    if removed:
+        _msg("Se eliminaron %d grupo(s) Sketch anteriores." % removed)
+
+
+def _make_sketch(doc, group, name, label, role, level, purpose, color_key, offset_x, offset_y, z):
+    sk = doc.addObject("Sketcher::SketchObject", _safe_name(name))
+    sk.Label = label
+    sk.Placement = App.Placement(App.Vector(offset_x, offset_y, z), App.Rotation())
+    group.addObject(sk)
+    _set_prop(sk, "App::PropertyString", "Role", "TestBuilding", "Rol semantico", role)
+    _set_prop(sk, "App::PropertyString", "GA_Role", "TestBuilding", "Rol semantico compatible", role)
+    _set_prop(sk, "App::PropertyString", "SketchPurpose", "TestBuilding", "Uso del sketch", purpose)
+    _set_prop(sk, "App::PropertyInteger", "Level", "TestBuilding", "Nivel", int(level))
+    try:
+        sk.ViewObject.LineColor = SKETCH_COLORS.get(color_key, (0.0, 0.0, 0.0))
+        sk.ViewObject.PointColor = SKETCH_COLORS.get(color_key, (0.0, 0.0, 0.0))
+        sk.ViewObject.LineWidth = 2.0
+    except Exception:
+        pass
+    return sk
+
+
+def _line(sketch, x1, y1, x2, y2, construction=False):
+    geo = Part.LineSegment(App.Vector(float(x1), float(y1), 0), App.Vector(float(x2), float(y2), 0))
+    try:
+        sketch.addGeometry(geo, bool(construction))
+    except TypeError:
+        sketch.addGeometry(geo)
+
+
+def _arc(sketch, cx, cy, radius, start_angle, end_angle, construction=False):
+    try:
+        circle = Part.Circle(App.Vector(float(cx), float(cy), 0), App.Vector(0, 0, 1), float(radius))
+        geo = Part.ArcOfCircle(circle, float(start_angle), float(end_angle))
+        sketch.addGeometry(geo, bool(construction))
+    except Exception:
+        pass
+
+
+def _rect(sketch, x, y, w, h, construction=False):
+    _line(sketch, x, y, x + w, y, construction)
+    _line(sketch, x + w, y, x + w, y + h, construction)
+    _line(sketch, x + w, y + h, x, y + h, construction)
+    _line(sketch, x, y + h, x, y, construction)
+
+
+def _centerline_cross(sketch, x, y, w, h, construction=False):
+    _line(sketch, x, y + h / 2.0, x + w, y + h / 2.0, construction)
+    _line(sketch, x + w / 2.0, y, x + w / 2.0, y + h, construction)
+
+
+def _center_segment_from_edge(edge, length=None):
+    x1, y1, x2, y2 = edge
+    if abs(y1 - y2) < 0.01:
+        if length is None:
+            return (x1, y1, x2, y2)
+        cx = (x1 + x2) / 2.0
+        return (cx - length / 2.0, y1, cx + length / 2.0, y1)
+    if length is None:
+        return (x1, y1, x2, y2)
+    cy = (y1 + y2) / 2.0
+    return (x1, cy - length / 2.0, x1, cy + length / 2.0)
+
+
+def _edge_key(x1, y1, x2, y2):
+    vals = [round(x1, 1), round(y1, 1), round(x2, 1), round(y2, 1)]
+    if vals[0] == vals[2] and vals[1] > vals[3]:
+        vals = [vals[2], vals[3], vals[0], vals[1]]
+    if vals[1] == vals[3] and vals[0] > vals[2]:
+        vals = [vals[2], vals[3], vals[0], vals[1]]
+    return tuple(vals)
+
+
+def _edge_len(edge):
+    x1, y1, x2, y2 = edge
+    return math.hypot(x2 - x1, y2 - y1)
+
+
+def _is_horizontal(edge):
+    return abs(edge[1] - edge[3]) < 0.01
+
+
+def _is_vertical(edge):
+    return abs(edge[0] - edge[2]) < 0.01
+
+
+def _is_boundary_edge(edge, width, depth, tol=1.0):
+    x1, y1, x2, y2 = edge
+    if _is_horizontal(edge):
+        return abs(y1) <= tol or abs(y1 - depth) <= tol
+    if _is_vertical(edge):
+        return abs(x1) <= tol or abs(x1 - width) <= tol
+    return False
+
+
+def _is_front_edge(edge, tol=1.0):
+    return _is_horizontal(edge) and abs(edge[1]) <= tol
+
+
+def _overlap_segment(a, b, min_len=700.0):
+    if _is_horizontal(a) and _is_horizontal(b) and abs(a[1] - b[1]) < 0.01:
+        start = max(min(a[0], a[2]), min(b[0], b[2]))
+        end = min(max(a[0], a[2]), max(b[0], b[2]))
+        if end - start >= min_len:
+            return _edge_key(start, a[1], end, a[1])
+    if _is_vertical(a) and _is_vertical(b) and abs(a[0] - b[0]) < 0.01:
+        start = max(min(a[1], a[3]), min(b[1], b[3]))
+        end = min(max(a[1], a[3]), max(b[1], b[3]))
+        if end - start >= min_len:
+            return _edge_key(a[0], start, a[0], end)
+    return None
+
+
+def _segment_key(segment):
+    return tuple(round(v, 1) for v in segment)
+
+
+def _offset_segment(segment, dx, dy=0.0):
+    x1, y1, x2, y2 = segment
+    return (x1 + dx, y1 + dy, x2 + dx, y2 + dy)
+
+
+def _offset_opening(opening, dx, dy=0.0):
+    shifted = dict(opening)
+    if "centerline" in shifted and len(shifted["centerline"]) == 4:
+        shifted["centerline"] = [
+            shifted["centerline"][0] + dx,
+            shifted["centerline"][1] + dy,
+            shifted["centerline"][2] + dx,
+            shifted["centerline"][3] + dy,
+        ]
+    if "edge" in shifted and len(shifted["edge"]) == 4:
+        shifted["edge"] = [
+            shifted["edge"][0] + dx,
+            shifted["edge"][1] + dy,
+            shifted["edge"][2] + dx,
+            shifted["edge"][3] + dy,
+        ]
+    return shifted
+
+
+def _room(name, kind, x, y, w, h, level=1):
+    return {
+        "name": name,
+        "kind": kind,
+        "x": float(x),
+        "y": float(y),
+        "w": float(w),
+        "h": float(h),
+        "level": int(level),
+    }
+
+
+def _room_edges(room):
+    x = room["x"]
+    y = room["y"]
+    w = room["w"]
+    h = room["h"]
+    return [
+        _edge_key(x, y, x + w, y),
+        _edge_key(x + w, y, x + w, y + h),
+        _edge_key(x, y + h, x + w, y + h),
+        _edge_key(x, y, x, y + h),
+    ]
+
+
+def _area_m2(room):
+    return (room["w"] * room["h"]) / 1000000.0
+
+
+def _build_house_rooms(rng, width, depth, level):
+    front = depth * rng.uniform(0.31, 0.38)
+    middle = depth * rng.uniform(0.22, 0.29)
+    back = depth - front - middle
+    x1 = width * rng.uniform(0.35, 0.43)
+    x2 = width * rng.uniform(0.63, 0.72)
+    service_split = x1 + (x2 - x1) * rng.uniform(0.42, 0.52)
+    master_w = width * rng.uniform(0.39, 0.48)
+    bath_w = width * rng.uniform(0.16, 0.22)
+
+    if level == 1:
+        return [
+            _room("Sala", "social", 0, 0, x1, front, level),
+            _room("Comedor", "social", x1, 0, x2 - x1, front, level),
+            _room("Cochera", "servicio", x2, 0, width - x2, front, level),
+            _room("Cocina", "servicio", 0, front, x1, middle, level),
+            _room("Bano social", "sanitario", x1, front, service_split - x1, middle * 0.48, level),
+            _room("Lavanderia", "servicio", x1, front + middle * 0.48, service_split - x1, middle * 0.52, level),
+            _room("Pasillo", "circulacion", service_split, front, x2 - service_split, middle, level),
+            _room("Dormitorio principal", "privado", 0, front + middle, master_w, back, level),
+            _room("Bano principal", "sanitario", master_w, front + middle, bath_w, back * 0.48, level),
+            _room("Vestidor", "privado", master_w, front + middle + back * 0.48, bath_w, back * 0.52, level),
+            _room("Dormitorio 2", "privado", master_w + bath_w, front + middle, width - master_w - bath_w, back * 0.50, level),
+            _room("Dormitorio 3", "privado", master_w + bath_w, front + middle + back * 0.50, width - master_w - bath_w, back * 0.50, level),
+        ]
+
+    upper_corridor = depth * rng.uniform(0.18, 0.24)
+    return [
+        _room("Estar familiar", "social", 0, 0, width * 0.42, front, level),
+        _room("Estudio", "trabajo", width * 0.42, 0, width * 0.30, front, level),
+        _room("Terraza", "social", width * 0.72, 0, width * 0.28, front, level),
+        _room("Pasillo", "circulacion", 0, front, width, upper_corridor, level),
+        _room("Dormitorio A", "privado", 0, front + upper_corridor, width * 0.36, depth - front - upper_corridor, level),
+        _room("Bano compartido", "sanitario", width * 0.36, front + upper_corridor, width * 0.20, (depth - front - upper_corridor) * 0.48, level),
+        _room("Closet blancos", "servicio", width * 0.36, front + upper_corridor + (depth - front - upper_corridor) * 0.48, width * 0.20, (depth - front - upper_corridor) * 0.52, level),
+        _room("Dormitorio B", "privado", width * 0.56, front + upper_corridor, width * 0.44, depth - front - upper_corridor, level),
+    ]
+
+
+def _office_segments(rng, width, count):
+    weights = [rng.uniform(0.85, 1.35) for _ in range(count)]
+    total = sum(weights)
+    cursor = 0.0
+    segments = []
+    for weight in weights:
+        w = width * weight / total
+        segments.append((cursor, w))
+        cursor += w
+    return segments
+
+
+def _build_office_rooms(rng, width, depth, level):
+    front = depth * rng.uniform(0.20, 0.28)
+    work_depth = depth - front
+    corridor = rng.uniform(1600, 2200)
+    lower_h = (work_depth - corridor) * rng.uniform(0.47, 0.55)
+    upper_h = work_depth - corridor - lower_h
+    corridor_y = front + lower_h
+    reception_w = width * rng.uniform(0.28, 0.36)
+    wait_w = width * rng.uniform(0.20, 0.27)
+    meeting_w = width * rng.uniform(0.18, 0.24)
+    service_w = width - reception_w - wait_w - meeting_w
+
+    rooms = [
+        _room("Recepcion", "publico", 0, 0, reception_w, front, level),
+        _room("Sala espera", "publico", reception_w, 0, wait_w, front, level),
+        _room("Sala reuniones", "trabajo", reception_w + wait_w, 0, meeting_w, front, level),
+        _room("Sanitarios", "sanitario", reception_w + wait_w + meeting_w, 0, service_w, front, level),
+        _room("Pasillo central", "circulacion", 0, corridor_y, width, corridor, level),
+    ]
+
+    lower_names = ["Atencion 1", "Atencion 2", "Atencion 3", "Caja", "Oficina tecnica", "Archivo activo"]
+    upper_names = ["Administracion", "Direccion", "Contabilidad", "TI Servidor", "Archivo", "Sala colaborativa"]
+    count = rng.randint(4, 6)
+    for idx, (x, w) in enumerate(_office_segments(rng, width, count)):
+        name = lower_names[idx % len(lower_names)]
+        kind = "publico" if "Atencion" in name or name == "Caja" else "trabajo"
+        rooms.append(_room(name, kind, x, front, w, lower_h, level))
+    for idx, (x, w) in enumerate(_office_segments(rng, width, count)):
+        name = upper_names[idx % len(upper_names)]
+        kind = "tecnico" if "TI" in name else ("logistica" if "Archivo" in name else "administrativo")
+        rooms.append(_room(name, kind, x, corridor_y + corridor, w, upper_h, level))
+    return rooms
+
+
+def _draw_exterior(sketch, width, depth, ext_wall):
+    del ext_wall
+    _rect(sketch, 0, 0, width, depth)
+    return [
+        _edge_key(0, 0, width, 0),
+        _edge_key(width, 0, width, depth),
+        _edge_key(0, depth, width, depth),
+        _edge_key(0, 0, 0, depth),
+    ]
+
+
+def _draw_interior_walls(sketch, rooms, int_wall):
+    del int_wall
+    count = 0
+    drawn = set()
+    segments = []
+    for idx, room_a in enumerate(rooms):
+        for room_b in rooms[idx + 1:]:
+            for edge_a in _room_edges(room_a):
+                for edge_b in _room_edges(room_b):
+                    shared = _overlap_segment(edge_a, edge_b, min_len=300.0)
+                    if shared is None:
+                        continue
+                    key = _segment_key(shared)
+                    if key in drawn:
+                        continue
+                    drawn.add(key)
+                    x1, y1, x2, y2 = _center_segment_from_edge(shared)
+                    _line(sketch, x1, y1, x2, y2)
+                    segments.append(shared)
+                    count += 1
+    return count, segments
+
+
+def _draw_reference_rooms(sketch, rooms):
+    for room in rooms:
+        _rect(sketch, room["x"], room["y"], room["w"], room["h"], True)
+        cx = room["x"] + room["w"] / 2.0
+        cy = room["y"] + room["h"] / 2.0
+        marker = min(room["w"], room["h"], 700) * 0.18
+        _line(sketch, cx - marker, cy, cx + marker, cy, True)
+        _line(sketch, cx, cy - marker, cx, cy + marker, True)
+
+
+def _draw_openings(rooms, door_sk, window_sk, width, depth, ext_wall, int_wall):
+    del ext_wall, int_wall
+    doors = []
+    windows = []
+    door_index = 0
+    win_index = 0
+    used_openings = set()
+
+    front_candidates = []
+    for room in rooms:
+        if room["kind"] not in {"publico", "social"}:
+            continue
+        for edge in _room_edges(room):
+            if _is_front_edge(edge) and _edge_len(edge) >= DEFAULT_MAIN_DOOR_MM:
+                score = _edge_len(edge)
+                if room["name"].lower().startswith("sala") or "recepcion" in room["name"].lower():
+                    score += 10000.0
+                front_candidates.append((score, room, edge))
+
+    main_door_edge = None
+    if front_candidates:
+        front_candidates.sort(key=lambda item: item[0], reverse=True)
+        _, room, edge = front_candidates[0]
+        door_index += 1
+        door_len = min(DEFAULT_MAIN_DOOR_MM, _edge_len(edge) * 0.55)
+        x1, y1, x2, y2 = _center_segment_from_edge(edge, door_len)
+        _line(door_sk, x1, y1, x2, y2)
+        main_door_edge = edge
+        used_openings.add(_segment_key((x1, y1, x2, y2)))
+        doors.append({
+            "id": "D-%02d" % door_index,
+            "type": "principal",
+            "room": room["name"],
+            "edge": edge,
+            "centerline": [round(x1, 1), round(y1, 1), round(x2, 1), round(y2, 1)],
+            "width_mm": round(door_len, 1),
+        })
+
+    circulation_rooms = [room for room in rooms if room["kind"] == "circulacion"]
+    for circulation in circulation_rooms:
+        for circulation_edge in _room_edges(circulation):
+            for room in rooms:
+                if room is circulation:
+                    continue
+                for room_edge in _room_edges(room):
+                    shared = _overlap_segment(circulation_edge, room_edge, min_len=850.0)
+                    if shared is None:
+                        continue
+                    door_len = min(DEFAULT_DOOR_MM, _edge_len(shared) * 0.70)
+                    if door_len < 700:
+                        continue
+                    x1, y1, x2, y2 = _center_segment_from_edge(shared, door_len)
+                    key = _segment_key((x1, y1, x2, y2))
+                    if key in used_openings:
+                        continue
+                    used_openings.add(key)
+                    door_index += 1
+                    _line(door_sk, x1, y1, x2, y2)
+                    doors.append({
+                        "id": "D-%02d" % door_index,
+                        "type": "interior",
+                        "room": room["name"],
+                        "connects_to": circulation["name"],
+                        "edge": shared,
+                        "centerline": [round(x1, 1), round(y1, 1), round(x2, 1), round(y2, 1)],
+                        "width_mm": round(door_len, 1),
+                    })
+
+    for room in rooms:
+        if room["kind"] in {"sanitario", "circulacion"}:
+            continue
+        for edge in _room_edges(room):
+            if not _is_boundary_edge(edge, width, depth):
+                continue
+            if main_door_edge is not None and edge == main_door_edge:
+                continue
+            length = _edge_len(edge)
+            if length < 1500:
+                continue
+            win_len = min(DEFAULT_WINDOW_MM, length * 0.55)
+            x1, y1, x2, y2 = _center_segment_from_edge(edge, win_len)
+            key = _segment_key((x1, y1, x2, y2))
+            if key in used_openings:
+                continue
+            used_openings.add(key)
+            win_index += 1
+            _line(window_sk, x1, y1, x2, y2)
+            win_type = "W-02" if win_len > 1200 else "W-01"
+            windows.append({
+                "id": "V-%02d" % win_index,
+                "type": win_type,
+                "room": room["name"],
+                "edge": edge,
+                "centerline": [round(x1, 1), round(y1, 1), round(x2, 1), round(y2, 1)],
+                "width_mm": round(win_len, 1),
+            })
+
+    return doors, windows
+
+
+def _make_wall_solid_from_segment(segment, thickness, height, z):
+    x1, y1, x2, y2 = segment
+    if _is_horizontal(segment):
+        x = min(x1, x2)
+        y = y1 - thickness / 2.0
+        return Part.makeBox(abs(x2 - x1), thickness, height, App.Vector(x, y, z))
+    x = x1 - thickness / 2.0
+    y = min(y1, y2)
+    return Part.makeBox(thickness, abs(y2 - y1), height, App.Vector(x, y, z))
+
+
+def _make_opening_solid_from_centerline(centerline, depth, height, z_base):
+    x1, y1, x2, y2 = centerline
+    if abs(y1 - y2) < 0.01:
+        x = min(x1, x2)
+        y = y1 - depth / 2.0
+        return Part.makeBox(abs(x2 - x1), depth, height, App.Vector(x, y, z_base))
+    x = x1 - depth / 2.0
+    y = min(y1, y2)
+    return Part.makeBox(depth, abs(y2 - y1), height, App.Vector(x, y, z_base))
+
+
+def _make_panel_solid_from_centerline(centerline, depth, height, z_base):
+    x1, y1, x2, y2 = centerline
+    if abs(y1 - y2) < 0.01:
+        x = min(x1, x2)
+        y = y1 - depth / 2.0
+        return Part.makeBox(abs(x2 - x1), depth, height, App.Vector(x, y, z_base))
+    x = x1 - depth / 2.0
+    y = min(y1, y2)
+    return Part.makeBox(depth, abs(y2 - y1), height, App.Vector(x, y, z_base))
+
+
+def _compound_or_none(shapes):
+    valid = [shape for shape in shapes if shape is not None]
+    if not valid:
+        return None
+    if len(valid) == 1:
+        return valid[0]
+    return Part.makeCompound(valid)
+
+
+def _cut_shape(base_shape, cutter_shape):
+    if base_shape is None or cutter_shape is None:
+        return base_shape
+    try:
+        return base_shape.cut(cutter_shape)
+    except Exception as exc:
+        _warn("No se pudo cortar buques en pared BIM: %s" % exc)
+        return base_shape
+
+
+def _make_part_feature(doc, group, name, shape, role, level, color, transparency=0):
+    if shape is None:
+        return None
+    obj = doc.addObject("Part::Feature", _safe_name(name))
+    obj.Label = name
+    obj.Shape = shape
+    group.addObject(obj)
+    _set_prop(obj, "App::PropertyString", "Role", "TestBuilding", "Rol semantico", role)
+    _set_prop(obj, "App::PropertyString", "GA_Role", "TestBuilding", "Rol semantico compatible", role)
+    _set_prop(obj, "App::PropertyInteger", "Level", "TestBuilding", "Nivel", int(level))
+    _set_view(obj, color=color, transparency=transparency)
+    return obj
+
+
+class _SketchOpeningCutterProxy(object):
+    def __init__(self, sketch=None, depth=250.0, height=2100.0, z_offset=0.0):
+        self.Type = "SketchOpeningCutter"
+        self._fallback_sketch = sketch
+        self._fallback_depth = float(depth)
+        self._fallback_height = float(height)
+        self._fallback_z_offset = float(z_offset)
+
+    def execute(self, obj):
+        sketch = getattr(obj, "SourceSketch", None) or self._fallback_sketch
+        if sketch is None or Part is None or App is None:
+            return
+        depth = float(getattr(obj, "Depth_mm", self._fallback_depth))
+        height = float(getattr(obj, "Height_mm", self._fallback_height))
+        z_offset = float(getattr(obj, "ZOffset_mm", self._fallback_z_offset))
+        shapes = []
+        placement = getattr(sketch, "Placement", App.Placement())
+        geometry = list(getattr(sketch, "Geometry", []))
+        for index, geo in enumerate(geometry):
+            try:
+                if hasattr(sketch, "getConstruction") and sketch.getConstruction(index):
+                    continue
+            except Exception:
+                pass
+            if not hasattr(geo, "StartPoint") or not hasattr(geo, "EndPoint"):
+                continue
+            p1 = placement.multVec(geo.StartPoint)
+            p2 = placement.multVec(geo.EndPoint)
+            if p1.distanceToPoint(p2) < 50:
+                continue
+            z_base = placement.Base.z + z_offset
+            shapes.append(_make_opening_solid_from_centerline([p1.x, p1.y, p2.x, p2.y], depth, height, z_base))
+        compound = _compound_or_none(shapes)
+        if compound is not None:
+            obj.Shape = compound
+
+
+def _make_sketch_cutter(doc, group, name, sketch, role, depth, height, z_offset, level, color):
+    obj = doc.addObject("Part::FeaturePython", _safe_name(name))
+    obj.Label = name
+    obj.Proxy = _SketchOpeningCutterProxy(sketch, depth, height, z_offset)
+    group.addObject(obj)
+    _set_prop(obj, "App::PropertyLink", "SourceSketch", "TestBuilding", "Sketch fuente del buque", sketch)
+    _set_prop(obj, "App::PropertyString", "Role", "TestBuilding", "Rol semantico", role)
+    _set_prop(obj, "App::PropertyString", "GA_Role", "TestBuilding", "Rol semantico compatible", role)
+    _set_prop(obj, "App::PropertyFloat", "Depth_mm", "TestBuilding", "Profundidad de corte", float(depth))
+    _set_prop(obj, "App::PropertyFloat", "Height_mm", "TestBuilding", "Altura de corte", float(height))
+    _set_prop(obj, "App::PropertyFloat", "ZOffset_mm", "TestBuilding", "Desfase vertical desde el nivel", float(z_offset))
+    _set_prop(obj, "App::PropertyInteger", "Level", "TestBuilding", "Nivel", int(level))
+    _set_view(obj, color=color, transparency=82)
+    try:
+        obj.Proxy.execute(obj)
+    except Exception:
+        pass
+    return obj
+
+
+def _make_arch_wall_from_sketch(doc, group, name, sketch, thickness, height, level, wall_kind, color):
+    if Arch is None:
+        raise RuntimeError("No se pudo importar Arch. Esta macro necesita el workbench Arch/BIM.")
+    try:
+        wall = Arch.makeWall(sketch, width=float(thickness), height=float(height), name=_safe_name(name))
+    except TypeError:
+        wall = Arch.makeWall(sketch, float(thickness), float(height), name=_safe_name(name))
+    wall.Label = name
+    group.addObject(wall)
+    _set_prop(wall, "App::PropertyString", "Role", "TestBuilding", "Rol semantico", "arch_wall")
+    _set_prop(wall, "App::PropertyString", "GA_Role", "TestBuilding", "Rol semantico compatible", "arch_wall")
+    _set_prop(wall, "App::PropertyString", "WallKind", "TestBuilding", "Tipo de muro", wall_kind)
+    _set_prop(wall, "App::PropertyFloat", "Thickness_mm", "TestBuilding", "Espesor del muro", float(thickness))
+    _set_prop(wall, "App::PropertyFloat", "Height_mm", "TestBuilding", "Altura del muro", float(height))
+    _set_prop(wall, "App::PropertyInteger", "Level", "TestBuilding", "Nivel", int(level))
+    _set_prop(wall, "App::PropertyLink", "SourceSketch", "TestBuilding", "Sketch fuente", sketch)
+    _set_view(wall, color=color, transparency=0)
+    return wall
+
+
+def _set_wall_subtractions(wall, cutters):
+    cutters = [c for c in cutters if c is not None]
+    if not cutters:
+        return False
+    for attr in ("Subtractions", "Subtraction"):
+        if hasattr(wall, attr):
+            try:
+                setattr(wall, attr, cutters)
+                return True
+            except Exception:
+                pass
+    try:
+        current = list(getattr(wall, "Subtractions"))
+        wall.Subtractions = current + cutters
+        return True
+    except Exception:
+        return False
+
+
+def _make_axis_base(doc, group, name, segment, z):
+    x1, y1, x2, y2 = segment
+    obj = doc.addObject("Part::Feature", _safe_name(name))
+    obj.Label = name
+    obj.Shape = Part.makePolygon([App.Vector(x1, y1, z), App.Vector(x2, y2, z)])
+    group.addObject(obj)
+    _set_prop(obj, "App::PropertyString", "Role", "TestBuilding", "Rol semantico", "bim_axis")
+    _set_prop(obj, "App::PropertyString", "GA_Role", "TestBuilding", "Rol semantico compatible", "bim_axis")
+    try:
+        obj.ViewObject.Visibility = False
+    except Exception:
+        pass
+    return obj
+
+
+def _create_bim_level(
+    doc,
+    floor_group,
+    exterior_segments,
+    interior_segments,
+    doors,
+    windows,
+    level,
+    offset_x,
+    ext_wall,
+    int_wall,
+    wall_height,
+    door_height,
+    window_sill,
+    window_height,
+):
+    del exterior_segments, interior_segments, doors, windows, offset_x
+    z = (level - 1) * 3500.0
+    bim_grp = doc.addObject("App::DocumentObjectGroup", "BIM_Nivel_%02d" % level)
+    bim_grp.Label = "BIM Nivel %d" % level
+    floor_group.addObject(bim_grp)
+
+    wall_grp = doc.addObject("App::DocumentObjectGroup", "ArchWall_Paredes_N%02d" % level)
+    cutter_grp = doc.addObject("App::DocumentObjectGroup", "ArchWall_Cutters_Buques_N%02d" % level)
+    element_grp = doc.addObject("App::DocumentObjectGroup", "ArchWall_Elementos_N%02d" % level)
+    for sub in [wall_grp, cutter_grp, element_grp]:
+        bim_grp.addObject(sub)
+
+    concrete_sk = None
+    light_sk = None
+    door_sk = None
+    window_sk = None
+    for obj in getattr(floor_group, "Group", []):
+        label = getattr(obj, "Label", "")
+        if "Concreto/exterior" in label:
+            concrete_sk = obj
+        elif "Paredes livianas" in label:
+            light_sk = obj
+        elif "Buques puertas" in label:
+            door_sk = obj
+        elif "Buques ventanas" in label:
+            window_sk = obj
+
+    if concrete_sk is None or light_sk is None or door_sk is None or window_sk is None:
+        raise RuntimeError("No se encontraron todos los sketches base para Arch Wall.")
+
+    exterior_wall = _make_arch_wall_from_sketch(
+        doc,
+        wall_grp,
+        "ArchWall_Paredes_Exteriores_N%02d" % level,
+        concrete_sk,
+        ext_wall,
+        wall_height,
+        level,
+        "exterior",
+        (0.70, 0.70, 0.70),
+    )
+    interior_wall = _make_arch_wall_from_sketch(
+        doc,
+        wall_grp,
+        "ArchWall_Paredes_Livianas_N%02d" % level,
+        light_sk,
+        int_wall,
+        wall_height,
+        level,
+        "interior_liviana",
+        (0.80, 0.84, 0.88),
+    )
+
+    door_cutter = _make_sketch_cutter(
+        doc,
+        cutter_grp,
+        "Cutter_Buques_Puertas_N%02d" % level,
+        door_sk,
+        "arch_opening_cutter_door",
+        max(ext_wall, int_wall) + 160.0,
+        door_height,
+        0.0,
+        level,
+        (0.85, 0.36, 0.10),
+    )
+    window_cutter = _make_sketch_cutter(
+        doc,
+        cutter_grp,
+        "Cutter_Buques_Ventanas_N%02d" % level,
+        window_sk,
+        "arch_opening_cutter_window",
+        ext_wall + 160.0,
+        window_height,
+        window_sill,
+        level,
+        (0.12, 0.62, 0.88),
+    )
+
+    exterior_subtractions_ok = _set_wall_subtractions(exterior_wall, [door_cutter, window_cutter])
+    interior_subtractions_ok = _set_wall_subtractions(interior_wall, [door_cutter])
+    _set_prop(exterior_wall, "App::PropertyBool", "OpeningsCut", "TestBuilding", "Buques enlazados como subtracciones", exterior_subtractions_ok)
+    _set_prop(interior_wall, "App::PropertyBool", "OpeningsCut", "TestBuilding", "Buques enlazados como subtracciones", interior_subtractions_ok)
+
+    door_obj = doc.addObject("Part::FeaturePython", "ArchWall_Puertas_N%02d" % level)
+    door_obj.Label = "ArchWall Puertas N%02d" % level
+    door_obj.Proxy = _SketchOpeningCutterProxy(door_sk, 45.0, door_height, 0.0)
+    element_grp.addObject(door_obj)
+    _set_prop(door_obj, "App::PropertyLink", "SourceSketch", "TestBuilding", "Sketch fuente", door_sk)
+    _set_prop(door_obj, "App::PropertyString", "Role", "TestBuilding", "Rol semantico", "arch_door_placeholder")
+    _set_prop(door_obj, "App::PropertyFloat", "Depth_mm", "TestBuilding", "Espesor visual", 45.0)
+    _set_prop(door_obj, "App::PropertyFloat", "Height_mm", "TestBuilding", "Altura de puerta", float(door_height))
+    _set_prop(door_obj, "App::PropertyFloat", "ZOffset_mm", "TestBuilding", "Desfase vertical", 0.0)
+    _set_prop(door_obj, "App::PropertyInteger", "Level", "TestBuilding", "Nivel", int(level))
+    _set_view(door_obj, color=(0.42, 0.20, 0.08), transparency=20)
+    door_obj.Proxy.execute(door_obj)
+
+    window_obj = doc.addObject("Part::FeaturePython", "ArchWall_Ventanas_N%02d" % level)
+    window_obj.Label = "ArchWall Ventanas N%02d" % level
+    window_obj.Proxy = _SketchOpeningCutterProxy(window_sk, 35.0, window_height, window_sill)
+    element_grp.addObject(window_obj)
+    _set_prop(window_obj, "App::PropertyLink", "SourceSketch", "TestBuilding", "Sketch fuente", window_sk)
+    _set_prop(window_obj, "App::PropertyString", "Role", "TestBuilding", "Rol semantico", "arch_window_placeholder")
+    _set_prop(window_obj, "App::PropertyFloat", "Depth_mm", "TestBuilding", "Espesor visual", 35.0)
+    _set_prop(window_obj, "App::PropertyFloat", "Height_mm", "TestBuilding", "Altura de ventana", float(window_height))
+    _set_prop(window_obj, "App::PropertyFloat", "ZOffset_mm", "TestBuilding", "Antepecho", float(window_sill))
+    _set_prop(window_obj, "App::PropertyInteger", "Level", "TestBuilding", "Nivel", int(level))
+    _set_view(window_obj, color=(0.12, 0.55, 0.82), transparency=45)
+    window_obj.Proxy.execute(window_obj)
+
+    try:
+        doc.recompute()
+    except Exception:
+        pass
+
+    return {
+        "created": True,
+        "mode": "arch_wall_from_sketch_with_parametric_subtractions",
+        "wall_count": 2,
+        "subtractions_linked": bool(exterior_subtractions_ok and interior_subtractions_ok),
+        "group": bim_grp.Name,
+    }
+
+
+def _create_ai_text(doc, group, payload):
+    text = json.dumps(payload, ensure_ascii=False, indent=2)
+    try:
+        obj = doc.addObject("App::TextDocument", "AI_Contexto_ArchWallEdificio")
+        obj.Label = "AI_Contexto_ArchWallEdificio"
+        obj.Text = (
+            "Contexto generado por GeneradorEdificioArchWallPruebas.FCMacro.\n"
+            "Copiar este JSON y pegarlo en una IA externa si se desea pedir ajustes.\n\n"
+            + text
+        )
+    except Exception:
+        obj = doc.addObject("App::FeaturePython", "AI_Contexto_ArchWallEdificio")
+        obj.Label = "AI_Contexto_ArchWallEdificio"
+        _set_prop(obj, "App::PropertyString", "JSON", "AI", "Contexto JSON para copiar", text[:32760])
+    group.addObject(obj)
+    return obj, text
+
+
+def _copy_to_clipboard(text):
+    if QtWidgets is None:
+        return False
+    try:
+        app = QtWidgets.QApplication.instance()
+        if app is None:
+            return False
+        app.clipboard().setText(text)
+        return True
+    except Exception:
+        return False
+
+
+def _draw_level(
+    doc,
+    group,
+    rooms,
+    building_type,
+    width,
+    depth,
+    level,
+    offset_x,
+    ext_wall,
+    int_wall,
+    create_bim,
+    wall_height,
+    door_height,
+    window_sill,
+    window_height,
+):
+    z = (level - 1) * 3500.0
+    floor_grp = doc.addObject("App::DocumentObjectGroup", "Sketch_Nivel_%02d" % level)
+    floor_grp.Label = "Sketch Nivel %d" % level
+    group.addObject(floor_grp)
+
+    concrete = _make_sketch(
+        doc,
+        floor_grp,
+        "SK_ConcretoExterior_N%02d" % level,
+        "SK Concreto/exterior N%d" % level,
+        "muro_exterior",
+        level,
+        "Paredes de concreto o exteriores",
+        "concreto",
+        offset_x,
+        0,
+        z,
+    )
+    light = _make_sketch(
+        doc,
+        floor_grp,
+        "SK_ParedesLivianas_N%02d" % level,
+        "SK Paredes livianas N%d" % level,
+        "muro_interior",
+        level,
+        "Paredes interiores o livianas",
+        "liviana",
+        offset_x,
+        0,
+        z,
+    )
+    doors_sk = _make_sketch(
+        doc,
+        floor_grp,
+        "SK_BuquesPuertas_N%02d" % level,
+        "SK Buques puertas N%d" % level,
+        "puerta",
+        level,
+        "Buques de puertas",
+        "puerta",
+        offset_x,
+        0,
+        z,
+    )
+    windows_sk = _make_sketch(
+        doc,
+        floor_grp,
+        "SK_BuquesVentanas_N%02d" % level,
+        "SK Buques ventanas N%d" % level,
+        "ventana",
+        level,
+        "Buques de ventanas",
+        "ventana",
+        offset_x,
+        0,
+        z,
+    )
+    ref_sk = _make_sketch(
+        doc,
+        floor_grp,
+        "SK_ReferenciaRecintos_N%02d" % level,
+        "SK Referencia recintos N%d" % level,
+        "referencia_recintos",
+        level,
+        "Rectangulos constructivos de recintos",
+        "referencia",
+        offset_x,
+        0,
+        z,
+    )
+
+    exterior_segments = _draw_exterior(concrete, width, depth, ext_wall)
+    interior_count, interior_segments = _draw_interior_walls(light, rooms, int_wall)
+    _draw_reference_rooms(ref_sk, rooms)
+    doors, windows = _draw_openings(rooms, doors_sk, windows_sk, width, depth, ext_wall, int_wall)
+
+    bim_info = {"created": False}
+    if create_bim:
+        bim_info = _create_bim_level(
+            doc,
+            floor_grp,
+            exterior_segments,
+            interior_segments,
+            doors,
+            windows,
+            level,
+            offset_x,
+            ext_wall,
+            int_wall,
+            wall_height,
+            door_height,
+            window_sill,
+            window_height,
+        )
+
+    for sk in [concrete, light, doors_sk, windows_sk, ref_sk]:
+        _set_prop(sk, "App::PropertyString", "BuildingType", "TestBuilding", "Tipo de edificio", building_type)
+        _set_prop(sk, "App::PropertyFloat", "Width_mm", "TestBuilding", "Ancho de planta", float(width))
+        _set_prop(sk, "App::PropertyFloat", "Depth_mm", "TestBuilding", "Fondo de planta", float(depth))
+
+    return {
+        "level": level,
+        "width_mm": round(width, 1),
+        "depth_mm": round(depth, 1),
+        "exterior_wall_mm": ext_wall,
+        "interior_wall_mm": int_wall,
+        "interior_wall_segments": interior_count,
+        "doors": doors,
+        "windows": windows,
+        "bim": bim_info,
+        "rooms": [
+            {
+                "name": r["name"],
+                "kind": r["kind"],
+                "x_mm": round(offset_x + r["x"], 1),
+                "y_mm": round(r["y"], 1),
+                "w_mm": round(r["w"], 1),
+                "h_mm": round(r["h"], 1),
+                "area_m2": round(_area_m2(r), 2),
+            }
+            for r in rooms
+        ],
+        "sketches": {
+            "concrete_exterior": concrete.Name,
+            "light_partitions": light.Name,
+            "door_openings": doors_sk.Name,
+            "window_openings": windows_sk.Name,
+            "room_reference": ref_sk.Name,
+        },
+    }
+
+
+def generate_sketch_building(options=None):
+    options = dict(options or {})
+    doc = _ensure_doc()
+    if options.get("clear_previous", True):
+        _clear_previous(doc)
+
+    seed = int(options.get("seed", 0) or 0)
+    if seed <= 0:
+        seed = int(time.time())
+    rng = random.Random(seed)
+
+    requested = options.get("building_type", "Aleatorio")
+    building_type = rng.choice(["Casa", "Oficina"]) if requested == "Aleatorio" else requested
+    levels = max(1, min(int(options.get("levels", 1)), 5))
+    ext_wall = float(options.get("ext_wall_mm", DEFAULT_EXT_WALL_MM))
+    int_wall = float(options.get("int_wall_mm", DEFAULT_INT_WALL_MM))
+    create_bim = bool(options.get("create_bim", True))
+    wall_height = float(options.get("wall_height_mm", DEFAULT_WALL_HEIGHT_MM))
+    door_height = float(options.get("door_height_mm", DEFAULT_DOOR_HEIGHT_MM))
+    window_sill = float(options.get("window_sill_mm", DEFAULT_WINDOW_SILL_MM))
+    window_height = float(options.get("window_height_mm", DEFAULT_WINDOW_HEIGHT_MM))
+
+    width = float(options.get("width_mm", 0) or 0)
+    depth = float(options.get("depth_mm", 0) or 0)
+    if width <= 0 or depth <= 0:
+        if building_type == "Casa":
+            width = rng.uniform(9500, 14500)
+            depth = rng.uniform(7800, 11500)
+        else:
+            width = rng.uniform(18000, 30000)
+            depth = rng.uniform(10500, 18000)
+
+    stamp = int(time.time())
+    group = doc.addObject("App::DocumentObjectGroup", RESULT_PREFIX + str(stamp))
+    group.Label = RESULT_PREFIX + str(stamp)
+    _set_prop(group, "App::PropertyString", "BuildingType", "TestBuilding", "Tipo de edificio", building_type)
+    _set_prop(group, "App::PropertyInteger", "Seed", "TestBuilding", "Semilla usada", seed)
+    _set_prop(group, "App::PropertyInteger", "Levels", "TestBuilding", "Cantidad de niveles", levels)
+
+    payload = {
+        "macro": "GeneradorEdificioArchWallPruebas.FCMacro",
+        "building_type": building_type,
+        "seed": seed,
+        "levels": levels,
+        "units": "mm",
+        "notes": "Geometria 2D en sketches separados; BIM opcional de muros y buques.",
+        "bim_enabled": create_bim,
+        "floors": [],
+    }
+
+    _msg("--- GeneradorEdificioArchWallPruebas ---")
+    _msg("Tipo: %s | Niveles: %d | Semilla: %d" % (building_type, levels, seed))
+    _msg("BIM: %s" % ("si" if create_bim else "no"))
+
+    for level in range(1, levels + 1):
+        offset_x = (level - 1) * (width + FLOOR_OFFSET_GAP_MM)
+        level_width = width * (rng.uniform(0.86, 0.98) if level > 1 and building_type == "Casa" else 1.0)
+        level_depth = depth * (rng.uniform(0.82, 0.96) if level > 1 and building_type == "Casa" else 1.0)
+        if building_type == "Casa":
+            rooms = _build_house_rooms(rng, level_width, level_depth, level)
+        else:
+            rooms = _build_office_rooms(rng, level_width, level_depth, level)
+        payload["floors"].append(
+            _draw_level(
+                doc,
+                group,
+                rooms,
+                building_type,
+                level_width,
+                level_depth,
+                level,
+                offset_x,
+                ext_wall,
+                int_wall,
+                create_bim,
+                wall_height,
+                door_height,
+                window_sill,
+                window_height,
+            )
+        )
+        _msg("Nivel %d: %d recintos | %.2f m2" % (level, len(rooms), sum(_area_m2(r) for r in rooms)))
+
+    ai_obj, ai_text = _create_ai_text(doc, group, payload)
+    if options.get("copy_ai_context", False):
+        copied = _copy_to_clipboard(ai_text)
+        _msg("Contexto IA copiado al portapapeles." if copied else "No se pudo copiar contexto IA al portapapeles.")
+
+    doc.recompute()
+    try:
+        if Gui is not None and Gui.ActiveDocument is not None:
+            Gui.ActiveDocument.ActiveView.viewTop()
+            Gui.SendMsgToActiveView("ViewFit")
+    except Exception:
+        pass
+
+    _msg("Listo. Grupo generado: %s" % group.Label)
+    _msg("Contexto para IA: %s" % ai_obj.Label)
+    return group
+
+
+class _SketchGeneratorPanel(QtWidgets.QDialog if QtWidgets is not None else object):
+    def __init__(self, parent=None):
+        super(_SketchGeneratorPanel, self).__init__(parent)
+        self.setWindowTitle("Generador Arch Wall de edificios de prueba")
+        try:
+            self.setWindowFlags(self.windowFlags() | QtCore.Qt.Tool)
+        except Exception:
+            pass
+        self._build_ui()
+        self._load()
+
+    def _build_ui(self):
+        layout = QtWidgets.QVBoxLayout(self)
+        intro = QtWidgets.QLabel("Genera una casa u oficina con sketches y paredes Arch Wall.")
+        layout.addWidget(intro)
+
+        form = QtWidgets.QFormLayout()
+        self.building_type = QtWidgets.QComboBox()
+        self.building_type.addItems(["Aleatorio", "Casa", "Oficina"])
+        form.addRow("Tipo", self.building_type)
+
+        self.seed = QtWidgets.QSpinBox()
+        self.seed.setRange(0, 2147483647)
+        self.seed.setSpecialValueText("Aleatoria")
+        form.addRow("Semilla", self.seed)
+
+        self.levels = QtWidgets.QSpinBox()
+        self.levels.setRange(1, 5)
+        form.addRow("Niveles", self.levels)
+
+        self.width_mm = QtWidgets.QDoubleSpinBox()
+        self.width_mm.setRange(0, 100000)
+        self.width_mm.setDecimals(0)
+        self.width_mm.setSingleStep(500)
+        self.width_mm.setSpecialValueText("Auto")
+        form.addRow("Ancho mm", self.width_mm)
+
+        self.depth_mm = QtWidgets.QDoubleSpinBox()
+        self.depth_mm.setRange(0, 100000)
+        self.depth_mm.setDecimals(0)
+        self.depth_mm.setSingleStep(500)
+        self.depth_mm.setSpecialValueText("Auto")
+        form.addRow("Fondo mm", self.depth_mm)
+
+        self.ext_wall_mm = QtWidgets.QSpinBox()
+        self.ext_wall_mm.setRange(100, 500)
+        form.addRow("Muro exterior mm", self.ext_wall_mm)
+
+        self.int_wall_mm = QtWidgets.QSpinBox()
+        self.int_wall_mm.setRange(50, 300)
+        form.addRow("Pared liviana mm", self.int_wall_mm)
+
+        self.create_bim = QtWidgets.QCheckBox("Generar Arch Wall con buques parametricos")
+        form.addRow("", self.create_bim)
+
+        self.wall_height_mm = QtWidgets.QSpinBox()
+        self.wall_height_mm.setRange(1000, 8000)
+        self.wall_height_mm.setSingleStep(100)
+        form.addRow("Altura muro mm", self.wall_height_mm)
+
+        self.door_height_mm = QtWidgets.QSpinBox()
+        self.door_height_mm.setRange(1800, 3000)
+        self.door_height_mm.setSingleStep(50)
+        form.addRow("Altura puerta mm", self.door_height_mm)
+
+        self.window_sill_mm = QtWidgets.QSpinBox()
+        self.window_sill_mm.setRange(0, 2000)
+        self.window_sill_mm.setSingleStep(50)
+        form.addRow("Antepecho ventana mm", self.window_sill_mm)
+
+        self.window_height_mm = QtWidgets.QSpinBox()
+        self.window_height_mm.setRange(300, 2500)
+        self.window_height_mm.setSingleStep(50)
+        form.addRow("Alto ventana mm", self.window_height_mm)
+
+        self.clear_previous = QtWidgets.QCheckBox("Borrar edificios Sketch anteriores")
+        form.addRow("", self.clear_previous)
+
+        self.copy_ai_context = QtWidgets.QCheckBox("Copiar contexto IA al portapapeles")
+        form.addRow("", self.copy_ai_context)
+
+        layout.addLayout(form)
+
+        row = QtWidgets.QHBoxLayout()
+        self.generate_btn = QtWidgets.QPushButton("Generar")
+        self.random_seed_btn = QtWidgets.QPushButton("Nueva semilla")
+        self.close_btn = QtWidgets.QPushButton("Cerrar")
+        row.addWidget(self.generate_btn)
+        row.addWidget(self.random_seed_btn)
+        row.addStretch(1)
+        row.addWidget(self.close_btn)
+        layout.addLayout(row)
+
+        self.status = QtWidgets.QLabel("")
+        layout.addWidget(self.status)
+
+        self.generate_btn.clicked.connect(self._on_generate)
+        self.random_seed_btn.clicked.connect(self._on_random_seed)
+        self.close_btn.clicked.connect(self.close)
+
+    def _load(self):
+        p = _params()
+        self.building_type.setCurrentText(p.GetString("building_type", "Aleatorio") if p else "Aleatorio")
+        self.seed.setValue(p.GetInt("seed", 0) if p else 0)
+        self.levels.setValue(p.GetInt("levels", 1) if p else 1)
+        self.width_mm.setValue(p.GetFloat("width_mm", 0.0) if p else 0.0)
+        self.depth_mm.setValue(p.GetFloat("depth_mm", 0.0) if p else 0.0)
+        self.ext_wall_mm.setValue(p.GetInt("ext_wall_mm", DEFAULT_EXT_WALL_MM) if p else DEFAULT_EXT_WALL_MM)
+        self.int_wall_mm.setValue(p.GetInt("int_wall_mm", DEFAULT_INT_WALL_MM) if p else DEFAULT_INT_WALL_MM)
+        self.create_bim.setChecked(p.GetBool("create_bim", True) if p else True)
+        self.wall_height_mm.setValue(p.GetInt("wall_height_mm", DEFAULT_WALL_HEIGHT_MM) if p else DEFAULT_WALL_HEIGHT_MM)
+        self.door_height_mm.setValue(p.GetInt("door_height_mm", DEFAULT_DOOR_HEIGHT_MM) if p else DEFAULT_DOOR_HEIGHT_MM)
+        self.window_sill_mm.setValue(p.GetInt("window_sill_mm", DEFAULT_WINDOW_SILL_MM) if p else DEFAULT_WINDOW_SILL_MM)
+        self.window_height_mm.setValue(p.GetInt("window_height_mm", DEFAULT_WINDOW_HEIGHT_MM) if p else DEFAULT_WINDOW_HEIGHT_MM)
+        self.clear_previous.setChecked(p.GetBool("clear_previous", True) if p else True)
+        self.copy_ai_context.setChecked(p.GetBool("copy_ai_context", False) if p else False)
+
+    def _save(self):
+        p = _params()
+        if not p:
+            return
+        p.SetString("building_type", self.building_type.currentText())
+        p.SetInt("seed", int(self.seed.value()))
+        p.SetInt("levels", int(self.levels.value()))
+        p.SetFloat("width_mm", float(self.width_mm.value()))
+        p.SetFloat("depth_mm", float(self.depth_mm.value()))
+        p.SetInt("ext_wall_mm", int(self.ext_wall_mm.value()))
+        p.SetInt("int_wall_mm", int(self.int_wall_mm.value()))
+        p.SetBool("create_bim", bool(self.create_bim.isChecked()))
+        p.SetInt("wall_height_mm", int(self.wall_height_mm.value()))
+        p.SetInt("door_height_mm", int(self.door_height_mm.value()))
+        p.SetInt("window_sill_mm", int(self.window_sill_mm.value()))
+        p.SetInt("window_height_mm", int(self.window_height_mm.value()))
+        p.SetBool("clear_previous", bool(self.clear_previous.isChecked()))
+        p.SetBool("copy_ai_context", bool(self.copy_ai_context.isChecked()))
+
+    def _state(self):
+        return {
+            "building_type": self.building_type.currentText(),
+            "seed": int(self.seed.value()),
+            "levels": int(self.levels.value()),
+            "width_mm": float(self.width_mm.value()),
+            "depth_mm": float(self.depth_mm.value()),
+            "ext_wall_mm": int(self.ext_wall_mm.value()),
+            "int_wall_mm": int(self.int_wall_mm.value()),
+            "create_bim": bool(self.create_bim.isChecked()),
+            "wall_height_mm": int(self.wall_height_mm.value()),
+            "door_height_mm": int(self.door_height_mm.value()),
+            "window_sill_mm": int(self.window_sill_mm.value()),
+            "window_height_mm": int(self.window_height_mm.value()),
+            "clear_previous": bool(self.clear_previous.isChecked()),
+            "copy_ai_context": bool(self.copy_ai_context.isChecked()),
+        }
+
+    def _on_random_seed(self):
+        self.seed.setValue(int(time.time()) & 0x7FFFFFFF)
+
+    def _on_generate(self):
+        self._save()
+        self.status.setText("Generando...")
+        try:
+            QtWidgets.QApplication.processEvents()
+        except Exception:
+            pass
+        try:
+            group = generate_sketch_building(self._state())
+            self.status.setText("Generado: %s" % group.Label)
+        except Exception as exc:
+            self.status.setText("Error: %s" % exc)
+            _error("Error en GeneradorEdificioArchWallPruebas: %s" % exc)
+            try:
+                import traceback
+
+                _error(traceback.format_exc())
+            except Exception:
+                pass
+
+
+def _show_panel():
+    if QtWidgets is None:
+        generate_sketch_building()
+        return
+    try:
+        old = getattr(App, "_GeneradorEdificioArchWallPruebasPanel", None)
+        if old is not None:
+            old.close()
+    except Exception:
+        pass
+    panel = _SketchGeneratorPanel()
+    App._GeneradorEdificioArchWallPruebasPanel = panel
+    panel.show()
+    try:
+        panel.raise_()
+    except Exception:
+        pass
+
+
+if __name__ == "__main__":
+    _show_panel()

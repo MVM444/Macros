@@ -1,0 +1,835 @@
+# -*- coding: utf-8 -*-
+"""Generador de edificios aleatorios para pruebas de macros en FreeCAD.
+
+Genera plantas 2D de casas u oficinas con recintos, muros, puertas, ventanas,
+etiquetas y propiedades simples. No usa API externa; deja un objeto de texto
+con contexto JSON para copiar y pegar en una IA si se desea documentar o iterar.
+"""
+
+from __future__ import annotations
+
+import json
+import math
+import random
+import time
+
+try:
+    import FreeCAD as App
+    import FreeCADGui as Gui
+    import Part
+    import Draft
+except Exception:  # Permite py_compile fuera de FreeCAD.
+    App = None
+    Gui = None
+    Part = None
+    Draft = None
+
+try:
+    from PySide2 import QtCore, QtWidgets
+except Exception:
+    try:
+        from PySide import QtCore
+        from PySide import QtGui as QtWidgets
+    except Exception:
+        QtCore = None
+        QtWidgets = None
+
+
+RESULT_PREFIX = "TEST_Edificio_"
+SETTINGS_PATH = "User parameter:BaseApp/Preferences/Mod/GeneradorEdificioPruebas"
+
+DEFAULT_TEXT_SIZE_MM = 180
+DEFAULT_WALL_MM = 150
+DEFAULT_DOOR_MM = 900
+DEFAULT_WINDOW_MM = 1300
+FLOOR_OFFSET_GAP_MM = 5000
+
+
+KIND_COLORS = {
+    "publico": (0.53, 0.74, 0.90),
+    "social": (0.66, 0.83, 0.61),
+    "trabajo": (0.72, 0.68, 0.88),
+    "administrativo": (0.82, 0.78, 0.58),
+    "servicio": (0.90, 0.74, 0.55),
+    "sanitario": (0.62, 0.78, 0.78),
+    "circulacion": (0.86, 0.86, 0.86),
+    "privado": (0.88, 0.66, 0.70),
+    "tecnico": (0.56, 0.62, 0.66),
+    "logistica": (0.76, 0.67, 0.58),
+}
+
+
+def _msg(text):
+    if App is not None:
+        App.Console.PrintMessage(str(text) + "\n")
+    else:
+        print(text)
+
+
+def _warn(text):
+    if App is not None:
+        App.Console.PrintWarning(str(text) + "\n")
+    else:
+        print("WARN:", text)
+
+
+def _error(text):
+    if App is not None:
+        App.Console.PrintError(str(text) + "\n")
+    else:
+        print("ERROR:", text)
+
+
+def _params():
+    if App is None:
+        return None
+    return App.ParamGet(SETTINGS_PATH)
+
+
+def _ensure_doc():
+    if App is None:
+        raise RuntimeError("Esta macro debe ejecutarse dentro de FreeCAD.")
+    doc = App.ActiveDocument
+    if doc is None:
+        doc = App.newDocument("Edificio_Pruebas")
+    return doc
+
+
+def _safe_name(value):
+    text = str(value).strip()
+    repl = {
+        " ": "_",
+        "-": "_",
+        "/": "_",
+        "\\": "_",
+        ".": "_",
+        "(": "",
+        ")": "",
+        "á": "a",
+        "é": "e",
+        "í": "i",
+        "ó": "o",
+        "ú": "u",
+        "ñ": "n",
+        "Á": "A",
+        "É": "E",
+        "Í": "I",
+        "Ó": "O",
+        "Ú": "U",
+        "Ñ": "N",
+    }
+    for old, new in repl.items():
+        text = text.replace(old, new)
+    return "".join(ch for ch in text if ch.isalnum() or ch == "_") or "Objeto"
+
+
+def _set_prop(obj, prop_type, name, group, desc, value):
+    try:
+        if not hasattr(obj, name):
+            obj.addProperty(prop_type, name, group, desc)
+        setattr(obj, name, value)
+    except Exception:
+        pass
+
+
+def _view(obj, color=None, transparency=None, line_width=None):
+    try:
+        vo = obj.ViewObject
+        if color is not None:
+            vo.ShapeColor = color
+        if transparency is not None:
+            vo.Transparency = transparency
+        if line_width is not None:
+            vo.LineWidth = line_width
+    except Exception:
+        pass
+
+
+def _rect_face(x, y, w, h, z=0.0):
+    pts = [
+        App.Vector(x, y, z),
+        App.Vector(x + w, y, z),
+        App.Vector(x + w, y + h, z),
+        App.Vector(x, y + h, z),
+        App.Vector(x, y, z),
+    ]
+    return Part.Face(Part.makePolygon(pts))
+
+
+def _rect_wire(x, y, w, h, z=0.0):
+    pts = [
+        App.Vector(x, y, z),
+        App.Vector(x + w, y, z),
+        App.Vector(x + w, y + h, z),
+        App.Vector(x, y + h, z),
+        App.Vector(x, y, z),
+    ]
+    return Part.makePolygon(pts)
+
+
+def _make_part(doc, group, name, label, shape, role=None, color=None, transparency=None):
+    obj = doc.addObject("Part::Feature", _safe_name(name))
+    obj.Label = label
+    obj.Shape = shape
+    if group is not None:
+        group.addObject(obj)
+    if role:
+        _set_prop(obj, "App::PropertyString", "Role", "GA", "Rol semantico del objeto", role)
+        _set_prop(obj, "App::PropertyString", "GA_Role", "GA", "Rol semantico compatible", role)
+    _view(obj, color=color, transparency=transparency)
+    return obj
+
+
+def _make_text(doc, group, label, text, x, y, z, size_mm):
+    placement = App.Placement(App.Vector(x, y, z), App.Rotation())
+    obj = None
+    try:
+        if hasattr(Draft, "make_text"):
+            obj = Draft.make_text(text, placement=placement)
+        else:
+            obj = Draft.makeText([text], point=App.Vector(x, y, z))
+    except Exception:
+        obj = doc.addObject("App::Annotation", _safe_name(label))
+        try:
+            obj.LabelText = text
+        except Exception:
+            pass
+    if obj is not None:
+        obj.Label = label
+        if group is not None:
+            group.addObject(obj)
+        try:
+            obj.Text = [text]
+        except Exception:
+            pass
+        try:
+            obj.String = text
+        except Exception:
+            pass
+        try:
+            obj.Placement = placement
+        except Exception:
+            pass
+        try:
+            obj.ViewObject.FontSize = float(size_mm)
+            obj.ViewObject.Justification = "Center"
+            obj.ViewObject.TextAlignment = "Middle"
+        except Exception:
+            pass
+    return obj
+
+
+def _room(name, kind, x, y, w, h, level=1):
+    return {
+        "name": name,
+        "kind": kind,
+        "x": float(x),
+        "y": float(y),
+        "w": float(w),
+        "h": float(h),
+        "level": int(level),
+    }
+
+
+def _area_m2(room):
+    return (room["w"] * room["h"]) / 1000000.0
+
+
+def _build_house_rooms(rng, width, depth, level):
+    front = depth * rng.uniform(0.30, 0.37)
+    middle = depth * rng.uniform(0.22, 0.29)
+    back = depth - front - middle
+    x1 = width * rng.uniform(0.35, 0.44)
+    x2 = width * rng.uniform(0.62, 0.72)
+    mid_left = (x2 - x1) * rng.uniform(0.40, 0.50)
+    master_w = width * rng.uniform(0.40, 0.48)
+    bath_w = width * rng.uniform(0.16, 0.21)
+
+    car_label = "Cochera" if rng.random() < 0.65 else "Terraza frontal"
+    rooms = [
+        _room("Sala", "social", 0, 0, x1, front, level),
+        _room("Comedor", "social", x1, 0, x2 - x1, front, level),
+        _room(car_label, "servicio", x2, 0, width - x2, front, level),
+        _room("Cocina", "servicio", 0, front, x1, middle, level),
+        _room("Bano social", "sanitario", x1, front, mid_left, middle * 0.50, level),
+        _room("Lavanderia", "servicio", x1, front + middle * 0.50, mid_left, middle * 0.50, level),
+        _room("Pasillo", "circulacion", x1 + mid_left, front, x2 - x1 - mid_left, middle, level),
+        _room("Dormitorio principal", "privado", 0, front + middle, master_w, back, level),
+        _room("Bano principal", "sanitario", master_w, front + middle, bath_w, back * 0.48, level),
+        _room("Vestidor", "privado", master_w, front + middle + back * 0.48, bath_w, back * 0.52, level),
+        _room("Dormitorio 2", "privado", master_w + bath_w, front + middle, width - master_w - bath_w, back * 0.50, level),
+        _room("Dormitorio 3", "privado", master_w + bath_w, front + middle + back * 0.50, width - master_w - bath_w, back * 0.50, level),
+    ]
+    if level > 1:
+        rooms = [
+            _room("Estar familiar", "social", 0, 0, x1, front, level),
+            _room("Estudio", "trabajo", x1, 0, x2 - x1, front, level),
+            _room("Terraza", "social", x2, 0, width - x2, front, level),
+            _room("Pasillo", "circulacion", 0, front, width, middle * 0.45, level),
+            _room("Dormitorio secundario A", "privado", 0, front + middle * 0.45, width * 0.36, depth - front - middle * 0.45, level),
+            _room("Bano compartido", "sanitario", width * 0.36, front + middle * 0.45, width * 0.20, (depth - front - middle * 0.45) * 0.48, level),
+            _room("Closet blancos", "servicio", width * 0.36, front + middle * 0.45 + (depth - front - middle * 0.45) * 0.48, width * 0.20, (depth - front - middle * 0.45) * 0.52, level),
+            _room("Dormitorio secundario B", "privado", width * 0.56, front + middle * 0.45, width * 0.44, depth - front - middle * 0.45, level),
+        ]
+    return rooms
+
+
+def _office_segments(rng, width, count):
+    weights = [rng.uniform(0.8, 1.35) for _ in range(count)]
+    total = sum(weights)
+    cursor = 0.0
+    segments = []
+    for weight in weights:
+        w = width * weight / total
+        segments.append((cursor, w))
+        cursor += w
+    return segments
+
+
+def _build_office_rooms(rng, width, depth, level):
+    front = depth * rng.uniform(0.20, 0.28)
+    work_depth = depth - front
+    corridor = rng.uniform(1600, 2200)
+    lower_h = (work_depth - corridor) * rng.uniform(0.46, 0.55)
+    upper_h = work_depth - corridor - lower_h
+    corridor_y = front + lower_h
+    reception_w = width * rng.uniform(0.28, 0.36)
+    wait_w = width * rng.uniform(0.20, 0.27)
+    meeting_w = width * rng.uniform(0.18, 0.24)
+    service_w = width - reception_w - wait_w - meeting_w
+
+    rooms = [
+        _room("Recepcion", "publico", 0, 0, reception_w, front, level),
+        _room("Sala de espera", "publico", reception_w, 0, wait_w, front, level),
+        _room("Sala de reuniones", "trabajo", reception_w + wait_w, 0, meeting_w, front, level),
+        _room("Servicios y limpieza", "sanitario", reception_w + wait_w + meeting_w, 0, service_w, front, level),
+        _room("Pasillo central", "circulacion", 0, corridor_y, width, corridor, level),
+    ]
+
+    lower_names = ["Atencion 1", "Atencion 2", "Atencion 3", "Oficina tecnica", "Caja", "Archivo activo"]
+    upper_names = ["Administracion", "Direccion", "Contabilidad", "TI/Servidor", "Archivo", "Sala colaborativa"]
+    count = rng.randint(4, 6)
+    for idx, (x, w) in enumerate(_office_segments(rng, width, count)):
+        name = lower_names[idx % len(lower_names)]
+        kind = "publico" if "Atencion" in name or name == "Caja" else "trabajo"
+        rooms.append(_room(name, kind, x, front, w, lower_h, level))
+    for idx, (x, w) in enumerate(_office_segments(rng, width, count)):
+        name = upper_names[idx % len(upper_names)]
+        kind = "tecnico" if "TI" in name else ("logistica" if "Archivo" in name else "administrativo")
+        rooms.append(_room(name, kind, x, corridor_y + corridor, w, upper_h, level))
+    return rooms
+
+
+def _edge_key(x1, y1, x2, y2):
+    vals = [round(x1, 1), round(y1, 1), round(x2, 1), round(y2, 1)]
+    if vals[0] == vals[2] and vals[1] > vals[3]:
+        vals = [vals[2], vals[3], vals[0], vals[1]]
+    if vals[1] == vals[3] and vals[0] > vals[2]:
+        vals = [vals[2], vals[3], vals[0], vals[1]]
+    return tuple(vals)
+
+
+def _room_edges(room):
+    x = room["x"]
+    y = room["y"]
+    w = room["w"]
+    h = room["h"]
+    return [
+        _edge_key(x, y, x + w, y),
+        _edge_key(x + w, y, x + w, y + h),
+        _edge_key(x, y + h, x + w, y + h),
+        _edge_key(x, y, x, y + h),
+    ]
+
+
+def _wall_shape_from_edge(edge, offset_x, offset_y, z, thickness):
+    x1, y1, x2, y2 = edge
+    if abs(y1 - y2) < 0.01:
+        x = min(x1, x2) + offset_x
+        y = y1 + offset_y - thickness / 2.0
+        return _rect_face(x, y, abs(x2 - x1), thickness, z)
+    x = x1 + offset_x - thickness / 2.0
+    y = min(y1, y2) + offset_y
+    return _rect_face(x, y, thickness, abs(y2 - y1), z)
+
+
+def _opening_shape(edge, offset_x, offset_y, z, length, depth):
+    x1, y1, x2, y2 = edge
+    if abs(y1 - y2) < 0.01:
+        cx = (x1 + x2) / 2.0
+        return _rect_face(cx - length / 2.0 + offset_x, y1 + offset_y - depth / 2.0, length, depth, z + 2.0)
+    cy = (y1 + y2) / 2.0
+    return _rect_face(x1 + offset_x - depth / 2.0, cy - length / 2.0 + offset_y, depth, length, z + 2.0)
+
+
+def _edge_len(edge):
+    x1, y1, x2, y2 = edge
+    return math.hypot(x2 - x1, y2 - y1)
+
+
+def _room_center(room, ox, oy):
+    return (ox + room["x"] + room["w"] / 2.0, oy + room["y"] + room["h"] / 2.0)
+
+
+def _clear_previous(doc):
+    removed = 0
+    for obj in list(doc.Objects):
+        try:
+            if obj.Name.startswith(RESULT_PREFIX) or obj.Label.startswith(RESULT_PREFIX):
+                doc.removeObject(obj.Name)
+                removed += 1
+        except Exception:
+            pass
+    if removed:
+        _msg("Se eliminaron %d grupo(s) de edificios de prueba anteriores." % removed)
+
+
+def _create_ai_text(doc, group, payload):
+    text = json.dumps(payload, ensure_ascii=False, indent=2)
+    try:
+        obj = doc.addObject("App::TextDocument", "AI_Contexto_Edificio")
+        obj.Label = "AI_Contexto_Edificio"
+        obj.Text = (
+            "Contexto generado por GeneradorEdificioPruebas.FCMacro.\n"
+            "Copiar este JSON y pegarlo en una IA externa si se desea pedir ajustes.\n\n"
+            + text
+        )
+    except Exception:
+        obj = doc.addObject("App::FeaturePython", "AI_Contexto_Edificio")
+        obj.Label = "AI_Contexto_Edificio"
+        _set_prop(obj, "App::PropertyString", "JSON", "AI", "Contexto JSON para copiar", text[:32760])
+    group.addObject(obj)
+    return obj, text
+
+
+def _copy_to_clipboard(text):
+    if QtWidgets is None:
+        return False
+    try:
+        app = QtWidgets.QApplication.instance()
+        if app is None:
+            return False
+        app.clipboard().setText(text)
+        return True
+    except Exception:
+        return False
+
+
+def _draw_layout(doc, group, rooms, building_type, width, depth, level, offset_x, offset_y, text_size_mm, wall_mm):
+    z = (level - 1) * 3500.0
+    floor_grp = doc.addObject("App::DocumentObjectGroup", "Nivel_%02d" % level)
+    floor_grp.Label = "Nivel %d" % level
+    group.addObject(floor_grp)
+    room_grp = doc.addObject("App::DocumentObjectGroup", "Recintos_N%02d" % level)
+    wall_grp = doc.addObject("App::DocumentObjectGroup", "Muros_N%02d" % level)
+    door_grp = doc.addObject("App::DocumentObjectGroup", "Puertas_N%02d" % level)
+    win_grp = doc.addObject("App::DocumentObjectGroup", "Ventanas_N%02d" % level)
+    label_grp = doc.addObject("App::DocumentObjectGroup", "Etiquetas_N%02d" % level)
+    for sub in [room_grp, wall_grp, door_grp, win_grp, label_grp]:
+        floor_grp.addObject(sub)
+
+    base = _make_part(
+        doc,
+        floor_grp,
+        "Contorno_N%02d" % level,
+        "Contorno nivel %d" % level,
+        _rect_wire(offset_x, offset_y, width, depth, z),
+        role="contorno",
+        color=(0.05, 0.05, 0.05),
+    )
+    _set_prop(base, "App::PropertyFloat", "Width_mm", "TestBuilding", "Ancho del edificio", float(width))
+    _set_prop(base, "App::PropertyFloat", "Depth_mm", "TestBuilding", "Fondo del edificio", float(depth))
+    _set_prop(base, "App::PropertyInteger", "Level", "TestBuilding", "Nivel", int(level))
+
+    room_objs = []
+    edge_map = {}
+    for room in rooms:
+        color = KIND_COLORS.get(room["kind"], (0.80, 0.80, 0.80))
+        obj = _make_part(
+            doc,
+            room_grp,
+            "Recinto_%s_N%02d" % (_safe_name(room["name"]), level),
+            room["name"],
+            _rect_face(offset_x + room["x"], offset_y + room["y"], room["w"], room["h"], z),
+            role="recinto",
+            color=color,
+            transparency=35,
+        )
+        _set_prop(obj, "App::PropertyString", "RoomName", "TestBuilding", "Nombre del recinto", room["name"])
+        _set_prop(obj, "App::PropertyString", "RoomKind", "TestBuilding", "Tipo funcional", room["kind"])
+        _set_prop(obj, "App::PropertyFloat", "Area_m2", "TestBuilding", "Area del recinto", float(_area_m2(room)))
+        _set_prop(obj, "App::PropertyFloat", "Width_mm", "TestBuilding", "Ancho del recinto", float(room["w"]))
+        _set_prop(obj, "App::PropertyFloat", "Depth_mm", "TestBuilding", "Fondo del recinto", float(room["h"]))
+        _set_prop(obj, "App::PropertyInteger", "Level", "TestBuilding", "Nivel", int(level))
+        _set_prop(obj, "App::PropertyBool", "IsCirculation", "TestBuilding", "Es circulacion", room["kind"] == "circulacion")
+        cx, cy = _room_center(room, offset_x, offset_y)
+        _make_text(doc, label_grp, "Etiqueta_%s_N%02d" % (_safe_name(room["name"]), level), room["name"], cx, cy, z + 20, text_size_mm)
+        room_objs.append(obj)
+        for edge in _room_edges(room):
+            edge_map.setdefault(edge, []).append(room)
+
+    for index, edge in enumerate(sorted(edge_map.keys())):
+        if _edge_len(edge) < 300:
+            continue
+        wall = _make_part(
+            doc,
+            wall_grp,
+            "Muro_N%02d_%03d" % (level, index + 1),
+            "Muro N%d.%03d" % (level, index + 1),
+            _wall_shape_from_edge(edge, offset_x, offset_y, z, wall_mm),
+            role="muro",
+            color=(0.18, 0.18, 0.18),
+            transparency=0,
+        )
+        _set_prop(wall, "App::PropertyBool", "IsWall", "TestBuilding", "Es muro", True)
+        _set_prop(wall, "App::PropertyInteger", "Level", "TestBuilding", "Nivel", int(level))
+
+    door_count = 0
+    window_count = 0
+    for edge, touching in edge_map.items():
+        names = {r["kind"] for r in touching}
+        length = _edge_len(edge)
+        if length < 1200:
+            continue
+        is_exterior = len(touching) == 1
+        has_circulation = "circulacion" in names
+        if has_circulation and len(touching) > 1:
+            other = [r for r in touching if r["kind"] != "circulacion"]
+            if other:
+                door_count += 1
+                door = _make_part(
+                    doc,
+                    door_grp,
+                    "Puerta_N%02d_%03d" % (level, door_count),
+                    "Puerta N%d.%03d" % (level, door_count),
+                    _opening_shape(edge, offset_x, offset_y, z, min(DEFAULT_DOOR_MM, length * 0.65), wall_mm * 1.8),
+                    role="puerta",
+                    color=(0.50, 0.28, 0.12),
+                    transparency=5,
+                )
+                _set_prop(door, "App::PropertyInteger", "Level", "TestBuilding", "Nivel", int(level))
+        elif is_exterior:
+            room = touching[0]
+            y1 = edge[1]
+            y2 = edge[3]
+            x1 = edge[0]
+            x2 = edge[2]
+            is_front_edge = abs(y1) < 0.01 and abs(y2) < 0.01
+            if is_front_edge and room["kind"] in {"publico", "social"}:
+                door_count += 1
+                role = "salida" if door_count == 1 else "puerta"
+                door = _make_part(
+                    doc,
+                    door_grp,
+                    "Acceso_N%02d_%03d" % (level, door_count),
+                    "Acceso principal N%d" % level if door_count == 1 else "Puerta exterior N%d.%03d" % (level, door_count),
+                    _opening_shape(edge, offset_x, offset_y, z, min(1200, length * 0.55), wall_mm * 1.9),
+                    role=role,
+                    color=(0.52, 0.22, 0.10),
+                    transparency=0,
+                )
+                _set_prop(door, "App::PropertyBool", "IsMainAccess", "TestBuilding", "Acceso principal", door_count == 1)
+                _set_prop(door, "App::PropertyInteger", "Level", "TestBuilding", "Nivel", int(level))
+            if room["kind"] not in {"sanitario", "circulacion"} and length >= 1500:
+                window_count += 1
+                window = _make_part(
+                    doc,
+                    win_grp,
+                    "Ventana_N%02d_%03d" % (level, window_count),
+                    "Ventana N%d.%03d" % (level, window_count),
+                    _opening_shape(edge, offset_x, offset_y, z, min(DEFAULT_WINDOW_MM, length * 0.55), wall_mm * 1.5),
+                    role="ventana",
+                    color=(0.25, 0.60, 0.90),
+                    transparency=20,
+                )
+                _set_prop(window, "App::PropertyInteger", "Level", "TestBuilding", "Nivel", int(level))
+
+    frente = _make_part(
+        doc,
+        floor_grp,
+        "Frente_N%02d" % level,
+        "Frente nivel %d" % level,
+        _wall_shape_from_edge(_edge_key(0, 0, width, 0), offset_x, offset_y - wall_mm * 2.0, z, wall_mm * 0.6),
+        role="frente",
+        color=(1.0, 0.72, 0.10),
+        transparency=0,
+    )
+    _set_prop(frente, "App::PropertyInteger", "Level", "TestBuilding", "Nivel", int(level))
+
+    return {
+        "level": level,
+        "width_mm": width,
+        "depth_mm": depth,
+        "rooms": [
+            {
+                "name": r["name"],
+                "kind": r["kind"],
+                "x_mm": round(offset_x + r["x"], 1),
+                "y_mm": round(offset_y + r["y"], 1),
+                "w_mm": round(r["w"], 1),
+                "h_mm": round(r["h"], 1),
+                "area_m2": round(_area_m2(r), 2),
+            }
+            for r in rooms
+        ],
+        "doors": door_count,
+        "windows": window_count,
+    }
+
+
+def generate_building(options=None):
+    options = dict(options or {})
+    doc = _ensure_doc()
+    if options.get("clear_previous", True):
+        _clear_previous(doc)
+
+    requested = options.get("building_type", "Aleatorio")
+    seed = int(options.get("seed", 0) or 0)
+    if seed <= 0:
+        seed = int(time.time())
+    rng = random.Random(seed)
+
+    if requested == "Aleatorio":
+        building_type = rng.choice(["Casa", "Oficina"])
+    else:
+        building_type = requested
+
+    levels = max(1, min(int(options.get("levels", 1)), 5))
+    text_size_mm = float(options.get("text_size_mm", DEFAULT_TEXT_SIZE_MM))
+    wall_mm = float(options.get("wall_mm", DEFAULT_WALL_MM))
+
+    width = float(options.get("width_mm", 0) or 0)
+    depth = float(options.get("depth_mm", 0) or 0)
+    if width <= 0 or depth <= 0:
+        if building_type == "Casa":
+            width = rng.uniform(9500, 14500)
+            depth = rng.uniform(7800, 11500)
+        else:
+            width = rng.uniform(18000, 30000)
+            depth = rng.uniform(10500, 18000)
+
+    stamp = int(time.time())
+    group = doc.addObject("App::DocumentObjectGroup", RESULT_PREFIX + str(stamp))
+    group.Label = RESULT_PREFIX + str(stamp)
+    _set_prop(group, "App::PropertyString", "BuildingType", "TestBuilding", "Tipo de edificio", building_type)
+    _set_prop(group, "App::PropertyInteger", "Seed", "TestBuilding", "Semilla usada", seed)
+    _set_prop(group, "App::PropertyInteger", "Levels", "TestBuilding", "Cantidad de niveles", levels)
+
+    payload = {
+        "macro": "GeneradorEdificioPruebas.FCMacro",
+        "building_type": building_type,
+        "seed": seed,
+        "levels": levels,
+        "units": "mm",
+        "notes": "Planta sintetica para pruebas; objetos tienen Role/GA_Role y propiedades TestBuilding.",
+        "floors": [],
+    }
+
+    _msg("--- GeneradorEdificioPruebas ---")
+    _msg("Tipo: %s | Niveles: %d | Semilla: %d" % (building_type, levels, seed))
+
+    for level in range(1, levels + 1):
+        offset_x = (level - 1) * (width + FLOOR_OFFSET_GAP_MM)
+        offset_y = 0.0
+        level_width = width * (rng.uniform(0.86, 0.98) if level > 1 and building_type == "Casa" else 1.0)
+        level_depth = depth * (rng.uniform(0.82, 0.96) if level > 1 and building_type == "Casa" else 1.0)
+        if building_type == "Casa":
+            rooms = _build_house_rooms(rng, level_width, level_depth, level)
+        else:
+            rooms = _build_office_rooms(rng, level_width, level_depth, level)
+        payload["floors"].append(
+            _draw_layout(
+                doc,
+                group,
+                rooms,
+                building_type,
+                level_width,
+                level_depth,
+                level,
+                offset_x,
+                offset_y,
+                text_size_mm,
+                wall_mm,
+            )
+        )
+        _msg("Nivel %d: %d recintos | %.2f m2" % (level, len(rooms), sum(_area_m2(r) for r in rooms)))
+
+    ai_obj, ai_text = _create_ai_text(doc, group, payload)
+    if options.get("copy_ai_context", False):
+        copied = _copy_to_clipboard(ai_text)
+        _msg("Contexto IA copiado al portapapeles." if copied else "No se pudo copiar contexto IA al portapapeles.")
+    doc.recompute()
+
+    try:
+        if Gui is not None and Gui.ActiveDocument is not None:
+            Gui.ActiveDocument.ActiveView.viewTop()
+            Gui.SendMsgToActiveView("ViewFit")
+    except Exception:
+        pass
+
+    _msg("Listo. Grupo generado: %s" % group.Label)
+    _msg("Contexto para IA: %s" % ai_obj.Label)
+    return group
+
+
+class _GeneratorPanel(QtWidgets.QDialog if QtWidgets is not None else object):
+    def __init__(self, parent=None):
+        super(_GeneratorPanel, self).__init__(parent)
+        self.setWindowTitle("Generador de edificios de prueba")
+        try:
+            self.setWindowFlags(self.windowFlags() | QtCore.Qt.Tool)
+        except Exception:
+            pass
+        self._build_ui()
+        self._load()
+
+    def _build_ui(self):
+        layout = QtWidgets.QVBoxLayout(self)
+        intro = QtWidgets.QLabel("Genera una casa u oficina sintetica para probar macros.")
+        layout.addWidget(intro)
+
+        form = QtWidgets.QFormLayout()
+        self.building_type = QtWidgets.QComboBox()
+        self.building_type.addItems(["Aleatorio", "Casa", "Oficina"])
+        form.addRow("Tipo", self.building_type)
+
+        self.seed = QtWidgets.QSpinBox()
+        self.seed.setRange(0, 2147483647)
+        self.seed.setSpecialValueText("Aleatoria")
+        form.addRow("Semilla", self.seed)
+
+        self.levels = QtWidgets.QSpinBox()
+        self.levels.setRange(1, 5)
+        form.addRow("Niveles", self.levels)
+
+        self.width_mm = QtWidgets.QDoubleSpinBox()
+        self.width_mm.setRange(0, 100000)
+        self.width_mm.setDecimals(0)
+        self.width_mm.setSingleStep(500)
+        self.width_mm.setSpecialValueText("Auto")
+        form.addRow("Ancho mm", self.width_mm)
+
+        self.depth_mm = QtWidgets.QDoubleSpinBox()
+        self.depth_mm.setRange(0, 100000)
+        self.depth_mm.setDecimals(0)
+        self.depth_mm.setSingleStep(500)
+        self.depth_mm.setSpecialValueText("Auto")
+        form.addRow("Fondo mm", self.depth_mm)
+
+        self.wall_mm = QtWidgets.QSpinBox()
+        self.wall_mm.setRange(50, 500)
+        form.addRow("Muro mm", self.wall_mm)
+
+        self.text_size_mm = QtWidgets.QSpinBox()
+        self.text_size_mm.setRange(50, 500)
+        form.addRow("Texto mm", self.text_size_mm)
+
+        self.clear_previous = QtWidgets.QCheckBox("Borrar edificios de prueba anteriores")
+        form.addRow("", self.clear_previous)
+
+        self.copy_ai_context = QtWidgets.QCheckBox("Copiar contexto IA al portapapeles")
+        form.addRow("", self.copy_ai_context)
+
+        layout.addLayout(form)
+
+        row = QtWidgets.QHBoxLayout()
+        self.generate_btn = QtWidgets.QPushButton("Generar")
+        self.random_seed_btn = QtWidgets.QPushButton("Nueva semilla")
+        self.close_btn = QtWidgets.QPushButton("Cerrar")
+        row.addWidget(self.generate_btn)
+        row.addWidget(self.random_seed_btn)
+        row.addStretch(1)
+        row.addWidget(self.close_btn)
+        layout.addLayout(row)
+
+        self.status = QtWidgets.QLabel("")
+        layout.addWidget(self.status)
+
+        self.generate_btn.clicked.connect(self._on_generate)
+        self.random_seed_btn.clicked.connect(self._on_random_seed)
+        self.close_btn.clicked.connect(self.close)
+
+    def _load(self):
+        p = _params()
+        self.building_type.setCurrentText(p.GetString("building_type", "Aleatorio") if p else "Aleatorio")
+        self.seed.setValue(p.GetInt("seed", 0) if p else 0)
+        self.levels.setValue(p.GetInt("levels", 1) if p else 1)
+        self.width_mm.setValue(p.GetFloat("width_mm", 0.0) if p else 0.0)
+        self.depth_mm.setValue(p.GetFloat("depth_mm", 0.0) if p else 0.0)
+        self.wall_mm.setValue(p.GetInt("wall_mm", DEFAULT_WALL_MM) if p else DEFAULT_WALL_MM)
+        self.text_size_mm.setValue(p.GetInt("text_size_mm", DEFAULT_TEXT_SIZE_MM) if p else DEFAULT_TEXT_SIZE_MM)
+        self.clear_previous.setChecked(p.GetBool("clear_previous", True) if p else True)
+        self.copy_ai_context.setChecked(p.GetBool("copy_ai_context", False) if p else False)
+
+    def _save(self):
+        p = _params()
+        if not p:
+            return
+        p.SetString("building_type", self.building_type.currentText())
+        p.SetInt("seed", int(self.seed.value()))
+        p.SetInt("levels", int(self.levels.value()))
+        p.SetFloat("width_mm", float(self.width_mm.value()))
+        p.SetFloat("depth_mm", float(self.depth_mm.value()))
+        p.SetInt("wall_mm", int(self.wall_mm.value()))
+        p.SetInt("text_size_mm", int(self.text_size_mm.value()))
+        p.SetBool("clear_previous", bool(self.clear_previous.isChecked()))
+        p.SetBool("copy_ai_context", bool(self.copy_ai_context.isChecked()))
+
+    def _state(self):
+        return {
+            "building_type": self.building_type.currentText(),
+            "seed": int(self.seed.value()),
+            "levels": int(self.levels.value()),
+            "width_mm": float(self.width_mm.value()),
+            "depth_mm": float(self.depth_mm.value()),
+            "wall_mm": int(self.wall_mm.value()),
+            "text_size_mm": int(self.text_size_mm.value()),
+            "clear_previous": bool(self.clear_previous.isChecked()),
+            "copy_ai_context": bool(self.copy_ai_context.isChecked()),
+        }
+
+    def _on_random_seed(self):
+        self.seed.setValue(int(time.time()) & 0x7FFFFFFF)
+
+    def _on_generate(self):
+        self._save()
+        self.status.setText("Generando...")
+        try:
+            QtWidgets.QApplication.processEvents()
+        except Exception:
+            pass
+        try:
+            group = generate_building(self._state())
+            self.status.setText("Generado: %s" % group.Label)
+        except Exception as exc:
+            self.status.setText("Error: %s" % exc)
+            _error("Error en GeneradorEdificioPruebas: %s" % exc)
+            try:
+                import traceback
+
+                _error(traceback.format_exc())
+            except Exception:
+                pass
+
+
+def _show_panel():
+    if QtWidgets is None:
+        generate_building()
+        return
+    try:
+        old = getattr(App, "_GeneradorEdificioPruebasPanel", None)
+        if old is not None:
+            old.close()
+    except Exception:
+        pass
+    panel = _GeneratorPanel()
+    App._GeneradorEdificioPruebasPanel = panel
+    panel.show()
+    try:
+        panel.raise_()
+    except Exception:
+        pass
+
+
+if __name__ == "__main__":
+    _show_panel()
