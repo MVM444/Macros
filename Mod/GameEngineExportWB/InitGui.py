@@ -14,7 +14,12 @@ import FreeCADGui
 import os
 
 from .commands import cmd_add_light_properties
+from .commands import cmd_bim_doors_windows
+from .commands import cmd_import_json_example
 from .commands import cmd_open_panel
+from .commands import cmd_quick_examples
+from .commands import cmd_reload_workbench
+from .commands import cmd_roof_quick_example
 
 LOG_PREFIX = "[GAMEEXPORT] "
 WORKBENCH_ID = "GameEngineExportWorkbench"
@@ -36,10 +41,28 @@ class GameEngineExportWorkbench(FreeCADGui.Workbench):
         FreeCAD.Console.PrintMessage(LOG_PREFIX + "Workbench source: " + os.path.dirname(__file__) + "\n")
         export_command = cmd_open_panel.CommandClass()
         light_command = cmd_add_light_properties.CommandClass()
+        quick_example_command = cmd_quick_examples.CommandClass()
+        import_json_command = cmd_import_json_example.CommandClass()
+        bim_doors_windows_command = cmd_bim_doors_windows.CommandClass()
+        roof_command = cmd_roof_quick_example.CommandClass()
+        reload_command = cmd_reload_workbench.CommandClass()
         FreeCADGui.addCommand(export_command.CommandName, export_command)
         FreeCADGui.addCommand(light_command.CommandName, light_command)
+        FreeCADGui.addCommand(quick_example_command.CommandName, quick_example_command)
+        FreeCADGui.addCommand(import_json_command.CommandName, import_json_command)
+        FreeCADGui.addCommand(bim_doors_windows_command.CommandName, bim_doors_windows_command)
+        FreeCADGui.addCommand(roof_command.CommandName, roof_command)
+        FreeCADGui.addCommand(reload_command.CommandName, reload_command)
         FreeCAD.Console.PrintMessage(LOG_PREFIX + "Registered export command: " + export_command.CommandName + "\n")
-        commands = [export_command.CommandName, light_command.CommandName]
+        commands = [
+            export_command.CommandName,
+            light_command.CommandName,
+            quick_example_command.CommandName,
+            import_json_command.CommandName,
+            bim_doors_windows_command.CommandName,
+            roof_command.CommandName,
+            reload_command.CommandName,
+        ]
         self.appendToolbar("Game Engine Export", commands)
         self.appendMenu("Game Engine Export", commands)
 

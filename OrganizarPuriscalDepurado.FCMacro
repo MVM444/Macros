@@ -1,0 +1,211 @@
+# -*- coding: utf-8 -*-
+# MenuText: FA Organizar Puriscal Depurado
+# ToolTip: Crea jerarquia Sitio-Edificio sin niveles y agrega una acera frontal de 2 m.
+
+"""Ordena el modelo depurado de Puriscal con jerarquia espacial BIM.
+
+Jerarquia:
+    Sitio Puriscal
+      - Obras exteriores (acera frontal)
+      - Edificio Puriscal (un nivel, sin objeto Level)
+          - Elementos constructivos
+          - Puertas y ventanas
+          - Cielos suspendidos
+          - Espacios de referencia
+          - Fuentes y auxiliares
+
+No elimina geometria. Los objetos fuente y de analisis se conservan ocultos.
+La macro es idempotente y puede ejecutarse nuevamente.
+"""
+
+from __future__ import annotations
+
+import Arch
+import FreeCAD as App
+import FreeCADGui as Gui
+
+
+GENERATED_BY = "FA_OrganizePuriscalDepurado"
+FRONT_X_MIN = 14365.257
+FRONT_X_MAX = 25956.500
+FRONT_Y = 2608.2783
+SIDEWALK_DEPTH = 2000.0
+SIDEWALK_THICKNESS = 150.0
+
+
+def add_prop(obj, prop_type, name, group, description):
+    if name not in list(getattr(obj, "PropertiesList", []) or []):
+        obj.addProperty(prop_type, name, group, description)
+
+
+def get_or_create_group(doc, name, label):
+    group = doc.getObject(name)
+    if group is None:
+        group = doc.addObject("App::DocumentObjectGroup", name)
+    group.Label = label
+    add_prop(group, "App::PropertyString", "FA_GeneratedBy", "FacilArquitectura", "Generador")
+    group.FA_GeneratedBy = GENERATED_BY
+    return group
+
+
+def get_or_create_site(doc):
+    site = doc.getObject("PD_Site") or doc.getObject("Site")
+    if site is None or str(getattr(site, "IfcType", "")) != "Site":
+        site = Arch.makeSite(name="Sitio y terreno - Puriscal")
+    site.Label = "Sitio y terreno - Puriscal"
+    add_prop(site, "App::PropertyString", "FA_GeneratedBy", "FacilArquitectura", "Generador")
+    add_prop(site, "App::PropertyString", "FA_Role", "FacilArquitectura", "Rol")
+    site.FA_GeneratedBy = GENERATED_BY
+    site.FA_Role = "site"
+    return site
+
+
+def get_or_create_building(doc):
+    building = doc.getObject("PD_Building") or doc.getObject("Building")
+    if building is None or str(getattr(building, "IfcType", "")) != "Building":
+        building = Arch.makeBuilding(name="Edificio Puriscal - un nivel")
+    building.Label = "Edificio Puriscal - un nivel"
+    add_prop(building, "App::PropertyString", "FA_GeneratedBy", "FacilArquitectura", "Generador")
+    add_prop(building, "App::PropertyString", "FA_Role", "FacilArquitectura", "Rol")
+    add_prop(building, "App::PropertyInteger", "FA_StoreyCount", "FacilArquitectura", "Cantidad de pisos")
+    building.FA_GeneratedBy = GENERATED_BY
+    building.FA_Role = "building"
+    building.FA_StoreyCount = 1
+    return building
+
+
+def get_or_create_sidewalk(doc):
+    sidewalk = doc.getObject("PD_Sidewalk")
+    length = FRONT_X_MAX - FRONT_X_MIN
+    if sidewalk is None:
+        sidewalk = Arch.makeStructure(
+            length=length,
+            width=SIDEWALK_DEPTH,
+            height=SIDEWALK_THICKNESS,
+            name="Acera frontal 2.00 m",
+        )
+        sidewalk.Label = "Acera frontal 2.00 m"
+    sidewalk.Length = length
+    sidewalk.Width = SIDEWALK_DEPTH
+    sidewalk.Height = SIDEWALK_THICKNESS
+    sidewalk.Placement.Base = App.Vector(
+        (FRONT_X_MIN + FRONT_X_MAX) * 0.5,
+        FRONT_Y - SIDEWALK_DEPTH * 0.5,
+        -SIDEWALK_THICKNESS,
+    )
+    sidewalk.IfcType = "Slab"
+    add_prop(sidewalk, "App::PropertyString", "FA_GeneratedBy", "FacilArquitectura", "Generador")
+    add_prop(sidewalk, "App::PropertyString", "FA_Role", "FacilArquitectura", "Rol")
+    add_prop(sidewalk, "App::PropertyLength", "FA_SidewalkDepth", "FacilArquitectura", "Fondo de acera")
+    add_prop(sidewalk, "App::PropertyString", "FA_Description", "FacilArquitectura", "Descripcion")
+    sidewalk.FA_GeneratedBy = GENERATED_BY
+    sidewalk.FA_Role = "sidewalk"
+    sidewalk.FA_SidewalkDepth = SIDEWALK_DEPTH
+    sidewalk.FA_Description = "Acera de concreto frente a la fachada principal"
+    try:
+        sidewalk.ViewObject.ShapeColor = (0.72, 0.72, 0.68)
+        sidewalk.ViewObject.LineColor = (0.25, 0.25, 0.22)
+    except Exception:
+        pass
+    return sidewalk
+
+
+doc = App.ActiveDocument
+if doc is None:
+    raise RuntimeError("Abra Puriscal Depurado antes de ejecutar la macro.")
+
+doc.openTransaction("Organizar Puriscal Depurado y crear acera")
+try:
+    site = get_or_create_site(doc)
+    building = get_or_create_building(doc)
+    exterior_group = get_or_create_group(doc, "PD_SiteWorks", "Terreno y obras exteriores")
+    construction_group = get_or_create_group(doc, "PD_Construction", "Elementos constructivos")
+    openings_group = get_or_create_group(doc, "PD_Openings", "Puertas y ventanas")
+    ceilings_group = get_or_create_group(doc, "PD_Ceilings", "Cielos suspendidos")
+    spaces_group = get_or_create_group(doc, "PD_Spaces", "Espacios de referencia")
+    references_group = get_or_create_group(doc, "PD_References", "Fuentes y auxiliares")
+    sidewalk = get_or_create_sidewalk(doc)
+
+    hierarchy_objects = {
+        site, building, exterior_group, construction_group, openings_group,
+        ceilings_group, spaces_group, references_group, sidewalk,
+    }
+
+    construction = []
+    openings = []
+    ceilings = []
+    spaces = []
+    for obj in list(doc.Objects):
+        if obj in hierarchy_objects:
+            continue
+        role = str(getattr(obj, "FA_Role", "") or "").lower()
+        ifc_type = str(getattr(obj, "IfcType", "") or "").lower()
+        if role in ("wall", "floor_slab") or ifc_type in ("wall", "slab"):
+            construction.append(obj)
+        elif role in ("door", "window") or ifc_type in ("door", "window"):
+            openings.append(obj)
+        elif role == "ceiling_panels":
+            ceilings.append(obj)
+        elif role == "room_polygon":
+            spaces.append(obj)
+
+    categorized = set(construction + openings + ceilings + spaces)
+    claimed_bases = {
+        getattr(obj, "Base", None)
+        for obj in categorized
+        if getattr(obj, "Base", None) is not None
+    }
+    references = [
+        obj for obj in list(doc.Objects)
+        if obj not in hierarchy_objects
+        and obj not in categorized
+        and obj not in claimed_bases
+    ]
+
+    for obj in construction:
+        construction_group.addObject(obj)
+    for obj in openings:
+        openings_group.addObject(obj)
+    for obj in ceilings:
+        ceilings_group.addObject(obj)
+    for obj in spaces:
+        spaces_group.addObject(obj)
+    for obj in references:
+        references_group.addObject(obj)
+
+    exterior_group.addObject(sidewalk)
+    for subgroup in (
+        construction_group, openings_group, ceilings_group,
+        spaces_group, references_group,
+    ):
+        building.addObject(subgroup)
+    site.Group = [building, exterior_group]
+
+    building.ViewObject.Visibility = True
+    site.ViewObject.Visibility = True
+    construction_group.ViewObject.Visibility = True
+    openings_group.ViewObject.Visibility = True
+    ceilings_group.ViewObject.Visibility = True
+    exterior_group.ViewObject.Visibility = True
+    spaces_group.ViewObject.Visibility = False
+    references_group.ViewObject.Visibility = False
+
+    add_prop(site, "App::PropertyString", "FA_Hierarchy", "FacilArquitectura", "Jerarquia aplicada")
+    site.FA_Hierarchy = "Site > Building > grupos funcionales (sin Level)"
+    add_prop(building, "App::PropertyInteger", "FA_OrganizedObjectCount", "FacilArquitectura", "Objetos clasificados")
+    building.FA_OrganizedObjectCount = len(categorized) + len(references)
+
+    doc.recompute()
+    doc.commitTransaction()
+    doc.recompute()
+    doc.save()
+except Exception:
+    doc.abortTransaction()
+    raise
+
+Gui.activeDocument().activeView().viewAxonometric()
+Gui.activeDocument().activeView().fitAll()
+App.Console.PrintMessage(
+    "[FACILARQ] Puriscal Depurado organizado sin niveles. Acera frontal: %.2f x %.2f m.\n"
+    % ((FRONT_X_MAX - FRONT_X_MIN) * 0.001, SIDEWALK_DEPTH * 0.001)
+)

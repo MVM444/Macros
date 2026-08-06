@@ -1,0 +1,56 @@
+# -*- coding: utf-8 -*-
+# MenuText: FA Analizar areas desde muro BIM
+# ToolTip: Crea el analisis rectangular de recintos desde uno o varios muros BIM seleccionados.
+# Icon: FacilArquitecturaLoader.svg
+
+from __future__ import annotations
+
+import os
+
+import FreeCAD as App
+import FreeCADGui as Gui
+
+
+def is_bim_wall(obj):
+    role = str(getattr(obj, "FA_Role", "") or "").strip().lower()
+    generated_by = str(getattr(obj, "FA_GeneratedBy", "") or "")
+    proxy_type = str(getattr(getattr(obj, "Proxy", None), "Type", "") or "").lower()
+    solids = list(getattr(getattr(obj, "Shape", None), "Solids", []) or [])
+    return bool(solids) and (
+        role in ("wall", "reconstructed_wall")
+        or generated_by in ("FA_CreateWallsBIM", "FA_CreateBuildingGrid")
+        or proxy_type == "wall"
+    )
+
+
+doc = App.ActiveDocument
+if doc is None:
+    raise RuntimeError("Abra un documento antes de ejecutar la macro.")
+
+selected = list(Gui.Selection.getSelection() or [])
+walls = [obj for obj in selected if is_bim_wall(obj)]
+if not walls or len(walls) != len(selected):
+    raise RuntimeError("Seleccione uno o varios muros BIM, sin mezclar otros objetos.")
+
+invalid = []
+for wall in walls:
+    source = (
+        getattr(wall, "FA_SourceSketch", None)
+        or getattr(wall, "Base", None)
+        or getattr(wall, "FA_SourceGridTrace", None)
+    )
+    if source is None or not (
+        list(getattr(source, "Geometry", []) or [])
+        or list(getattr(getattr(source, "Shape", None), "Edges", []) or [])
+    ):
+        invalid.append(str(getattr(wall, "Label", wall.Name)))
+if invalid:
+    raise RuntimeError("Muros sin eje/base utilizable: %s" % ", ".join(invalid))
+
+engine = os.path.join(os.path.dirname(os.path.abspath(__file__)), "CrearAnalisisAreasRectangulares.FCMacro")
+namespace = {
+    "__name__": "__main__",
+    "__file__": engine,
+    "ELECTRICCR_SELECTED_BIM_WALLS": walls,
+}
+exec(compile(open(engine, "rb").read(), engine, "exec"), namespace)

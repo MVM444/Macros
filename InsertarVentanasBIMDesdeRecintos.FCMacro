@@ -1,0 +1,474 @@
+# -*- coding: utf-8 -*-
+# MenuText: FA Insertar ventanas BIM desde recintos
+# ToolTip: Inserta ventanas BIM nativas desde Sketch_Centros_Ventanas y las aloja en el muro.
+# Icon: FacilArquitecturaLoader.svg
+
+from __future__ import annotations
+
+import math
+
+import FreeCAD as App
+import FreeCADGui as Gui
+import Arch
+
+
+GENERATED_BY = "FA_InsertWindowsBIM"
+GROUP_NAME = "FA_BIMWindows"
+SHEET_NAME = "Spreadsheet_Ventanas_BIM"
+DEFAULT_SILL_MM = 900.0
+DEFAULT_HEIGHT_MM = 1200.0
+FRAME_WIDTH_MM = 60.0
+PANEL_DEPTH_MM = 40.0
+MAX_WALL_OFFSET_MM = 250.0
+MAX_WALL_OVERHANG_MM = 500.0
+PARALLEL_DOT_MIN = 0.95
+COLLINEAR_TOLERANCE_MM = 80.0
+ROOM_SAMPLE_MM = 250.0
+
+
+def add_prop(obj, prop_type, name, group, description):
+    if name not in list(getattr(obj, "PropertiesList", []) or []):
+        obj.addProperty(prop_type, name, group, description)
+
+
+def quantity_value(value, default=0.0):
+    try:
+        return float(getattr(value, "Value", value))
+    except Exception:
+        return float(default)
+
+
+def read_parameter(doc, name, default):
+    sheet = doc.getObject("Spreadsheet_Parametros")
+    if sheet is None:
+        return float(default)
+    for row in range(1, 120):
+        try:
+            key = str(sheet.get("A%d" % row) or "").strip()
+        except Exception:
+            key = ""
+        if key != name:
+            continue
+        try:
+            return float(str(sheet.get("B%d" % row)).replace(" mm", "").strip())
+        except Exception:
+            return float(default)
+    return float(default)
+
+
+def is_bim_wall(obj):
+    if obj is None:
+        return False
+    role = str(getattr(obj, "FA_Role", "") or "").lower()
+    generated_by = str(getattr(obj, "FA_GeneratedBy", "") or "")
+    return bool(list(getattr(getattr(obj, "Shape", None), "Solids", []) or [])) and (
+        role in ("wall", "reconstructed_wall")
+        or generated_by in ("FA_CreateWallsBIM", "FA_CreateBuildingGrid")
+    )
+
+
+def wall_centerline(wall):
+    for attr in ("FA_SourceSketch", "Base", "FA_SourceGridTrace"):
+        source = getattr(wall, attr, None)
+        if source is not None and list(getattr(source, "Geometry", []) or []):
+            return source
+    return None
+
+
+def find_wall(doc):
+    for obj in list(Gui.Selection.getSelection() or []):
+        if is_bim_wall(obj) and wall_centerline(obj) is not None:
+            return obj
+    candidates = []
+    for obj in doc.Objects:
+        if not is_bim_wall(obj) or wall_centerline(obj) is None:
+            continue
+        source = wall_centerline(obj)
+        score = 100 if str(getattr(source, "FA_Role", "") or "") == "grid_clipped_lines" else 0
+        score += 40 if str(getattr(obj, "FA_GeneratedBy", "") or "") == "FA_CreateWallsBIM" else 0
+        candidates.append((score, obj))
+    return max(candidates, key=lambda item: item[0])[1] if candidates else None
+
+
+def source_segments(sketch):
+    placement = sketch.getGlobalPlacement()
+    result = []
+    for index, geometry in enumerate(list(getattr(sketch, "Geometry", []) or [])):
+        if not hasattr(geometry, "StartPoint") or not hasattr(geometry, "EndPoint"):
+            continue
+        first = placement.multVec(geometry.StartPoint)
+        second = placement.multVec(geometry.EndPoint)
+        length = first.distanceToPoint(second)
+        if length <= 1.0:
+            continue
+        result.append(
+            {
+                "index": index,
+                "first": App.Vector(first.x, first.y, 0.0),
+                "second": App.Vector(second.x, second.y, 0.0),
+                "unit": ((second.x - first.x) / length, (second.y - first.y) / length),
+                "length": length,
+            }
+        )
+    return result
+
+
+def project_to_line(point, first, second):
+    dx = second.x - first.x
+    dy = second.y - first.y
+    length_sq = dx * dx + dy * dy
+    if length_sq <= 1e-9:
+        return 999999.0, App.Vector(point.x, point.y, 0.0)
+    parameter = ((point.x - first.x) * dx + (point.y - first.y) * dy) / length_sq
+    projected = App.Vector(first.x + parameter * dx, first.y + parameter * dy, 0.0)
+    return point.distanceToPoint(projected), projected
+
+
+def scalar_on_line(point, origin, unit):
+    return (point.x - origin.x) * unit[0] + (point.y - origin.y) * unit[1]
+
+
+def closest_wall_line(axis, wall_segments):
+    candidates = []
+    for wall in wall_segments:
+        parallel = abs(axis["unit"][0] * wall["unit"][0] + axis["unit"][1] * wall["unit"][1])
+        if parallel < PARALLEL_DOT_MIN:
+            continue
+        d0, q0 = project_to_line(axis["first"], wall["first"], wall["second"])
+        d1, q1 = project_to_line(axis["second"], wall["first"], wall["second"])
+        offset = (d0 + d1) * 0.5
+        if offset > MAX_WALL_OFFSET_MM:
+            continue
+        peers = []
+        for peer in wall_segments:
+            peer_parallel = abs(wall["unit"][0] * peer["unit"][0] + wall["unit"][1] * peer["unit"][1])
+            if peer_parallel < PARALLEL_DOT_MIN:
+                continue
+            pd0, _pq0 = project_to_line(peer["first"], wall["first"], wall["second"])
+            pd1, _pq1 = project_to_line(peer["second"], wall["first"], wall["second"])
+            if max(pd0, pd1) <= COLLINEAR_TOLERANCE_MM:
+                peers.append(peer)
+        if not peers:
+            continue
+        values = []
+        for peer in peers:
+            values.extend(
+                (
+                    scalar_on_line(peer["first"], wall["first"], wall["unit"]),
+                    scalar_on_line(peer["second"], wall["first"], wall["unit"]),
+                )
+            )
+        axis_values = (
+            scalar_on_line(q0, wall["first"], wall["unit"]),
+            scalar_on_line(q1, wall["first"], wall["unit"]),
+        )
+        support_min, support_max = min(values), max(values)
+        axis_min, axis_max = min(axis_values), max(axis_values)
+        overhang = max(0.0, support_min - axis_min, axis_max - support_max)
+        score = offset + overhang * 10.0 + (1.0 - parallel) * 1000.0
+        candidates.append((score, offset, overhang, q0, q1, wall))
+    return min(candidates, key=lambda item: item[0]) if candidates else None
+
+
+def area_rectangles(doc):
+    group = doc.getObject("FA_RectangularAreas")
+    result = []
+    for obj in list(getattr(group, "Group", []) or []):
+        if not hasattr(obj, "Shape") or str(getattr(obj, "ElectricCRTipo", "") or "") != "Area":
+            continue
+        box = obj.Shape.BoundBox
+        result.append(
+            {
+                "object": obj,
+                "name": str(getattr(obj, "Recinto", obj.Label) or obj.Label),
+                "rect": (box.XMin, box.YMin, box.XMax, box.YMax),
+            }
+        )
+    return result
+
+
+def contains(point, rectangle, margin=5.0):
+    x1, y1, x2, y2 = rectangle
+    return x1 - margin <= point.x <= x2 + margin and y1 - margin <= point.y <= y2 + margin
+
+
+def rooms_on_sides(first, second, wall_half_width, rooms):
+    direction = second.sub(first)
+    length = direction.Length
+    if length <= 1.0:
+        return ([], [])
+    unit = (direction.x / length, direction.y / length)
+    normal = (-unit[1], unit[0])
+    distance = wall_half_width + ROOM_SAMPLE_MM
+    found = [[], []]
+    for fraction in (0.15, 0.5, 0.85):
+        center = first.add(direction.multiply(fraction))
+        samples = (
+            App.Vector(center.x + normal[0] * distance, center.y + normal[1] * distance, 0.0),
+            App.Vector(center.x - normal[0] * distance, center.y - normal[1] * distance, 0.0),
+        )
+        for side, sample in enumerate(samples):
+            for room in rooms:
+                if contains(sample, room["rect"]) and room not in found[side]:
+                    found[side].append(room)
+    return tuple(found)
+
+
+def remove_previous(doc):
+    window_names = []
+    base_names = []
+    for obj in list(doc.Objects):
+        if str(getattr(obj, "FA_GeneratedBy", "") or "") != GENERATED_BY:
+            continue
+        role = str(getattr(obj, "FA_Role", "") or "")
+        if role == "window":
+            window_names.append(obj.Name)
+            base = getattr(obj, "Base", None)
+            if base is not None:
+                base_names.append(base.Name)
+        elif role == "window_base":
+            base_names.append(obj.Name)
+    for name in window_names:
+        obj = doc.getObject(name)
+        if obj is not None:
+            try:
+                obj.Hosts = []
+            except Exception:
+                pass
+            doc.removeObject(name)
+    for name in base_names:
+        if doc.getObject(name) is not None:
+            doc.removeObject(name)
+    old_group = doc.getObject(GROUP_NAME)
+    if old_group is not None:
+        doc.removeObject(old_group.Name)
+    old_sheet = doc.getObject(SHEET_NAME)
+    if old_sheet is not None:
+        doc.removeObject(old_sheet.Name)
+
+
+def ensure_group(doc, wall, trace, axes, sill, height):
+    group = doc.addObject("App::DocumentObjectGroup", GROUP_NAME)
+    group.Label = "Ventanas BIM desde ejes y recintos"
+    add_prop(group, "App::PropertyLink", "FA_SourceWall", "FacilArquitectura", "Muro BIM anfitrion")
+    add_prop(group, "App::PropertyLink", "FA_SourceCenterline", "FacilArquitectura", "Centro del muro")
+    add_prop(group, "App::PropertyLink", "FA_SourceWindowAxes", "FacilArquitectura", "Ejes de ventanas")
+    add_prop(group, "App::PropertyString", "FA_GeneratedBy", "FacilArquitectura", "Generador")
+    add_prop(group, "App::PropertyInteger", "FA_WindowCount", "FacilArquitectura", "Ventanas creadas")
+    add_prop(group, "App::PropertyInteger", "FA_RejectedAxisCount", "FacilArquitectura", "Ejes rechazados")
+    add_prop(group, "App::PropertyLength", "FA_SillHeight", "FacilArquitectura", "Antepecho")
+    add_prop(group, "App::PropertyLength", "FA_WindowHeight", "FacilArquitectura", "Altura")
+    group.FA_SourceWall = wall
+    group.FA_SourceCenterline = trace
+    group.FA_SourceWindowAxes = axes
+    group.FA_GeneratedBy = GENERATED_BY
+    group.FA_SillHeight = sill
+    group.FA_WindowHeight = height
+    parent = doc.getObject("FA_BIM")
+    if parent is not None:
+        parent.addObject(group)
+    return group
+
+
+def tag_window(window, base, wall, trace, axes, record):
+    for obj, role in ((window, "window"), (base, "window_base")):
+        add_prop(obj, "App::PropertyString", "FA_GeneratedBy", "FacilArquitectura", "Generador")
+        add_prop(obj, "App::PropertyString", "FA_Role", "FacilArquitectura", "Rol")
+        obj.FA_GeneratedBy = GENERATED_BY
+        obj.FA_Role = role
+    add_prop(window, "App::PropertyLink", "FA_SourceWall", "FacilArquitectura", "Muro BIM anfitrion")
+    add_prop(window, "App::PropertyLink", "FA_SourceCenterline", "FacilArquitectura", "Centro del muro")
+    add_prop(window, "App::PropertyLink", "FA_SourceWindowAxes", "FacilArquitectura", "Sketch de ejes")
+    add_prop(window, "App::PropertyInteger", "FA_SourceGeometryIndex", "FacilArquitectura", "Indice del eje")
+    add_prop(window, "App::PropertyLength", "FA_WallOffset", "FacilArquitectura", "Desfase al muro")
+    add_prop(window, "App::PropertyLength", "FA_SillHeight", "FacilArquitectura", "Antepecho")
+    add_prop(window, "App::PropertyLength", "FA_WindowHeight", "FacilArquitectura", "Altura")
+    add_prop(window, "App::PropertyString", "FA_PresetName", "FacilArquitectura", "Preset BIM")
+    add_prop(window, "App::PropertyLinkList", "FA_AdjacentRooms", "FacilArquitectura", "Recintos adyacentes")
+    add_prop(window, "App::PropertyString", "FA_AdjacentRoomNames", "FacilArquitectura", "Nombres adyacentes")
+    add_prop(window, "App::PropertyFloat", "FA_InferenceConfidence", "FacilArquitectura", "Confianza")
+    adjacent = record["side_a"] + [room for room in record["side_b"] if room not in record["side_a"]]
+    window.FA_SourceWall = wall
+    window.FA_SourceCenterline = trace
+    window.FA_SourceWindowAxes = axes
+    window.FA_SourceGeometryIndex = record["axis_index"]
+    window.FA_WallOffset = record["wall_offset"]
+    window.FA_SillHeight = record["sill"]
+    window.FA_WindowHeight = record["height"]
+    window.FA_PresetName = record["preset"]
+    window.FA_AdjacentRooms = [room["object"] for room in adjacent]
+    window.FA_AdjacentRoomNames = " | ".join(room["name"] for room in adjacent)
+    window.FA_InferenceConfidence = record["confidence"]
+    add_prop(base, "App::PropertyLink", "FA_SourceWindowAxes", "FacilArquitectura", "Sketch de ejes")
+    add_prop(base, "App::PropertyInteger", "FA_SourceGeometryIndex", "FacilArquitectura", "Indice del eje")
+    base.FA_SourceWindowAxes = axes
+    base.FA_SourceGeometryIndex = record["axis_index"]
+
+
+def write_report(doc, group, rows, wall, axes):
+    sheet = doc.addObject("Spreadsheet::Sheet", SHEET_NAME)
+    sheet.Label = "Informe de ventanas BIM"
+    headers = (
+        "Eje", "Ancho_mm", "Desfase_muro_mm", "Preset_BIM", "Antepecho_mm",
+        "Altura_mm", "Lado_A", "Lado_B", "Confianza", "Estado", "Host",
+    )
+    for column, header in enumerate(headers):
+        cell = "%s1" % chr(ord("A") + column)
+        sheet.set(cell, header)
+        sheet.setStyle(cell, "bold", "add")
+    for row_number, row in enumerate(rows, 2):
+        values = (
+            row["axis_index"], "%.2f" % row["width"], "%.2f" % row["wall_offset"],
+            row.get("preset", ""), "%.2f" % row.get("sill", 0.0),
+            "%.2f" % row.get("height", 0.0), row.get("side_a_names", ""),
+            row.get("side_b_names", ""), "%.2f" % row.get("confidence", 0.0),
+            row["status"], wall.Name if row["status"] == "Creada" else "",
+        )
+        for column, value in enumerate(values):
+            sheet.set("%s%d" % (chr(ord("A") + column), row_number), str(value))
+    for column, width in zip("ABCDEFGHIJK", (55, 85, 115, 130, 105, 90, 190, 190, 85, 145, 85)):
+        sheet.setColumnWidth(column, width)
+    add_prop(sheet, "App::PropertyLink", "FA_SourceWall", "FacilArquitectura", "Muro BIM anfitrion")
+    add_prop(sheet, "App::PropertyLink", "FA_SourceWindowAxes", "FacilArquitectura", "Ejes de ventanas")
+    add_prop(sheet, "App::PropertyString", "FA_GeneratedBy", "FacilArquitectura", "Generador")
+    sheet.FA_SourceWall = wall
+    sheet.FA_SourceWindowAxes = axes
+    sheet.FA_GeneratedBy = GENERATED_BY
+    group.addObject(sheet)
+    return sheet
+
+
+doc = App.ActiveDocument
+if doc is None:
+    raise RuntimeError("Abra un documento antes de ejecutar la macro.")
+wall = find_wall(doc)
+if wall is None:
+    raise RuntimeError("No se encontro un muro BIM con Sketch base.")
+trace = wall_centerline(wall)
+axes = doc.getObject("Sketch_Centros_Ventanas")
+if axes is None:
+    raise RuntimeError("No se encontro Sketch_Centros_Ventanas.")
+rooms = area_rectangles(doc)
+wall_width = quantity_value(getattr(wall, "Width", 0.0), 120.0)
+wall_half_width = wall_width * 0.5
+sill = read_parameter(doc, "window_sill_mm", DEFAULT_SILL_MM)
+height = read_parameter(doc, "window_height_mm", DEFAULT_HEIGHT_MM)
+wall_segments = source_segments(trace)
+window_axes = source_segments(axes)
+
+doc.openTransaction("FA Insertar ventanas BIM desde recintos")
+try:
+    remove_previous(doc)
+    doc.recompute()
+    group = ensure_group(doc, wall, trace, axes, sill, height)
+    created = []
+    rejected = 0
+    report_rows = []
+    for axis in window_axes:
+        match = closest_wall_line(axis, wall_segments)
+        row = {
+            "axis_index": axis["index"],
+            "width": axis["length"],
+            "wall_offset": match[1] if match else 999999.0,
+            "status": "Rechazado",
+        }
+        if match is None or match[1] > MAX_WALL_OFFSET_MM or match[2] > MAX_WALL_OVERHANG_MM:
+            row["status"] = "Rechazado: no coincide con muro"
+            row["confidence"] = 0.0
+            report_rows.append(row)
+            rejected += 1
+            continue
+        _score, wall_offset, overhang, first, second, _wall_segment = match
+        direction = second.sub(first)
+        width = direction.Length
+        if width < 300.0 or width > 6000.0:
+            row["status"] = "Rechazado: ancho no plausible"
+            row["confidence"] = 0.0
+            report_rows.append(row)
+            rejected += 1
+            continue
+        unit = (direction.x / width, direction.y / width)
+        normal = (-unit[1], unit[0])
+        origin = App.Vector(
+            first.x - normal[0] * wall_half_width,
+            first.y - normal[1] * wall_half_width,
+            sill,
+        )
+        angle = math.degrees(math.atan2(unit[1], unit[0]))
+        rotation = App.Rotation(App.Vector(0, 0, 1), angle).multiply(
+            App.Rotation(App.Vector(1, 0, 0), 90)
+        )
+        placement = App.Placement(origin, rotation)
+        preset = "Open 1-pane" if width < 900.0 else "Sliding 2-pane"
+        side_a, side_b = rooms_on_sides(first, second, wall_half_width, rooms)
+        confidence = 0.95
+        if wall_offset > 80.0 or overhang > 100.0:
+            confidence = 0.80
+        if not side_a and not side_b:
+            confidence = min(confidence, 0.70)
+        window = Arch.makeWindowPreset(
+            preset,
+            width=width,
+            height=height,
+            h1=FRAME_WIDTH_MM,
+            h2=FRAME_WIDTH_MM,
+            h3=0.0,
+            w1=wall_width,
+            w2=PANEL_DEPTH_MM,
+            o1=0.0,
+            o2=(wall_width - PANEL_DEPTH_MM) * 0.5,
+            placement=placement,
+        )
+        if window is None:
+            row["status"] = "Error al crear preset BIM"
+            row["confidence"] = 0.0
+            report_rows.append(row)
+            rejected += 1
+            continue
+        adjacent_names = [room["name"] for room in side_a + [r for r in side_b if r not in side_a]]
+        window.Label = "Ventana BIM - %s - %02d" % (
+            " / ".join(adjacent_names) if adjacent_names else "sin recinto",
+            axis["index"] + 1,
+        )
+        window.Opening = 0
+        window.SymbolPlan = True
+        window.Hosts = [wall]
+        record = {
+            "axis_index": axis["index"], "wall_offset": wall_offset,
+            "sill": sill, "height": height, "preset": preset,
+            "side_a": side_a, "side_b": side_b, "confidence": confidence,
+        }
+        tag_window(window, window.Base, wall, trace, axes, record)
+        group.addObject(window)
+        try:
+            window.ViewObject.ShapeColor = (0.18, 0.64, 0.88)
+            window.ViewObject.LineColor = (0.03, 0.20, 0.34)
+            window.ViewObject.Transparency = 15
+        except Exception:
+            pass
+        row.update(
+            {
+                "width": width, "wall_offset": wall_offset, "preset": preset,
+                "sill": sill, "height": height,
+                "side_a_names": " | ".join(room["name"] for room in side_a),
+                "side_b_names": " | ".join(room["name"] for room in side_b),
+                "confidence": confidence, "status": "Creada",
+            }
+        )
+        report_rows.append(row)
+        created.append(window)
+    wall.touch()
+    doc.recompute()
+    group.FA_WindowCount = len(created)
+    group.FA_RejectedAxisCount = rejected
+    write_report(doc, group, report_rows, wall, axes)
+    doc.recompute()
+    doc.commitTransaction()
+except Exception:
+    doc.abortTransaction()
+    raise
+
+App.Console.PrintMessage(
+    "[FACILARQ] Ventanas BIM: creadas %d, ejes rechazados %d, muro %s\n"
+    % (len(created), rejected, wall.Label)
+)

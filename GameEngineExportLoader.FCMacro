@@ -3,7 +3,7 @@
 # GameEngineExportLoader Macro
 # Description: Reload and activate GameEngineExportWB from the Macros-de-Freecad repo.
 # Notes: Uses hot-reload flow (close panel + purge commands/modules + re-register workbench).
-# Version: 2026-07-02
+# Version: 2026-07-27
 
 import importlib
 import os
@@ -25,6 +25,8 @@ COMMAND_CANDIDATES = (
     "GameEngineExport_AddLightProperties",
     "GameEngineExport_QuickExample",
 )
+LOADER_MENU_TEXT = "Game Engine Export Loader"
+LOADER_TOOLTIP = "Carga y recarga el workbench Game Engine Export"
 
 
 def log_info(message):
@@ -33,6 +35,29 @@ def log_info(message):
 
 def log_error(message):
     App.Console.PrintError(LOG_PREFIX + str(message) + "\n")
+
+
+def install_loader_toolbar():
+    here = os.path.normpath(os.path.abspath(os.path.dirname(__file__)))
+    helper_roots = (os.path.join(here, "Macros-de-Freecad"), here)
+    for root in helper_roots:
+        if os.path.exists(os.path.join(root, "loader_toolbar.py")) and root not in sys.path:
+            sys.path.insert(0, root)
+    try:
+        from loader_toolbar import install_global_loader_toolbar
+
+        return install_global_loader_toolbar(
+            App,
+            Gui,
+            __file__,
+            os.path.join(here, "GameEngineExportLoader.svg"),
+            LOADER_MENU_TEXT,
+            LOADER_TOOLTIP,
+            LOG_PREFIX,
+        )
+    except Exception as exc:
+        log_error("Could not install global loader toolbar: " + str(exc))
+        return None
 
 
 def normalize_path(path_text):
@@ -70,6 +95,27 @@ def purge_modules():
             sys.modules.pop(name, None)
             removed += 1
     log_info("Purged modules: " + str(removed))
+
+
+def stop_active_web_preview():
+    """Stop a preview HTTP server before its module is removed."""
+    stopped_modules = set()
+    for name, module in list(sys.modules.items()):
+        name_l = str(name).lower()
+        if not name_l.endswith(".core.web_preview") or module is None:
+            continue
+        module_id = id(module)
+        if module_id in stopped_modules:
+            continue
+        stopped_modules.add(module_id)
+        stop_server = getattr(module, "stop_preview_server", None)
+        if not callable(stop_server):
+            continue
+        try:
+            stop_server("Workbench hot restart")
+            log_info("Stopped active Web preview server")
+        except Exception as exc:
+            log_error("Could not stop Web preview server: " + str(exc))
 
 
 def close_active_dialog():
@@ -169,6 +215,7 @@ def activate_workbench():
 
 
 def main():
+    toolbar_handle = install_loader_toolbar()
     log_info("Hot restart requested")
     close_active_dialog()
     repo_roots = candidate_repo_roots()
@@ -177,6 +224,7 @@ def main():
     deactivate_workbench()
     remove_old_workbench()
     remove_old_commands()
+    stop_active_web_preview()
     purge_modules()
     importlib.invalidate_caches()
     import_workbench_initgui()
@@ -186,6 +234,8 @@ def main():
             Gui.updateGui()
     except Exception:
         pass
+    if toolbar_handle is not None:
+        toolbar_handle.refresh()
     log_info("Workbench hot restart completed")
 
 

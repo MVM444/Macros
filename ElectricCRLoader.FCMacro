@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # Icon: ElectricCRLoader.svg
+# Version: 2026-07-14
 
 import os
 import sys
@@ -8,6 +9,20 @@ import FreeCAD as App
 import FreeCADGui as Gui
 
 _ICON_NAME = "ElectricCRLoader.svg"
+_LOG_PREFIX = "[ELECTRICCR] "
+_MACRO_COMMAND_SCRIPT = "ElectricCRLoader.FCMacro"
+_MACRO_COMMAND_MENU = "ElectricCR Loader"
+_MACRO_COMMAND_TOOLTIP = "Carga y recarga el workbench ElectricCR"
+_MACRO_TOOLBAR_NAME = "Macros"
+_TOOLBAR_CONTROLLER_ATTR = "_electriccr_loader_toolbar_persistence_controller"
+
+
+def _log_info(message):
+    App.Console.PrintMessage(_LOG_PREFIX + str(message) + "\n")
+
+
+def _log_error(message):
+    App.Console.PrintError(_LOG_PREFIX + str(message) + "\n")
 
 
 def _macro_path_entries():
@@ -113,6 +128,273 @@ __Icon__ = _resolve_icon_path(_ICON_NAME)
 __icon__ = __Icon__
 
 
+def _param_group_names(group):
+    try:
+        return list(group.GetGroups())
+    except Exception:
+        return []
+
+
+def _next_std_macro_name(macros_group):
+    max_index = -1
+    for name in _param_group_names(macros_group):
+        if not str(name).startswith("Std_Macro_"):
+            continue
+        try:
+            max_index = max(max_index, int(str(name).split("_")[-1]))
+        except Exception:
+            pass
+    return "Std_Macro_" + str(max_index + 1)
+
+
+def _find_or_create_macro_command():
+    macros_group = App.ParamGet("User parameter:BaseApp/Macro/Macros")
+    existing_name = None
+    for command_name in _param_group_names(macros_group):
+        command_group = macros_group.GetGroup(command_name)
+        try:
+            script = command_group.GetString("Script", "")
+        except Exception:
+            script = ""
+        if os.path.normcase(script) == os.path.normcase(_MACRO_COMMAND_SCRIPT):
+            existing_name = str(command_name)
+            break
+
+    command_name = existing_name or _next_std_macro_name(macros_group)
+    command_group = macros_group.GetGroup(command_name)
+    command_group.SetString("Script", _MACRO_COMMAND_SCRIPT)
+    command_group.SetString("Menu", _MACRO_COMMAND_MENU)
+    command_group.SetString("Tooltip", _MACRO_COMMAND_TOOLTIP)
+    command_group.SetString("WhatsThis", "")
+    command_group.SetString("Statustip", _MACRO_COMMAND_TOOLTIP)
+    command_group.SetString("Pixmap", __Icon__ or _ICON_NAME)
+    command_group.SetString("Accel", "")
+    command_group.SetBool("System", False)
+    _log_info(("Macro command updated: " if existing_name else "Macro command registered: ") + command_name)
+    return command_name
+
+
+def _find_or_create_macro_toolbar():
+    toolbar_root = App.ParamGet("User parameter:BaseApp/Workbench/Global/Toolbar")
+    for group_name in _param_group_names(toolbar_root):
+        group = toolbar_root.GetGroup(group_name)
+        try:
+            if group.GetString("Name", "") == _MACRO_TOOLBAR_NAME:
+                group.SetBool("Active", True)
+                return group
+        except Exception:
+            continue
+
+    max_index = 0
+    for group_name in _param_group_names(toolbar_root):
+        if str(group_name).startswith("Custom_"):
+            try:
+                max_index = max(max_index, int(str(group_name).split("_")[-1]))
+            except Exception:
+                pass
+    group = toolbar_root.GetGroup("Custom_" + str(max_index + 1))
+    group.SetString("Name", _MACRO_TOOLBAR_NAME)
+    group.SetBool("Active", True)
+    _log_info("Global toolbar created: " + _MACRO_TOOLBAR_NAME)
+    return group
+
+
+def _ensure_loader_toolbar_registration():
+    try:
+        command_name = _find_or_create_macro_command()
+        toolbar_group = _find_or_create_macro_toolbar()
+        toolbar_group.SetString(command_name, "FreeCAD")
+        App.ParamGet("User parameter:BaseApp/Preferences/MainWindow/Toolbars").SetBool(_MACRO_TOOLBAR_NAME, True)
+        try:
+            if hasattr(App, "saveParameter"):
+                App.saveParameter()
+        except Exception:
+            pass
+        _log_info("Loader registered in global toolbar: " + _MACRO_TOOLBAR_NAME)
+        return command_name
+    except Exception as exc:
+        _log_error("Could not register loader toolbar button: " + str(exc))
+        return None
+
+
+def _qt_modules():
+    for binding in ("PySide6", "PySide2", "PySide"):
+        try:
+            if binding == "PySide":
+                from PySide import QtCore, QtGui
+
+                return QtCore, QtGui, QtGui
+            module = __import__(binding, fromlist=["QtCore", "QtGui", "QtWidgets"])
+            return module.QtCore, module.QtGui, module.QtWidgets
+        except Exception:
+            continue
+    return None, None, None
+
+
+def _find_qt_toolbars(main_window):
+    _qtcore, _qtgui, qtwidgets = _qt_modules()
+    if qtwidgets is None:
+        return []
+    result = []
+    try:
+        for toolbar in main_window.findChildren(qtwidgets.QToolBar):
+            if toolbar.windowTitle() == _MACRO_TOOLBAR_NAME or toolbar.objectName() == _MACRO_TOOLBAR_NAME:
+                result.append(toolbar)
+    except Exception:
+        pass
+    return result
+
+
+def _set_toolbars_visible(toolbars=None):
+    try:
+        App.ParamGet("User parameter:BaseApp/Preferences/MainWindow/Toolbars").SetBool(_MACRO_TOOLBAR_NAME, True)
+    except Exception:
+        pass
+    if toolbars is None:
+        try:
+            toolbars = _find_qt_toolbars(Gui.getMainWindow())
+        except Exception:
+            toolbars = []
+    shown = False
+    for toolbar in toolbars or []:
+        try:
+            toggle = toolbar.toggleViewAction()
+            if toggle is not None:
+                toggle.setChecked(True)
+        except Exception:
+            pass
+        try:
+            toolbar.show()
+            toolbar.setVisible(True)
+            shown = True
+        except Exception:
+            pass
+    return shown
+
+
+def _execute_loader_from_disk(checked=False):
+    del checked
+    path = os.path.join(os.path.dirname(__file__), _MACRO_COMMAND_SCRIPT)
+    namespace = {"__file__": path, "__name__": "__main__"}
+    try:
+        with open(path, "r", encoding="utf-8-sig") as handle:
+            code = compile(handle.read(), path, "exec")
+        exec(code, namespace, namespace)
+    except Exception as exc:
+        _log_error("Could not execute fresh loader from disk: " + str(exc))
+        raise
+
+
+def _bind_runtime_action(action):
+    try:
+        action.triggered.disconnect()
+    except Exception:
+        pass
+    action.triggered.connect(_execute_loader_from_disk)
+
+
+def _ensure_runtime_toolbar_button(command_name=None):
+    QtCore, QtGui, QtWidgets = _qt_modules()
+    del QtCore
+    if QtGui is None or QtWidgets is None:
+        _log_error("Could not access Qt modules to update toolbar")
+        return
+    try:
+        main_window = Gui.getMainWindow()
+    except Exception as exc:
+        _log_error("Could not access FreeCAD main window: " + str(exc))
+        return
+
+    toolbars = _find_qt_toolbars(main_window)
+    if not toolbars:
+        try:
+            toolbar = QtWidgets.QToolBar(_MACRO_TOOLBAR_NAME, main_window)
+            toolbar.setObjectName(_MACRO_TOOLBAR_NAME)
+            toolbar.setWindowTitle(_MACRO_TOOLBAR_NAME)
+            main_window.addToolBar(toolbar)
+            toolbars = [toolbar]
+            _log_info("Runtime toolbar created: " + _MACRO_TOOLBAR_NAME)
+        except Exception as exc:
+            _log_error("Could not create runtime toolbar: " + str(exc))
+            return
+
+    toolbar = next((candidate for candidate in toolbars if candidate.isVisible()), toolbars[0])
+    runtime_name = "ElectricCR_Loader_Runtime_Action"
+    for action in list(toolbar.actions()):
+        action_name = str(action.objectName())
+        try:
+            action_text = str(action.text()).replace("&", "").strip().lower()
+        except Exception:
+            action_text = ""
+        is_standard_loader = command_name and (
+            action_name == command_name or action_text in {"electriccrloader", "electriccr loader"}
+        )
+        if is_standard_loader:
+            try:
+                action.setIcon(QtGui.QIcon(__Icon__))
+                action.setToolTip(_MACRO_COMMAND_TOOLTIP)
+            except Exception:
+                pass
+            _set_toolbars_visible(toolbars)
+            return
+        if action_name == runtime_name:
+            _bind_runtime_action(action)
+            _set_toolbars_visible(toolbars)
+            return
+
+    action = QtGui.QAction(QtGui.QIcon(__Icon__), _MACRO_COMMAND_MENU, main_window)
+    action.setObjectName(runtime_name)
+    action.setToolTip(_MACRO_COMMAND_TOOLTIP)
+    _bind_runtime_action(action)
+    toolbar.addAction(action)
+    _set_toolbars_visible(toolbars)
+    _log_info("Runtime loader button added to toolbar: " + _MACRO_TOOLBAR_NAME)
+
+
+def _install_toolbar_persistence(command_name=None):
+    QtCore, _qtgui, _qtwidgets = _qt_modules()
+    if QtCore is None:
+        _log_error("Could not access QtCore for toolbar persistence")
+        return
+    try:
+        main_window = Gui.getMainWindow()
+    except Exception as exc:
+        _log_error("Could not access main window for toolbar persistence: " + str(exc))
+        return
+    existing = getattr(main_window, _TOOLBAR_CONTROLLER_ATTR, None)
+    if existing is not None and hasattr(existing, "schedule_show"):
+        existing.command_name = command_name or existing.command_name
+        existing.schedule_show(0)
+        return
+
+    class _ToolbarPersistenceController(QtCore.QObject):
+        def __init__(self, parent, macro_command):
+            super().__init__(parent)
+            self.command_name = macro_command
+            self._timer = QtCore.QTimer(self)
+            self._timer.setSingleShot(True)
+            self._timer.timeout.connect(self._show_toolbar)
+
+        def schedule_show(self, delay=350):
+            self._timer.start(max(0, int(delay)))
+
+        def on_workbench_activated(self, *args):
+            del args
+            self.schedule_show(350)
+
+        def _show_toolbar(self):
+            _ensure_runtime_toolbar_button(self.command_name)
+
+    controller = _ToolbarPersistenceController(main_window, command_name)
+    try:
+        main_window.workbenchActivated.connect(controller.on_workbench_activated)
+    except Exception as exc:
+        _log_error("Could not connect toolbar to workbench changes: " + str(exc))
+    setattr(main_window, _TOOLBAR_CONTROLLER_ATTR, controller)
+    controller.schedule_show(0)
+    _log_info("Global loader toolbar persistence installed")
+
+
 def _is_complete_pkg(pkg_dir: str) -> bool:
     try:
         return (
@@ -202,5 +484,13 @@ def ensure_path_and_load():
     except Exception as err:
         App.Console.PrintError("ElectricCR: Error cargando el workbench: {}\n".format(err))
 
+def main():
+    command_name = _ensure_loader_toolbar_registration()
+    _ensure_runtime_toolbar_button(command_name)
+    _install_toolbar_persistence(command_name)
+    ensure_path_and_load()
+    _ensure_runtime_toolbar_button(command_name)
+    _install_toolbar_persistence(command_name)
 
-ensure_path_and_load()
+
+main()

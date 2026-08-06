@@ -1,0 +1,1372 @@
+{
+  "version_order": [
+    "GF-EIM-IT-0001-2023---Esp. Tec. AA Norte.docx",
+    "GF-EIM-IT-0053-2024---Esp. Tec. Aires Acondicionados.docx",
+    "GF-EIM-IT-0019-2025---Esp. Tec. Aires Acondicionados.docx",
+    "GF-EIM-IT-0031-2025---Esp. Tec. Aires Acondicionados.docx"
+  ],
+  "version_deltas": [
+    {
+      "old": "GF-EIM-IT-0001-2023---Esp. Tec. AA Norte.docx",
+      "new": "GF-EIM-IT-0053-2024---Esp. Tec. Aires Acondicionados.docx",
+      "sequence_similarity": 0.6911196911196911,
+      "old_paragraphs": 222,
+      "new_paragraphs": 296,
+      "change_blocks": [
+        {
+          "operation": "delete",
+          "old": [
+            {
+              "index": 4,
+              "style": "Normal",
+              "text": ", "
+            },
+            {
+              "index": 5,
+              "style": "Normal",
+              "text": "Sub-Área Gestión Administrativa y Logística"
+            },
+            {
+              "index": 8,
+              "style": "Normal",
+              "text": "Estimada Licenciada:"
+            },
+            {
+              "index": 10,
+              "style": "Normal",
+              "text": "Asunto:"
+            }
+          ],
+          "new": []
+        },
+        {
+          "operation": "replace",
+          "old": [
+            {
+              "index": 12,
+              "style": "Normal",
+              "text": "Reemplazo de Aires Acondicionados para las Sucursales de Ciudad Quesada, Naranjo y Orotina."
+            },
+            {
+              "index": 13,
+              "style": "Normal",
+              "text": "Antecedentes"
+            },
+            {
+              "index": 14,
+              "style": "Normal",
+              "text": "Mediante el Sistema de Operación, Control y Mantenimiento (S.O.C.O.), orden de trabajo 32023, se solicita colaboración para el reemplazo de aires acondicionados en las sucursales de Ciudad Quesada, Naranjo y Orotina. Debido al presupuesto y complejidad de los trabajos, solo se reemplazarán los equipos de las salas de espera de las Sucursales de Orotina y Ciudad Quesada, plataforma y sala de reuniones de Naranjo, cobros en Ciudad Quesada y del servidor de Orotina."
+            }
+          ],
+          "new": [
+            {
+              "index": 4,
+              "style": "Normal",
+              "text": "Reemplazo, adquisición e instalación de Aires Acondicionados para las Sucursales de la Caja Costarricense del Seguro Social"
+            }
+          ]
+        },
+        {
+          "operation": "replace",
+          "old": [
+            {
+              "index": 16,
+              "style": "Normal",
+              "text": "Este trabajo consistirá en la adquisición y reemplazo (desinstalación e instalación) de aires acondicionados tipo Mini-Splits:"
+            },
+            {
+              "index": 17,
+              "style": "Normal",
+              "text": "Tres (3) equipos tipo piso-cielo de 60.000 BTU/h, en las salas de espera de las Sucursales Orotina y Ciudad Quesada y la sala de reuniones de la Sucursal de Naranjo. "
+            },
+            {
+              "index": 18,
+              "style": "Normal",
+              "text": "Un equipo Mini-Split tipo piso-cielo de 36.000 BTU/h en la plataforma de la Sucursal de Naranjo."
+            },
+            {
+              "index": 19,
+              "style": "Normal",
+              "text": "Un equipo de pared de 24.000 BTU/h en cobros de la Sucursal de Ciudad Quesada. Este equipo es completamente nuevo no de reemplazo, ver croquis."
+            },
+            {
+              "index": 20,
+              "style": "Normal",
+              "text": "Un equipo de pared de 12.000 BTU/h en el cuarto del servidor en la Sucursal de Orotina."
+            },
+            {
+              "index": 21,
+              "style": "Normal",
+              "text": "Todos los equipos serán con tecnología INVERTER."
+            },
+            {
+              "index": 22,
+              "style": "Normal",
+              "text": "Los equipos nuevos deberán quedar instalados en el mismo sitio y de la misma manera que los equipos actuales. La ubicación de los equipos se indica en los croquis adjuntos. En el caso de los equipos con la condensadora en el techo, se omitirá lo que se indica en el punto 5.9 sobre instalar las condensadoras en el techo como última opción."
+            }
+          ],
+          "new": [
+            {
+              "index": 6,
+              "style": "Normal",
+              "text": "Este trabajo consistirá en la adquisición y reemplazo (desinstalación e instalación) de aires acondicionados en las Sucursales de la C.C.S.S."
+            },
+            {
+              "index": 7,
+              "style": "Normal",
+              "text": "La lista de los equipos a instalar o reemplazar se encuentra como documentos adjuntos, junto con los croquis de la ubicación de algunos equipos."
+            },
+            {
+              "index": 8,
+              "style": "Normal",
+              "text": "Para todos los edificios cercanos al mar, las unidades condensadoras de los aires acondicionados a instalar deberán contar con protección anticorrosiva en las tuberías y las aletas del serpentín. Esta protección será especial para ambientes salinos y deberá cumplir con la norma ASTM B117 (niebla marina: +10.000 horas), con certificación del fabricante del tratamiento. Además, todos los accesorios metálicos que se instalen, incluyendo soportes y estructuras de fijación, deberán estar pintados con pintura anticorrosiva o fabricados en materiales resistentes a la corrosión, como el acero inoxidable o el aluminio, para garantizar su durabilidad y resistencia en ambientes salinos."
+            },
+            {
+              "index": 9,
+              "style": "Normal",
+              "text": "Los equipos serán con tecnología INVERTER, excepto los equipos portátiles."
+            },
+            {
+              "index": 10,
+              "style": "Normal",
+              "text": "Los equipos para reemplazar deberán quedar instalados en el mismo sitio y de la misma manera que los equipos actuales. La ubicación de los equipos nuevos se indicará en los croquis adjuntos o en visita al sitio. "
+            },
+            {
+              "index": 11,
+              "style": "Normal",
+              "text": "En el caso de los equipos que se indique que la condensadora va en el techo, se omitirá lo que se indica en el punto 5.9 sobre instalar las condensadoras en el techo como última opción."
+            },
+            {
+              "index": 12,
+              "style": "Normal",
+              "text": "Si el equipo tiene bomba de condensado se deberá reemplazar también."
+            }
+          ]
+        },
+        {
+          "operation": "replace",
+          "old": [
+            {
+              "index": 24,
+              "style": "Normal",
+              "text": "Para la alimentación eléctrica de los equipos de la Sucursal de Orotina se utilizará la instalación actual."
+            },
+            {
+              "index": 25,
+              "style": "Normal",
+              "text": "En la sucursal de Ciudad Quesada se deberá hacer una alimentación nueva para el equipo desde el tablero de aires acondicionados en el cuarto eléctrico. En sala de espera se hará con un breaker de 50 Amp, cable THHN # 8 AWG para vivos y tierra, en tubería de 25 mm como mínimo. En oficinas de cobros se hará con cable THHN # 12 AWG para vivos y tierra con breaker de 20 A.  En esta sucursal existe tubería EMT almacenada en bodega que se deberá utilizar para esta instalación, tomarlo en cuenta en la oferta (aproximadamente 8 tubos de 3 metros y 1” de diámetro, 4 Curvas 1\")."
+            },
+            {
+              "index": 26,
+              "style": "Normal",
+              "text": "En la sucursal de Naranjo se deberá hacer una alimentación nueva para cada equipo desde el Tablero Eléctrico más cercano. Para el equipo de 60000 BTU/h se hará con Breaker de 50 Amp, cable THHN # 8 AWG para vivos y tierra, en tubería de 25 mm como mínimo. Para el equipo de 36000 BTU/h se hará con Breaker de 30 Amp, cable THHN # 10 AWG para vivos y tierra, en tubería de 13 mm como mínimo."
+            }
+          ],
+          "new": [
+            {
+              "index": 14,
+              "style": "Normal",
+              "text": "Para la alimentación eléctrica de los equipos a reemplazar se utilizará la instalación actual, a menos que se diga lo contrario en las tablas anexas o croquis adjuntos."
+            },
+            {
+              "index": 15,
+              "style": "Normal",
+              "text": "En caso de que se necesite hacer la alimentación eléctrica del aire acondicionado este se hará de la siguiente manera:"
+            },
+            {
+              "index": 16,
+              "style": "Especificaciones 1",
+              "text": "Para equipos de 60000 BTU/h se hará con Breaker de 50 Amp, cable THHN # 8 AWG para vivos y tierra, en tubería EMT de 25 mm como mínimo. "
+            },
+            {
+              "index": 17,
+              "style": "Especificaciones 1",
+              "text": "En equipos entre 36000btu/h y 60000btu/h se hará con cable AWG#10 para vivos y tierra con tubería EMT de 19mm como mínimo y Breaker de 30 Amp. "
+            },
+            {
+              "index": 18,
+              "style": "Especificaciones 1",
+              "text": "Para equipos inferiores a 36000btu/h se hará cable THHN AWG#12 para vivos y tierra y tubería EMT de 13mm como mínimo y breaker de 20 Amp. "
+            },
+            {
+              "index": 19,
+              "style": "Especificaciones 1",
+              "text": "También se puede seguir las recomendaciones que indica el fabricante del equipo, con respecto al a calibre del cableado y la capacidad el disyuntor electromagnético."
+            },
+            {
+              "index": 20,
+              "style": "Especificaciones 1",
+              "text": "No se permite el uso de cable TSJ o similar en tuberías u oculto en el entretecho."
+            }
+          ]
+        },
+        {
+          "operation": "insert",
+          "old": [],
+          "new": [
+            {
+              "index": 26,
+              "style": "Especificaciones 1",
+              "text": "Si al momento de la recepción el equipo presentara alguna falla, no se recibirá la obra hasta que funcione correctamente. Si las fallas son reincidentes durante el periodo de garantía después de una tercera falla del equipo debe ser remplazado por uno nuevo con las mismas características o superiores a las solicitadas."
+            },
+            {
+              "index": 27,
+              "style": "List Paragraph",
+              "text": "El equipo no debe causar incomodidad ni a los usuarios ni al personal, por lo que debe ser silencioso y la velocidad del aire adecuada para no producir ruidos ni corrientes de aire molestas (chiflones)."
+            }
+          ]
+        },
+        {
+          "operation": "replace",
+          "old": [
+            {
+              "index": 33,
+              "style": "Normal",
+              "text": "Las tuberías de cobre no deberán quedar expuestas fuera del edificio, se deberá hacer una protección metálica que dificulte el acceso y robo de las tuberías, pero que no impida su mantenimiento. Esta protección se hará en acero y se cubrirá con lámina de acero 1.8mm de espesor (calibre 18) como mínimo."
+            },
+            {
+              "index": 34,
+              "style": "List Paragraph",
+              "text": "El equipo no debe causar incomodidad ni a los usuarios ni al personal, por lo que debe ser silencioso y la velocidad del aire adecuada para no producir ruidos ni corrientes de aire molestas (chiflones)."
+            }
+          ],
+          "new": [
+            {
+              "index": 29,
+              "style": "Especificaciones 1",
+              "text": "Las tuberías de cobre no deberán quedar expuestas fuera del edificio, se deberá proteger las tuberías para dificultar el robo y vandalismo. Cualquier tramo de tubería expuesta deberá estar protegido con una cubierta metálica que dificulte el acceso y el robo, pero que permita el mantenimiento adecuado. Esta protección estará fabricada con acero y contará con una estructura de angular de 25mm x 25mm de lado y 5mm de espesor (1\" x 1\" x 3/16\") y estará revestida con una lámina de acero de al menos 1.8 mm de espesor (calibre 18). Ver punto “Protección para las Tuberías y los Equipos”."
+            },
+            {
+              "index": 30,
+              "style": "Especificaciones 1",
+              "text": "También se deberá hacer una jaula de protección para todas las condensadoras que no están ubicadas en techo. Sin embargo, las tuberías en los equipos del techo también se deberán proteger contra robo y vandalismo."
+            },
+            {
+              "index": 31,
+              "style": "Especificaciones 1",
+              "text": "Para la instalación de aires acondicionados portátiles, se requerirá la implementación de un circuito eléctrico independiente con su propio tomacorriente para asegurar un suministro de energía adecuado y seguro. Además, es necesario instalar un sistema de evacuación para el aire caliente que puede ser a través de una ventana utilizando un kit de salida de aire. En ausencia de una ventana, se deberá proporcionar una solución alternativa como una apertura en el cielorraso."
+            }
+          ]
+        },
+        {
+          "operation": "replace",
+          "old": [
+            {
+              "index": 37,
+              "style": "List Paragraph",
+              "text": "El oferente deberá estar incorporado al Colegio Federado de Ingenieros y Arquitectos de Costa Rica, para lo cual deberá presentar AL DIA la respectiva certificación con su oferta. La experiencia solicitada deberá ser como mínimo de 05 años posterior a la incorporación al CFIA. Deberá incluir los atestados correspondientes en la oferta. Ver siguiente punto “CERTIFICACIONES”."
+            }
+          ],
+          "new": [
+            {
+              "index": 34,
+              "style": "List Paragraph",
+              "text": "El oferente deberá estar incorporado al Colegio Federado de Ingenieros y Arquitectos de Costa Rica, para lo cual deberá presentar al día la respectiva certificación con su oferta. La experiencia solicitada deberá ser como mínimo de 05 años. Deberá incluir los atestados correspondientes en la oferta. Ver siguiente punto “CERTIFICACIONES”."
+            }
+          ]
+        },
+        {
+          "operation": "replace",
+          "old": [
+            {
+              "index": 39,
+              "style": "Especificaciones 1",
+              "text": "El oferente deberá aportar las siguientes certificaciones de la empresa, el personal, los equipos y materiales a instalar, y debe asegurarse de incluir esta información en la oferta:"
+            }
+          ],
+          "new": [
+            {
+              "index": 36,
+              "style": "Especificaciones 1",
+              "text": "El oferente deberá aportar las siguientes certificaciones de la empresa, del personal, de los equipos y los materiales a instalar, y debe asegurarse de incluir esta información en la oferta:"
+            }
+          ]
+        },
+        {
+          "operation": "replace",
+          "old": [
+            {
+              "index": 43,
+              "style": "Especificaciones 1",
+              "text": "Copia de los Títulos de los técnicos especializados en la instalación de equipos de aire acondicionado e instalaciones eléctricas. Certificación de Fabrica de los técnicos en aire acondicionado."
+            }
+          ],
+          "new": [
+            {
+              "index": 40,
+              "style": "Especificaciones 1",
+              "text": "Copia de los Títulos de los técnicos especializados en la instalación de equipos de aire acondicionado e instalaciones eléctricas. Se deberán aportar solo los títulos relacionados con las labores de instalación y mantenimiento en aire acondicionado y tareas afines."
+            },
+            {
+              "index": 41,
+              "style": "Especificaciones 1",
+              "text": "Certificación de Fabrica de los técnicos en aire acondicionado."
+            }
+          ]
+        },
+        {
+          "operation": "replace",
+          "old": [
+            {
+              "index": 48,
+              "style": "Especificaciones 1",
+              "text": "Certificación de poseer personal capacitado y el equipo adecuado para disponer de materiales peligrosos o contaminantes (refrigerante R-22) y que estos contaminantes serán desechados en un centro de acopio autorizado."
+            }
+          ],
+          "new": [
+            {
+              "index": 46,
+              "style": "Especificaciones 1",
+              "text": "Certificación de poseer personal capacitado y el equipo adecuado para disponer de materiales peligrosos o contaminantes (refrigerantes) y que estos contaminantes serán desechados en un centro de acopio autorizado."
+            }
+          ]
+        },
+        {
+          "operation": "delete",
+          "old": [
+            {
+              "index": 77,
+              "style": "Especificaciones 1",
+              "text": "Las unidades mini-splits iguales o menores de 12.000btu/h deberá poseer un EER igual o mayor a 12.5."
+            },
+            {
+              "index": 78,
+              "style": "Especificaciones 1",
+              "text": "Las unidades mini-splits iguales o menores de 36.000btu/h deberá poseer un EER igual o mayor a 12.2."
+            },
+            {
+              "index": 79,
+              "style": "Especificaciones 1",
+              "text": "Las unidades mini-splits iguales o menores de 60.000btu/h deberá poseer un EER igual o mayor a 11.5."
+            },
+            {
+              "index": 80,
+              "style": "Especificaciones 1",
+              "text": "Los equipos multi-split tendrán una eficiencia mayor a 22 SEER y un mínimo de 12.5 EER."
+            },
+            {
+              "index": 81,
+              "style": "Especificaciones 1",
+              "text": "Los equipos VRF tendrán una eficiencia mayor a 13 EER y 26 IEER."
+            },
+            {
+              "index": 82,
+              "style": "Normal",
+              "text": "ERR =   Capacidad de Enfriamiento (BTU)"
+            },
+            {
+              "index": 83,
+              "style": "List Paragraph",
+              "text": "Consumo eléctrico (W/h)"
+            }
+          ],
+          "new": []
+        },
+        {
+          "operation": "insert",
+          "old": [],
+          "new": [
+            {
+              "index": 102,
+              "style": "Normal",
+              "text": "Unidades Evaporadoras tipo Manejadora de Aire."
+            },
+            {
+              "index": 103,
+              "style": "Especificaciones 1",
+              "text": "El ventilador será de tipo centrífugo de tres velocidades y bajo nivel de ruido, motores con capacidad de trabajo continuo y baja disipación de calor. "
+            },
+            {
+              "index": 104,
+              "style": "Especificaciones 1",
+              "text": "Deberá poseer termostato ajustable y programable."
+            },
+            {
+              "index": 105,
+              "style": "Especificaciones 1",
+              "text": "Con filtro de aire de larga durabilidad en fibra sintética lavable, anti-bacterial, y fácilmente accesibles para su limpieza."
+            },
+            {
+              "index": 106,
+              "style": "Especificaciones 1",
+              "text": "El nivel de ruido generado por la unidad evaporadora deberá ser menor a 56 dB(A) medidos a una distancia de 1,50 metro de esta con el ventilador operando en la máxima velocidad."
+            },
+            {
+              "index": 107,
+              "style": "Especificaciones 1",
+              "text": "El serpentín será de tubos de cobre y aletas de aluminio."
+            },
+            {
+              "index": 108,
+              "style": "Especificaciones 1",
+              "text": "Deberá incluirse el control con termostato"
+            },
+            {
+              "index": 109,
+              "style": "Especificaciones 1",
+              "text": "Deberá incluirse una bandeja auxiliar para el drenaje de condensado de las evaporadoras."
+            },
+            {
+              "index": 110,
+              "style": "Especificaciones 1",
+              "text": "Las evaporadoras en horizontal para ducto debe llevar una base/soporte metálico en angular de 1½” x 1½” x 1/8” pintado con dos manos de anticorrosivo con cuatro tacos de hule."
+            },
+            {
+              "index": 111,
+              "style": "Normal",
+              "text": "Aires Acondicionados Portátiles"
+            },
+            {
+              "index": 112,
+              "style": "Especificaciones 1",
+              "text": "Capacidad de enfriamiento nominal de 12000 a 14000 btu/h."
+            },
+            {
+              "index": 113,
+              "style": "Especificaciones 1",
+              "text": "Voltaje de operación entre 115V y 120V en corriente alterna, con una frecuencia de 60Hz y monofásicos."
+            },
+            {
+              "index": 114,
+              "style": "Especificaciones 1",
+              "text": "Diversidad en modos de funcionamiento, incluyendo refrigeración, deshumidificación, ventilación y un modo turbo para una alta potencia."
+            },
+            {
+              "index": 115,
+              "style": "Especificaciones 1",
+              "text": "Control de velocidad del ventilador ajustable y con funciones como oscilación automática."
+            },
+            {
+              "index": 116,
+              "style": "Especificaciones 1",
+              "text": "Con control remoto."
+            },
+            {
+              "index": 117,
+              "style": "Especificaciones 1",
+              "text": "Eficiencia energética destacada con un SEER mínimo de 12.0."
+            },
+            {
+              "index": 118,
+              "style": "Especificaciones 1",
+              "text": "Nivel de ruido reducido no superior a 60 dB(A)."
+            },
+            {
+              "index": 119,
+              "style": "Especificaciones 1",
+              "text": "Uso de refrigerante R410A en la cantidad estipulada por el fabricante. Se aceptan otros refrigerantes que cumplan con las normas de protección al medio ambiente vigentes."
+            },
+            {
+              "index": 120,
+              "style": "Especificaciones 1",
+              "text": "Fácil movilidad del equipo con ruedas integradas."
+            },
+            {
+              "index": 121,
+              "style": "Especificaciones 1",
+              "text": "Inclusión de todos los accesorios requeridos para una instalación estándar y un kit de ventana adaptable."
+            },
+            {
+              "index": 122,
+              "style": "Especificaciones 1",
+              "text": "Manual de usuario completo en español que detalle operación y mantenimiento del equipo."
+            },
+            {
+              "index": 123,
+              "style": "Especificaciones 1",
+              "text": "Servicios adicionales de evaluación inicial preinstalación y capacitación post-instalación ofrecidos por el proveedor."
+            },
+            {
+              "index": 124,
+              "style": "Especificaciones 1",
+              "text": "Garantía mínima de 24 meses contra defectos de fabricación e instalación."
+            },
+            {
+              "index": 125,
+              "style": "Especificaciones 1",
+              "text": "Los equipos deberán ser entregados e instalados en los sitios designados, incluyendo la instalación de tomacorrientes adecuados si es necesario, incluyendo cableado correctamente canalizado y breaker."
+            }
+          ]
+        },
+        {
+          "operation": "insert",
+          "old": [],
+          "new": [
+            {
+              "index": 142,
+              "style": "Normal",
+              "text": "Especificaciones de Ductos para Aire Acondicionado"
+            },
+            {
+              "index": 143,
+              "style": "Especificaciones 1",
+              "text": "Los ductos de aire acondicionado se fabricarán utilizando paneles \"sandwich\" compuestos por poliuretano expandido celular y recubrimientos de láminas de aluminio."
+            },
+            {
+              "index": 144,
+              "style": "Especificaciones 1",
+              "text": "Características de los paneles:"
+            },
+            {
+              "index": 145,
+              "style": "Especificaciones 1",
+              "text": "Aluminio externo: Espesor de 0,08 mm, gofrado y protegido con laca de poliéster."
+            },
+            {
+              "index": 146,
+              "style": "Especificaciones 1",
+              "text": "Aluminio interno: Espesor de 0,08 mm, gofrado y protegido con laca de poliéster."
+            },
+            {
+              "index": 147,
+              "style": "Especificaciones 1",
+              "text": "Componente aislante: Poliuretano expandido con una densidad de 48-50 kg/m3."
+            },
+            {
+              "index": 148,
+              "style": "Especificaciones 1",
+              "text": "Espesor total: 20 mm."
+            },
+            {
+              "index": 149,
+              "style": "Especificaciones 1",
+              "text": "Conductividad térmica: 0,022 W/(m °C) a 10°C."
+            },
+            {
+              "index": 150,
+              "style": "Especificaciones 1",
+              "text": "Reacción al fuego: Clase \"0\" - \"1\"."
+            },
+            {
+              "index": 151,
+              "style": "Especificaciones 1",
+              "text": "Clase de rigidez: R 200000."
+            },
+            {
+              "index": 152,
+              "style": "Especificaciones 1",
+              "text": "Los ductos se clasifican en clase \"0\" en cuanto a reacción al fuego, lo que significa que no serán combustibles."
+            },
+            {
+              "index": 153,
+              "style": "Especificaciones 1",
+              "text": "El componente aislante se clasifica como clase \"1\"."
+            },
+            {
+              "index": 154,
+              "style": "Especificaciones 1",
+              "text": "Los ductos contarán con refuerzos para garantizar una estanqueidad mecánica a una presión interna máxima de 500 Pa."
+            },
+            {
+              "index": 155,
+              "style": "Especificaciones 1",
+              "text": "La máxima deformación del conducto no superará el 3% del ancho o no será mayor de 30 mm."
+            },
+            {
+              "index": 156,
+              "style": "Especificaciones 1",
+              "text": "Las juntas entre ductos se fabricarán con bridas de tipo \"invisible\" con bayoneta escondida para asegurar una estanqueidad neumática y mecánica adecuada."
+            },
+            {
+              "index": 157,
+              "style": "Especificaciones 1",
+              "text": "Los ductos se sostendrán mediante soportes a intervalos de no más de 4 metros si el lado mayor del conducto es inferior a 1 metro, y a intervalos de no más de 2 metros si el lado mayor del conducto es superior a 1 metro. Sin embargo, se recomienda una soportería a no más de 1,2 m de distancia, debe estar sujetado con alambre trenzado #16, sujetado a la estructura del techo.  El soporte del ducto debe ser de perfil U 1/z x 2 x ½”."
+            },
+            {
+              "index": 158,
+              "style": "Especificaciones 1",
+              "text": "Los difusores y rejillas deben estar conectados a un cajón que a la vez sujete el ducto flexible mediante un cuello amarrado con faja panduit."
+            },
+            {
+              "index": 159,
+              "style": "Especificaciones 1",
+              "text": "En cielo suspendido colocar dámper en el cuello que sale del ducto."
+            },
+            {
+              "index": 160,
+              "style": "Especificaciones 1",
+              "text": "Los accesorios, como compuertas de registro, compuertas cortafuego, difusores, baterías a conducto, entre otros, serán sostenidos de manera autónoma para evitar que su peso descanse en los ductos."
+            },
+            {
+              "index": 161,
+              "style": "Especificaciones 1",
+              "text": "De ser necesario o se indique en planos, se instalarán puntos de control para sondas anemométricas y pequeñas puertas de inspección y limpieza distribuidos a lo largo del recorrido de los ductos."
+            },
+            {
+              "index": 162,
+              "style": "Especificaciones 1",
+              "text": "Las puertas de inspección y limpieza se fabricarán utilizando el mismo panel \"sandwich\" de los ductos y contarán con guarniciones para asegurar la estanqueidad neumática."
+            },
+            {
+              "index": 163,
+              "style": "Normal",
+              "text": "Protección para las Tuberías y los Equipos"
+            },
+            {
+              "index": 164,
+              "style": "Especificaciones 1",
+              "text": "Se implementará un sistema de protección para prevenir el robo de tubería o daño de los equipos, el cual consistirá en la instalación de una cubierta metálica de acero que simulará una columna falsa o una canaleta para resguardar las tuberías y el cableado, y una jaula de acero para protección de los equipos."
+            },
+            {
+              "index": 165,
+              "style": "Especificaciones 1",
+              "text": "Se implementará un sistema de protección para salvaguardar la condensadora de posibles robos o daños. Este sistema consistirá en la construcción de una estructura metálica que envolverá la condensadora, proporcionando seguridad y evitando accesos no autorizados:"
+            },
+            {
+              "index": 166,
+              "style": "Especificaciones 1",
+              "text": "La estructura metálica estará fabricada con estructura de angular de acero de 25 mm x 25 mm de lado y 5 mm de espesor (1\" x 1\" x 3/16\"), complementada con tubos de acero cuadrados de 19 mm de lado y 1.5 mm de espesor como mínimo. Para condensadoras pequeñas se puede utilizar tubo cuadrado de 19mm x 19mm x 1.5m."
+            },
+            {
+              "index": 167,
+              "style": "Especificaciones 1",
+              "text": "En la parte donde se conectan o pasen las tuberías se cubrirá con lámina de acero de al menos 1.8 mm de espesor (calibre 18) para impedir el acceso."
+            },
+            {
+              "index": 168,
+              "style": "Especificaciones 1",
+              "text": "La estructura metálica se diseñará de manera que permita el flujo de aire adecuado para el correcto funcionamiento de la condensadora y facilitará el acceso para su mantenimiento."
+            },
+            {
+              "index": 169,
+              "style": "Especificaciones 1",
+              "text": "La estructura se fijará al suelo o pared mediante anclajes de expansión para concreto de (¼\" x 2 ¼\") (6.35 mm x 31.75 mm), asegurando una sujeción sólida y resistente."
+            },
+            {
+              "index": 170,
+              "style": "Especificaciones 1",
+              "text": "Se instalará una puerta con cerradura en la estructura para permitir el acceso al personal autorizado para tareas de mantenimiento y servicio."
+            },
+            {
+              "index": 171,
+              "style": "Especificaciones 1",
+              "text": "En el caso de las tuberías que desciendan por las paredes, se construirá una columna falsa a través de la cual las tuberías se conectarán desde el cielorraso hasta el nivel del piso. Las siguientes consideraciones aplican para esta columna falsa: "
+            },
+            {
+              "index": 172,
+              "style": "Especificaciones 1",
+              "text": "La columna falsa o ducto deberá cubrir completamente las tuberías de refrigerante, incluyendo su aislamiento. "
+            },
+            {
+              "index": 173,
+              "style": "Especificaciones 1",
+              "text": "El tamaño del ducto o columna se adaptará al tamaño y la cantidad de tuberías, junto con sus respectivos aislantes."
+            },
+            {
+              "index": 174,
+              "style": "Especificaciones 1",
+              "text": "En un costado de la columna, se realizará una apertura por donde las tuberías se conectarán a la unidad condensadora. "
+            },
+            {
+              "index": 175,
+              "style": "Especificaciones 1",
+              "text": "Se minimizará la cantidad de tubería expuesta, por lo tanto, la distancia entre el ducto y los conectores en la condensadora deberá ser reducida. Este tramo expuesto de tubería deberá estar aislado, cubierto con una manta y pintado con dos capas de impermeabilizante."
+            },
+            {
+              "index": 176,
+              "style": "Especificaciones 1",
+              "text": "Los boquetes y salidas se rellenarán con espuma expandida para evitar la entrada de plagas, humedad y suciedad dentro del tubo de acero."
+            },
+            {
+              "index": 177,
+              "style": "Especificaciones 1",
+              "text": "La columna falsa estará sujeta a la pared, a la columna de concreto y a la acera mediante al menos 8 anclajes de expansión para concreto de (¼\" x 2 ¼\") (6.35 mm x 31.75 mm)."
+            },
+            {
+              "index": 178,
+              "style": "Especificaciones 1",
+              "text": "El ducto atravesará el cielorraso de manera que las tuberías salgan del ducto dentro del entretecho."
+            },
+            {
+              "index": 179,
+              "style": "Especificaciones 1",
+              "text": "Se construirá una estructura de angular de acero de 25 mm x 25 mm de lado y 5 mm de espesor (1\" x 1 \" x 3/16\"), utilizando angulares verticales unidos por pletinas horizontales, separadas cada 20 cm. El tamaño del ducto o columna se adaptará al tamaño y la cantidad de tuberías, junto con sus respectivos aislantes."
+            },
+            {
+              "index": 180,
+              "style": "Especificaciones 1",
+              "text": "La estructura se cubrirá en los lados expuestos con una lámina de acero de al menos 1.8 mm de espesor (calibre 18), con el fin de evitar el acceso a las tuberías. La lámina se fabricará en una sola pieza, se cortará con guillotina cizalladora y se doblará con una dobladora, asegurándose de no dejar rebabas ni filos que puedan causar cortes. Se fijará con tornillos tipo frijolito, pero para mayor seguridad se utilizarán 4 tornillos para techo de 3/4 de pulgada (19 mm) de punta fina, acompañados de arandelas metálicas, los cuales, una vez atornillados, se soldarán al metal. Después de colocar la cubierta de lámina metálica, los tornillos de anclaje que sujetan la estructura a la pared deberán quedar inaccesibles. "
+            },
+            {
+              "index": 181,
+              "style": "Especificaciones 1",
+              "text": "De manera similar al punto anterior, se construirá una cubierta para proteger parte de la tubería en su tramo horizontal."
+            },
+            {
+              "index": 182,
+              "style": "Especificaciones 1",
+              "text": "Las estructuras metálicas mencionadas estarán sujetas a las paredes de concreto mediante anclajes de expansión para concreto de (¼\" x 2 ¼\") (6.35 mm x 31.75 mm). "
+            },
+            {
+              "index": 183,
+              "style": "Especificaciones 1",
+              "text": "En el caso de las condensadoras instaladas en el techo, la tubería se dispondrá principalmente dentro del techo y solo se expondrá en el punto de conexión directa con la condensadora."
+            },
+            {
+              "index": 184,
+              "style": "Especificaciones 1",
+              "text": "Si la condensadora se instala en una pared, la tubería deberá ir dentro del edificio o el cielorraso, y solo se expondrá en el punto más cercano posible a la conexión con la condensadora."
+            },
+            {
+              "index": 185,
+              "style": "Especificaciones 1",
+              "text": "Para las condensadoras instaladas en el piso, donde las tuberías queden expuestas sobre el suelo o deban cruzar una acera, se hará una trinchera en concreto por donde pasarán las tuberías, que luego se cubrirá con una tapa con candado para evitar el acceso. El concreto utilizado tendrá una resistencia a la compresión mínima de fIc=210 kg/cm², y se utilizará una grilla de varilla #3 con una separación de 15 cm en ambas direcciones como estructura metálica."
+            },
+            {
+              "index": 186,
+              "style": "Especificaciones 1",
+              "text": "En caso de que queden tramos extra de tubería, estos deberán ocultarse dentro del edificio, el cielorraso o protegerse mediante una estructura metálica similar a las descritas en los puntos anteriores."
+            },
+            {
+              "index": 187,
+              "style": "Especificaciones 1",
+              "text": "Todas las estructuras metálicas se pintarán con una base anticorrosiva aplicada en dos capas, seguida de una capa de pintura de aceite con un color similar al de la columna del edificio. Antes de pintar, el metal deberá estar completamente limpio de polvo, suciedad, grasa u óxido. Se recomienda utilizar desengrasante y desoxidante para limpiar la superficie metálica. Los productos utilizados, como el desengrasante, el antioxidante, el anticorrosivo y la pintura, o cualquier otro recubrimiento, deberán ser adecuados para estructuras metálicas expuestas a la intemperie y deberán tener una calidad similar o superior a las marcas Sur, Protecto o Lanco."
+            }
+          ]
+        },
+        {
+          "operation": "replace",
+          "old": [
+            {
+              "index": 174,
+              "style": "Especificaciones 1",
+              "text": "Todo el trabajo deberá ser ejecutado por personal técnico calificado y de amplia experiencia, debiéndose aportar los atestados que certifiquen su capacidad para realizar las labores propias del mantenimiento preventivo y correctivo. Se deberán aportar solo los títulos relacionados con las labores de mantenimiento en aire acondicionado y tareas afines."
+            }
+          ],
+          "new": [
+            {
+              "index": 234,
+              "style": "Especificaciones 1",
+              "text": "Todo el trabajo deberá ser ejecutado por personal técnico calificado y de amplia experiencia, debiéndose aportar los atestados que certifiquen su capacidad para realizar las labores propias del mantenimiento preventivo y correctivo."
+            }
+          ]
+        },
+        {
+          "operation": "replace",
+          "old": [
+            {
+              "index": 198,
+              "style": "Normal",
+              "text": " El plazo de entrega será de uno (1) a quince (20) días hábiles, posterior a la notificación del contrato emitido mediante la plataforma SICOP."
+            }
+          ],
+          "new": [
+            {
+              "index": 258,
+              "style": "Normal",
+              "text": "Conforme a la notificación del contrato a través de la plataforma SICOP, el cronograma de entrega de aires acondicionados para las distintas regiones se especifica en días hábiles:"
+            },
+            {
+              "index": 259,
+              "style": "Normal",
+              "text": "Es importante señalar que los plazos establecidos para la instalación y puesta en funcionamiento de los aires acondicionados son máximos y han sido definidos considerando tanto las necesidades urgentes de las unidades como la capacidad de la Administración para revisar y realizar la recepción definitiva. Aunque los equipos pueden ser instalados antes de lo previsto, es crucial que estén completamente funcionales para la fecha límite especificada, asegurando que estén listos para las inspecciones y la recepción oficial. Esto facilita la programación eficiente de las visitas de recepción en todas las sucursales a nivel nacional."
+            },
+            {
+              "index": 260,
+              "style": "Normal",
+              "text": "La recepción definitiva de los equipos de aire acondicionado se realizará a más tardar un mes después de la inspección programada. Este período permitirá realizar todas las correcciones necesarias detectadas durante la inspección, asegurando que los equipos cumplan con todos los requisitos y especificaciones técnicas antes de su aceptación final."
+            }
+          ]
+        },
+        {
+          "operation": "replace",
+          "old": [
+            {
+              "index": 201,
+              "style": "Normal",
+              "text": "Incumplimiento en el tiempo de entrega e instalación del sistema de aire acondicionado y mantenimiento de los equipos. Si el contratista incumple con el tiempo de entrega, será sancionado con una Cláusula Penal de acuerdo con el formulario del Anexo Nº 3. “Análisis y estudio técnico para la determinación de Cláusulas Penales por entrega tardía o anticipada”."
+            },
+            {
+              "index": 202,
+              "style": "Normal",
+              "text": " Vigencia de la Oferta "
+            },
+            {
+              "index": 203,
+              "style": "Normal",
+              "text": "La cual no puede ser menor de 60 días naturales a partir de la fecha de la apertura."
+            }
+          ],
+          "new": [
+            {
+              "index": 263,
+              "style": "Normal",
+              "text": "Incumplimiento en el tiempo de entrega e instalación del sistema de aire acondicionado y mantenimiento de los equipos. Si el contratista incumple con el tiempo de entrega, será sancionado con una Cláusula Penal de acuerdo con el formulario del Anexo Nº 2. “Análisis y estudio técnico para la determinación de Cláusulas Penales por entrega tardía o anticipada”."
+            }
+          ]
+        },
+        {
+          "operation": "replace",
+          "old": [
+            {
+              "index": 205,
+              "style": "Normal",
+              "text": "El adjudicatario dispondrá de 5 días hábiles, contados a partir de la firmeza de la adjudicación, para rendir la garantía de cumplimiento por un monto de 5% del total adjudicado y mantener una vigencia de cuatro (4) meses adicionales al recibido a satisfacción."
+            }
+          ],
+          "new": [
+            {
+              "index": 265,
+              "style": "Normal",
+              "text": "El adjudicatario dispondrá de 5 días hábiles, contados a partir de la firmeza de la adjudicación, para rendir la garantía de cumplimiento por un monto de 5% del total adjudicado y mantener una vigencia de cuatro (4) meses adicionales hasta el final de la garantía contra defectos de fabricación e instalación."
+            }
+          ]
+        },
+        {
+          "operation": "replace",
+          "old": [
+            {
+              "index": 207,
+              "style": "Normal",
+              "text": "La oferta base por cada oferente deberá cumplir con los requisitos legales y todas las especificaciones requeridas en el cartel de compra."
+            }
+          ],
+          "new": [
+            {
+              "index": 267,
+              "style": "Normal",
+              "text": "La oferta base por cada oferente deberá cumplir con los requisitos legales, financieros y todas las especificaciones requeridas en el cartel de compra."
+            }
+          ]
+        },
+        {
+          "operation": "replace",
+          "old": [
+            {
+              "index": 209,
+              "style": "Normal",
+              "text": "A - PRECIO (80%)"
+            },
+            {
+              "index": 210,
+              "style": "Normal",
+              "text": "A la oferta que presente el menor precio en el equipo, se le otorgarán 80 puntos. A las ofertas restantes se les asignará el puntaje (P) de acuerdo con la siguiente fórmula:"
+            },
+            {
+              "index": 211,
+              "style": "List Paragraph",
+              "text": "P = (MP/EP) * 80"
+            }
+          ],
+          "new": [
+            {
+              "index": 269,
+              "style": "Normal",
+              "text": "A - PRECIO (70%)"
+            },
+            {
+              "index": 270,
+              "style": "Normal",
+              "text": "A la oferta que presente el menor precio en el equipo, se le otorgarán 70 puntos. A las ofertas restantes se les asignará el puntaje (P) de acuerdo con la siguiente fórmula:"
+            },
+            {
+              "index": 271,
+              "style": "List Paragraph",
+              "text": "P = (MP/EP) * 70"
+            }
+          ]
+        },
+        {
+          "operation": "replace",
+          "old": [
+            {
+              "index": 216,
+              "style": "Normal",
+              "text": "B - EXPERIENCIA DE LA EMPRESA (20 PUNTOS)"
+            },
+            {
+              "index": 217,
+              "style": "Normal",
+              "text": "La experiencia será demostrada mediante certificaciones extendidas por quien ostenta la representación legal de las empresas donde los oferentes presten o hayan prestado servicios, en las que se debe indicar el tiempo de servicio y la calidad de estos."
+            }
+          ],
+          "new": [
+            {
+              "index": 276,
+              "style": "Normal",
+              "text": "B - EXPERIENCIA DE LA EMPRESA (15 PUNTOS)"
+            },
+            {
+              "index": 277,
+              "style": "Normal",
+              "text": "La experiencia será demostrada mediante certificaciones extendidas por quien ostenta la representación legal de las empresas donde los oferentes presten o hayan prestado servicios. Estas certificaciones deben indicar el tiempo de servicio y la calidad de estos. Toda empresa con más de 15 años de experiencia en el mercado recibirá 15 puntos."
+            },
+            {
+              "index": 278,
+              "style": "Normal",
+              "text": "C – EFICIENCIA DE LOS EQUIPOS (15 PUNTOS)"
+            },
+            {
+              "index": 279,
+              "style": "List Paragraph",
+              "text": "La eficiencia de los equipos debe estar certificada mediante AHRI. La empresa que presente equipos con una eficiencia EER (según el tipo y capacidad de cada aire acondicionado) igual o superior a la siguiente lista, obtendrá 15 puntos:"
+            },
+            {
+              "index": 280,
+              "style": "List Paragraph",
+              "text": "Las unidades mini-splits de hasta 12,000 BTU/h deben tener un EER igual o mayor a 12.5."
+            },
+            {
+              "index": 281,
+              "style": "List Paragraph",
+              "text": "Las unidades mini-splits de hasta 36,000 BTU/h deben tener un EER igual o mayor a 12."
+            },
+            {
+              "index": 282,
+              "style": "List Paragraph",
+              "text": "Las unidades mini-splits de hasta 60,000 BTU/h deben tener un EER igual o mayor a 11.5."
+            },
+            {
+              "index": 283,
+              "style": "List Paragraph",
+              "text": "EER= Capacidad de Enfriamiento (BTU)​/ Consumo Eléctrico (W/h)"
+            }
+          ]
+        },
+        {
+          "operation": "replace",
+          "old": [
+            {
+              "index": 242,
+              "style": "Normal",
+              "text": "ANEXO Nº 1"
+            }
+          ],
+          "new": [
+            {
+              "index": 307,
+              "style": "Normal",
+              "text": "Anexo Nº 4: Equipos nuevos para instalar y reemplazar en las Sucursales de la Región Norte."
+            },
+            {
+              "index": 308,
+              "style": "Normal",
+              "text": "Anexo Nº 5: Equipos nuevos para instalar y reemplazar en las Sucursales de la Región Chorotega."
+            },
+            {
+              "index": 309,
+              "style": "Normal",
+              "text": "Anexo Nº 6: Equipos nuevos para instalar y reemplazar en las Sucursales de la Región Atlántica."
+            },
+            {
+              "index": 310,
+              "style": "Normal",
+              "text": "Anexo Nº 7: Equipos nuevos para instalar en Oficinas Centrales.\nAnexo Nº 8: Croquis, planos y detalles."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "old": "GF-EIM-IT-0053-2024---Esp. Tec. Aires Acondicionados.docx",
+      "new": "GF-EIM-IT-0019-2025---Esp. Tec. Aires Acondicionados.docx",
+      "sequence_similarity": 0.9415692821368948,
+      "old_paragraphs": 296,
+      "new_paragraphs": 303,
+      "change_blocks": [
+        {
+          "operation": "replace",
+          "old": [
+            {
+              "index": 34,
+              "style": "List Paragraph",
+              "text": "El oferente deberá estar incorporado al Colegio Federado de Ingenieros y Arquitectos de Costa Rica, para lo cual deberá presentar al día la respectiva certificación con su oferta. La experiencia solicitada deberá ser como mínimo de 05 años. Deberá incluir los atestados correspondientes en la oferta. Ver siguiente punto “CERTIFICACIONES”."
+            }
+          ],
+          "new": [
+            {
+              "index": 34,
+              "style": "List Paragraph",
+              "text": "La experiencia solicitada deberá ser como mínimo de 05 años. Deberá incluir los atestados correspondientes en la oferta. Ver siguiente punto “CERTIFICACIONES”."
+            }
+          ]
+        },
+        {
+          "operation": "replace",
+          "old": [
+            {
+              "index": 37,
+              "style": "Especificaciones 1",
+              "text": "Certificación de que la empresa está debidamente inscrita y al día en el Colegio Federado de Ingenieros y Arquitectos de Costa Rica, emitida por esta entidad."
+            }
+          ],
+          "new": [
+            {
+              "index": 37,
+              "style": "Especificaciones 1",
+              "text": "Requisitos excluyentes (obligatorios):"
+            }
+          ]
+        },
+        {
+          "operation": "delete",
+          "old": [
+            {
+              "index": 39,
+              "style": "Especificaciones 1",
+              "text": "Ingenieros Mecánico y Eléctrico, o Ingeniero Electromecánico o en Mantenimiento Industrial, afiliado y al día en el Colegio Federado de Ingenieros y Arquitectos de Costa Rica, emitida por esta entidad."
+            }
+          ],
+          "new": []
+        },
+        {
+          "operation": "delete",
+          "old": [
+            {
+              "index": 41,
+              "style": "Especificaciones 1",
+              "text": "Certificación de Fabrica de los técnicos en aire acondicionado."
+            },
+            {
+              "index": 42,
+              "style": "Especificaciones 1",
+              "text": "Certificado de que el oferente es representante de fábrica, que posee talleres autorizados y stock de repuestos."
+            }
+          ],
+          "new": []
+        },
+        {
+          "operation": "insert",
+          "old": [],
+          "new": [
+            {
+              "index": 45,
+              "style": "Especificaciones 1",
+              "text": "Requisitos no excluyentes (evaluables):"
+            },
+            {
+              "index": 46,
+              "style": "Especificaciones 1",
+              "text": "Los siguientes requisitos no son obligatorios, pero sí serán considerados en la evaluación técnica conforme al sistema de puntuación descrito en el apartado 24:"
+            },
+            {
+              "index": 47,
+              "style": "Especificaciones 1",
+              "text": "Certificación de que la empresa está debidamente inscrita y al día en el Colegio Federado de Ingenieros y Arquitectos de Costa Rica (CFIA)."
+            },
+            {
+              "index": 48,
+              "style": "Especificaciones 1",
+              "text": "Certificación de que el equipo técnico cuenta con ingenieros Mecánico, Eléctrico, Electromecánico o en Mantenimiento Industrial, afiliados y al día en el CFIA."
+            },
+            {
+              "index": 49,
+              "style": "Especificaciones 1",
+              "text": "Certificación de fábrica para los técnicos en aire acondicionado que respalde su entrenamiento y autorización para trabajar con los equipos propuestos."
+            },
+            {
+              "index": 50,
+              "style": "Especificaciones 1",
+              "text": "Certificación de representación de fábrica, que acredite al oferente como representante oficial con talleres autorizados y stock de repuestos en el país."
+            }
+          ]
+        },
+        {
+          "operation": "replace",
+          "old": [
+            {
+              "index": 108,
+              "style": "Especificaciones 1",
+              "text": "Deberá incluirse el control con termostato"
+            }
+          ],
+          "new": [
+            {
+              "index": 112,
+              "style": "Especificaciones 1",
+              "text": "Deberá incluirse el control con termostato."
+            }
+          ]
+        },
+        {
+          "operation": "replace",
+          "old": [
+            {
+              "index": 258,
+              "style": "Normal",
+              "text": "Conforme a la notificación del contrato a través de la plataforma SICOP, el cronograma de entrega de aires acondicionados para las distintas regiones se especifica en días hábiles:"
+            },
+            {
+              "index": 259,
+              "style": "Normal",
+              "text": "Es importante señalar que los plazos establecidos para la instalación y puesta en funcionamiento de los aires acondicionados son máximos y han sido definidos considerando tanto las necesidades urgentes de las unidades como la capacidad de la Administración para revisar y realizar la recepción definitiva. Aunque los equipos pueden ser instalados antes de lo previsto, es crucial que estén completamente funcionales para la fecha límite especificada, asegurando que estén listos para las inspecciones y la recepción oficial. Esto facilita la programación eficiente de las visitas de recepción en todas las sucursales a nivel nacional."
+            },
+            {
+              "index": 260,
+              "style": "Normal",
+              "text": "La recepción definitiva de los equipos de aire acondicionado se realizará a más tardar un mes después de la inspección programada. Este período permitirá realizar todas las correcciones necesarias detectadas durante la inspección, asegurando que los equipos cumplan con todos los requisitos y especificaciones técnicas antes de su aceptación final."
+            }
+          ],
+          "new": [
+            {
+              "index": 262,
+              "style": "Normal",
+              "text": "El contratista dispondrá de un plazo máximo de hasta 45 días hábiles para la instalación y puesta en funcionamiento de los equipos de aire acondicionado en cada sucursal, contados a partir de la notificación de la orden de inicio a través de la plataforma SICOP."
+            },
+            {
+              "index": 263,
+              "style": "Normal",
+              "text": "En caso de que un mismo oferente resulte adjudicado con varias sucursales, deberá dar prioridad a la instalación en la Sucursal de Turrialba, la cual deberá ser atendida de forma inmediata y preferente antes de proceder con las demás ubicaciones."
+            },
+            {
+              "index": 264,
+              "style": "Normal",
+              "text": "Es importante señalar que este plazo ha sido definido considerando tanto las necesidades operativas de las unidades como la capacidad de la Administración para revisar y realizar la recepción definitiva. Aunque los equipos pueden ser instalados antes de lo previsto, es crucial que estén completamente funcionales dentro del plazo establecido, asegurando su disponibilidad para inspección y recepción oficial, y permitiendo así una programación eficiente de visitas de recepción en todas las sucursales a nivel nacional."
+            },
+            {
+              "index": 265,
+              "style": "Normal",
+              "text": "La recepción definitiva de los equipos de aire acondicionado se realizará a más tardar un mes después de la inspección programada. Este período permitirá ejecutar todas las correcciones necesarias detectadas durante dicha inspección, asegurando que los equipos cumplan con los requisitos contractuales y especificaciones técnicas antes de su aceptación final."
+            }
+          ]
+        },
+        {
+          "operation": "replace",
+          "old": [
+            {
+              "index": 276,
+              "style": "Normal",
+              "text": "B - EXPERIENCIA DE LA EMPRESA (15 PUNTOS)"
+            },
+            {
+              "index": 277,
+              "style": "Normal",
+              "text": "La experiencia será demostrada mediante certificaciones extendidas por quien ostenta la representación legal de las empresas donde los oferentes presten o hayan prestado servicios. Estas certificaciones deben indicar el tiempo de servicio y la calidad de estos. Toda empresa con más de 15 años de experiencia en el mercado recibirá 15 puntos."
+            },
+            {
+              "index": 278,
+              "style": "Normal",
+              "text": "C – EFICIENCIA DE LOS EQUIPOS (15 PUNTOS)"
+            },
+            {
+              "index": 279,
+              "style": "List Paragraph",
+              "text": "La eficiencia de los equipos debe estar certificada mediante AHRI. La empresa que presente equipos con una eficiencia EER (según el tipo y capacidad de cada aire acondicionado) igual o superior a la siguiente lista, obtendrá 15 puntos:"
+            }
+          ],
+          "new": [
+            {
+              "index": 281,
+              "style": "Normal",
+              "text": "B - EXPERIENCIA DE LA EMPRESA (10 PUNTOS)"
+            },
+            {
+              "index": 282,
+              "style": "Normal",
+              "text": "La experiencia será demostrada mediante certificaciones extendidas por quien ostenta la representación legal de las empresas donde los oferentes presten o hayan prestado servicios. Estas certificaciones deben indicar el tiempo de servicio y la calidad de estos. Toda empresa con más de 15 años de experiencia en el mercado recibirá 10 puntos."
+            },
+            {
+              "index": 283,
+              "style": "Normal",
+              "text": "C – EFICIENCIA DE LOS EQUIPOS (10 PUNTOS)"
+            },
+            {
+              "index": 284,
+              "style": "List Paragraph",
+              "text": "La eficiencia de los equipos debe estar certificada mediante AHRI. La empresa que presente equipos con una eficiencia EER (según el tipo y capacidad de cada aire acondicionado) igual o superior a la siguiente lista, obtendrá 10 puntos:"
+            }
+          ]
+        },
+        {
+          "operation": "insert",
+          "old": [],
+          "new": [
+            {
+              "index": 289,
+              "style": "Normal",
+              "text": "D – CERTIFICACIONES TÉCNICAS (10 puntos)"
+            },
+            {
+              "index": 290,
+              "style": "Normal (Web)",
+              "text": "Se evaluará la presentación de los siguientes documentos. Cada uno otorga puntaje únicamente si se presenta:"
+            },
+            {
+              "index": 291,
+              "style": "Normal (Web)",
+              "text": "Total: 10 puntos. Si no se presenta alguno de los requisitos anteriores, el subcriterio correspondiente obtendrá 0 puntos."
+            }
+          ]
+        },
+        {
+          "operation": "replace",
+          "old": [
+            {
+              "index": 310,
+              "style": "Normal",
+              "text": "Anexo Nº 7: Equipos nuevos para instalar en Oficinas Centrales.\nAnexo Nº 8: Croquis, planos y detalles."
+            }
+          ],
+          "new": [
+            {
+              "index": 318,
+              "style": "Normal",
+              "text": "Anexo Nº 7: Equipos nuevos para instalar y reemplazar en las Sucursales de la Región Brunca."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "old": "GF-EIM-IT-0019-2025---Esp. Tec. Aires Acondicionados.docx",
+      "new": "GF-EIM-IT-0031-2025---Esp. Tec. Aires Acondicionados.docx",
+      "sequence_similarity": 0.9597423510466989,
+      "old_paragraphs": 303,
+      "new_paragraphs": 318,
+      "change_blocks": [
+        {
+          "operation": "insert",
+          "old": [],
+          "new": [
+            {
+              "index": 231,
+              "style": "List Paragraph",
+              "text": "El servicio de mantenimiento preventivo o correctivo se realizará tanto para las unidades condensadoras como para las unidades evaporadoras, considerándose como dos servicios independientes por cada sistema de aire acondicionado (uno para la condensadora y otro para la evaporadora)."
+            }
+          ]
+        },
+        {
+          "operation": "replace",
+          "old": [
+            {
+              "index": 266,
+              "style": "Normal",
+              "text": "Cláusula Penal  "
+            },
+            {
+              "index": 267,
+              "style": "Normal",
+              "text": "Se aplicará la siguiente cláusula penal: "
+            },
+            {
+              "index": 268,
+              "style": "Normal",
+              "text": "Incumplimiento en el tiempo de entrega e instalación del sistema de aire acondicionado y mantenimiento de los equipos. Si el contratista incumple con el tiempo de entrega, será sancionado con una Cláusula Penal de acuerdo con el formulario del Anexo Nº 2. “Análisis y estudio técnico para la determinación de Cláusulas Penales por entrega tardía o anticipada”."
+            }
+          ],
+          "new": [
+            {
+              "index": 268,
+              "style": "Normal",
+              "text": "Cláusulas Penales y Multas"
+            },
+            {
+              "index": 269,
+              "style": "Normal",
+              "text": "Las sanciones aplicables al contratista comprenden tanto cláusulas penales por incumplimientos en los plazos establecidos, como multas por deficiencias en la calidad del servicio o del equipo. A continuación, se detallan los casos en los que corresponde aplicar cada una de estas sanciones."
+            },
+            {
+              "index": 270,
+              "style": "Normal",
+              "text": "Cláusula penal por incumplimiento en el tiempo de entrega:"
+            },
+            {
+              "index": 271,
+              "style": "Normal",
+              "text": "Se aplicará en caso de incumplimiento en el tiempo de entrega e instalación del sistema de aire acondicionado y mantenimiento de los equipos. Si el contratista incumple con el tiempo de entrega, será sancionado con una Cláusula Penal de acuerdo con el formulario del Anexo Nº 2: “Determinación de Cláusulas Penales y Multas”."
+            },
+            {
+              "index": 272,
+              "style": "Normal",
+              "text": "Multas por mala calidad del servicio o del equipo:"
+            },
+            {
+              "index": 273,
+              "style": "Normal",
+              "text": "Para los equipos nuevos, la calidad del producto y de la instalación serán evaluadas como condición para su recepción definitiva. No se aplicarán multas en esta etapa; sin embargo, cualquier deficiencia detectada tras la recepción podrá ser sancionada según los criterios establecidos en el Anexo Nº 2, en caso de que comprometa la operación o funcionalidad esperada del equipo."
+            },
+            {
+              "index": 274,
+              "style": "Normal",
+              "text": "El administrador local podrá, en cualquier momento que lo considere oportuno, verificar que los mantenimientos o instalaciones se ejecuten conforme a lo establecido en las especificaciones técnicas. También deberá confirmar que el personal que realice las labores corresponda al ofertado y, en caso de ser diferente, que esté debidamente autorizado."
+            },
+            {
+              "index": 275,
+              "style": "Normal",
+              "text": "Adicionalmente, se considerarán como posibles indicios de mala calidad situaciones que pueden ser detectadas fácilmente por el usuario del equipo, tales como:"
+            },
+            {
+              "index": 277,
+              "style": "List Paragraph",
+              "text": "El aire acondicionado no enfría."
+            },
+            {
+              "index": 278,
+              "style": "List Paragraph",
+              "text": "Hace ruidos extraños o molestos."
+            },
+            {
+              "index": 279,
+              "style": "List Paragraph",
+              "text": "El flujo de aire es muy bajo o casi inexistente."
+            },
+            {
+              "index": 280,
+              "style": "List Paragraph",
+              "text": "Presenta goteos o acumulación de agua."
+            },
+            {
+              "index": 281,
+              "style": "List Paragraph",
+              "text": "Emite malos olores al encenderse o durante el funcionamiento."
+            },
+            {
+              "index": 282,
+              "style": "List Paragraph",
+              "text": "Se apaga solo o se congela."
+            },
+            {
+              "index": 283,
+              "style": "List Paragraph",
+              "text": "El control remoto no funciona correctamente."
+            },
+            {
+              "index": 284,
+              "style": "List Paragraph",
+              "text": "La unidad genera vibraciones inusuales."
+            },
+            {
+              "index": 285,
+              "style": "Normal",
+              "text": "Cualquiera de estas fallas, si se determinan atribuibles a una mala instalación o mantenimiento, dará lugar a la aplicación de las multas contempladas en el Anexo Nº 2."
+            }
+          ]
+        },
+        {
+          "operation": "replace",
+          "old": [
+            {
+              "index": 272,
+              "style": "Normal",
+              "text": "La oferta base por cada oferente deberá cumplir con los requisitos legales, financieros y todas las especificaciones requeridas en el cartel de compra."
+            },
+            {
+              "index": 273,
+              "style": "Normal",
+              "text": "Una vez que se ha determinado que las ofertas cumplen con los aspectos legales y técnicos y que son admisibles para una eventual adjudicación, se procederá a evaluar las ofertas según los siguientes criterios de evaluación:"
+            }
+          ],
+          "new": [
+            {
+              "index": 289,
+              "style": "Normal",
+              "text": "Cada oferente deberá presentar una oferta base que cumpla con todos los requisitos técnicos, legales, financieros y demás especificaciones establecidas en el cartel de compra."
+            },
+            {
+              "index": 290,
+              "style": "Normal",
+              "text": "Una vez verificado que las ofertas cumplen con los requisitos legales, técnicos y financieros, y que son admisibles para una eventual adjudicación, se procederá a su evaluación conforme a los siguientes criterios:"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "exact_pdf_duplicate_groups": [],
+  "same_extracted_text_groups": [
+    [
+      "C:\\Users\\marco\\OneDrive - Caja Costarricense de Seguro Social\\EIMGF\\2024\\Informes TEC 2024 PDF\\GF-EIM-IT-0024-2024---Esp. Tec. Aires Acondicionados-firmado.pdf",
+      "C:\\Users\\marco\\OneDrive - Caja Costarricense de Seguro Social\\EIMGF\\2024\\Informes TEC 2024 PDF\\GF-EIM-IT-0024-2024---Esp. Tec. Aires Acondicionados.pdf"
+    ]
+  ]
+}

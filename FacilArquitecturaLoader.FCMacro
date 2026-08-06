@@ -1,0 +1,679 @@
+# -*- coding: utf-8 -*-
+# Icon: FacilArquitecturaLoader.svg
+# FacilArquitecturaLoader Macro
+# Description: Reload and activate FacilArquitecturaWB from the Macros-de-Freecad repo.
+# Notes: Uses hot-reload flow for development in FreeCAD 1.1.1.
+# Version: 2026-07-23.2
+
+import importlib
+import os
+import sys
+
+import FreeCAD as App
+import FreeCADGui as Gui
+
+
+LOG_PREFIX = "[FACILARQ] "
+WB_CANDIDATES = ("FacilArquitecturaWorkbench", "Facil Arquitectura", "FacilArquitecturaWB")
+MODULE_PREFIXES = ("FacilArquitecturaWB", "Mod.FacilArquitecturaWB")
+MODULE_CANDIDATES = ("FacilArquitecturaWB.InitGui", "Mod.FacilArquitecturaWB.InitGui")
+COMMAND_CANDIDATES = (
+    "FA_ImportCADReference",
+    "FA_CreateProject",
+    "FA_CreateMasterSketches",
+    "FA_CenterlinesFromSelection",
+    "FA_WindowCenterlinesFromSelection",
+    "FA_DoorCenterlinesFromSelection",
+    "FA_CloseWallSketch",
+    "FA_CollectRoomLabels",
+    "FA_CreateSampleGeometry",
+    "FA_CreateAxesColumnsBIM",
+    "FA_CreateBuildingGrid",
+    "FA_CreateWallsBIM",
+    "FA_CreateSiteFloorBIM",
+    "FA_CreateModularCeiling",
+    "FA_CreateServicePlatformFront",
+    "FA_UpdateServicePlatformFront",
+    "FA_AddCashierServiceWindow",
+)
+MACRO_COMMAND_SCRIPT = "FacilArquitecturaLoader.FCMacro"
+MACRO_COMMAND_MENU = "Facil Arquitectura"
+MACRO_COMMAND_TOOLTIP = "Carga y recarga el workbench Facil Arquitectura"
+MACRO_COMMAND_ICON = "FacilArquitecturaLoader.svg"
+MACRO_TOOLBAR_NAME = "Macros"
+TOOLBAR_CONTROLLER_ATTR = "_fa_loader_toolbar_persistence_controller"
+
+
+def log_info(message):
+    App.Console.PrintMessage(LOG_PREFIX + str(message) + "\n")
+
+
+def log_error(message):
+    App.Console.PrintError(LOG_PREFIX + str(message) + "\n")
+
+
+def normalize_path(path_text):
+    return os.path.normcase(os.path.normpath(os.path.abspath(path_text)))
+
+
+def ensure_repo_on_path(repo_root):
+    repo_root = os.path.normpath(os.path.abspath(repo_root))
+    normalized = normalize_path(repo_root)
+    old_count = len(sys.path)
+    sys.path[:] = [path for path in sys.path if normalize_path(path or os.getcwd()) != normalized]
+    removed = old_count - len(sys.path)
+    sys.path.insert(0, repo_root)
+    if removed:
+        log_info("Moved repo path to front: " + repo_root)
+    else:
+        log_info("Added repo path at front: " + repo_root)
+
+
+def candidate_repo_roots():
+    here = os.path.dirname(__file__)
+    roots = []
+    for root in (os.path.join(here, "Macros-de-Freecad"), here):
+        root = os.path.normpath(os.path.abspath(root))
+        if os.path.isdir(root) and root not in roots:
+            roots.append(root)
+    return roots
+
+
+def macro_dir():
+    return os.path.normpath(os.path.abspath(os.path.dirname(__file__)))
+
+
+def icon_path():
+    candidate = os.path.join(macro_dir(), MACRO_COMMAND_ICON)
+    if os.path.exists(candidate):
+        return os.path.abspath(candidate).replace(os.sep, "/")
+    return MACRO_COMMAND_ICON
+
+
+def _param_group_names(group):
+    try:
+        return list(group.GetGroups())
+    except Exception:
+        return []
+
+
+def _next_std_macro_name(macros_group):
+    max_index = -1
+    for name in _param_group_names(macros_group):
+        if not str(name).startswith("Std_Macro_"):
+            continue
+        try:
+            max_index = max(max_index, int(str(name).split("_")[-1]))
+        except Exception:
+            pass
+    return "Std_Macro_" + str(max_index + 1)
+
+
+def _find_or_create_macro_command():
+    macros_group = App.ParamGet("User parameter:BaseApp/Macro/Macros")
+    existing_name = None
+    for command_name in _param_group_names(macros_group):
+        command_group = macros_group.GetGroup(command_name)
+        try:
+            script = command_group.GetString("Script", "")
+        except Exception:
+            script = ""
+        if os.path.normcase(script) == os.path.normcase(MACRO_COMMAND_SCRIPT):
+            existing_name = str(command_name)
+            break
+
+    command_name = existing_name or _next_std_macro_name(macros_group)
+    command_group = macros_group.GetGroup(command_name)
+    command_group.SetString("Script", MACRO_COMMAND_SCRIPT)
+    command_group.SetString("Menu", MACRO_COMMAND_MENU)
+    command_group.SetString("Tooltip", MACRO_COMMAND_TOOLTIP)
+    command_group.SetString("WhatsThis", "")
+    command_group.SetString("Statustip", MACRO_COMMAND_TOOLTIP)
+    command_group.SetString("Pixmap", icon_path())
+    command_group.SetString("Accel", "")
+    command_group.SetBool("System", False)
+    if existing_name:
+        log_info("Macro command already registered: " + command_name)
+    else:
+        log_info("Macro command registered: " + command_name)
+    return command_name
+
+
+def _find_or_create_macro_toolbar():
+    toolbar_root = App.ParamGet("User parameter:BaseApp/Workbench/Global/Toolbar")
+    for group_name in _param_group_names(toolbar_root):
+        group = toolbar_root.GetGroup(group_name)
+        try:
+            if group.GetString("Name", "") == MACRO_TOOLBAR_NAME:
+                group.SetBool("Active", True)
+                return group
+        except Exception:
+            continue
+
+    max_index = 0
+    for group_name in _param_group_names(toolbar_root):
+        if str(group_name).startswith("Custom_"):
+            try:
+                max_index = max(max_index, int(str(group_name).split("_")[-1]))
+            except Exception:
+                pass
+    group = toolbar_root.GetGroup("Custom_" + str(max_index + 1))
+    group.SetString("Name", MACRO_TOOLBAR_NAME)
+    group.SetBool("Active", True)
+    log_info("Macro toolbar created: " + MACRO_TOOLBAR_NAME)
+    return group
+
+
+def ensure_loader_toolbar_button():
+    """Persist this loader in FreeCAD's global Macros toolbar."""
+    try:
+        command_name = _find_or_create_macro_command()
+        toolbar_group = _find_or_create_macro_toolbar()
+        try:
+            existing = toolbar_group.GetString(command_name, "")
+        except Exception:
+            existing = ""
+        if existing:
+            log_info("Loader button already in toolbar: " + MACRO_TOOLBAR_NAME)
+        else:
+            toolbar_group.SetString(command_name, "FreeCAD")
+            log_info("Loader button added to toolbar: " + MACRO_TOOLBAR_NAME)
+        App.ParamGet("User parameter:BaseApp/Preferences/MainWindow/Toolbars").SetBool(MACRO_TOOLBAR_NAME, True)
+        try:
+            if hasattr(App, "saveParameter"):
+                App.saveParameter()
+        except Exception:
+            pass
+        return command_name
+    except Exception as exc:
+        log_error("Could not register loader toolbar button: " + str(exc))
+        return None
+
+
+def _qt_modules():
+    for binding in ("PySide6", "PySide2", "PySide"):
+        try:
+            if binding == "PySide":
+                from PySide import QtGui
+
+                return QtGui, QtGui
+            module = __import__(binding, fromlist=["QtGui", "QtWidgets"])
+            return module.QtGui, module.QtWidgets
+        except Exception:
+            continue
+    return None, None
+
+
+def _qt_core_module():
+    for binding in ("PySide6", "PySide2", "PySide"):
+        try:
+            module = __import__(binding, fromlist=["QtCore"])
+            return module.QtCore
+        except Exception:
+            continue
+    return None
+
+
+def _find_qt_toolbars(main_window, toolbar_name):
+    result = []
+    _qtgui, qtwidgets = _qt_modules()
+    if qtwidgets is not None:
+        try:
+            for toolbar in main_window.findChildren(qtwidgets.QToolBar):
+                if toolbar.windowTitle() == toolbar_name or toolbar.objectName() == toolbar_name:
+                    if toolbar not in result:
+                        result.append(toolbar)
+        except Exception:
+            pass
+    try:
+        from PySide6 import QtWidgets
+
+        for toolbar in main_window.findChildren(QtWidgets.QToolBar):
+            if toolbar.windowTitle() == toolbar_name or toolbar.objectName() == toolbar_name:
+                if toolbar not in result:
+                    result.append(toolbar)
+    except Exception:
+        pass
+    try:
+        from PySide2 import QtWidgets
+
+        for toolbar in main_window.findChildren(QtWidgets.QToolBar):
+            if toolbar.windowTitle() == toolbar_name or toolbar.objectName() == toolbar_name:
+                if toolbar not in result:
+                    result.append(toolbar)
+    except Exception:
+        pass
+    return result
+
+
+def _find_qt_toolbar(main_window, toolbar_name):
+    toolbars = _find_qt_toolbars(main_window, toolbar_name)
+    if not toolbars:
+        return None
+    try:
+        toolbars.sort(key=lambda toolbar: bool(toolbar.isVisible()), reverse=True)
+    except Exception:
+        pass
+    return toolbars[0]
+
+
+def _execute_loader_from_disk(checked=False):
+    """Execute the current loader file instead of a stale in-memory callback."""
+    del checked
+    path = os.path.join(macro_dir(), MACRO_COMMAND_SCRIPT)
+    namespace = {"__file__": path, "__name__": "__main__"}
+    try:
+        with open(path, "r", encoding="utf-8-sig") as handle:
+            code = compile(handle.read(), path, "exec")
+        exec(code, namespace, namespace)
+    except Exception as exc:
+        log_error("Could not execute fresh loader from disk: " + str(exc))
+        raise
+
+
+def _bind_runtime_action(action):
+    try:
+        action.triggered.disconnect()
+    except Exception:
+        pass
+    action.triggered.connect(_execute_loader_from_disk)
+
+
+def ensure_runtime_toolbar_button():
+    """Show the loader button immediately in the current FreeCAD session."""
+    QtGui, QtWidgets = _qt_modules()
+    if QtGui is None or QtWidgets is None:
+        log_error("Could not access Qt modules to update toolbar in this session")
+        return
+    try:
+        main_window = Gui.getMainWindow()
+    except Exception as exc:
+        log_error("Could not access FreeCAD main window: " + str(exc))
+        return
+    if main_window is None:
+        return
+
+    toolbar = _find_qt_toolbar(main_window, MACRO_TOOLBAR_NAME)
+    if toolbar is None:
+        try:
+            toolbar = QtWidgets.QToolBar(MACRO_TOOLBAR_NAME, main_window)
+            toolbar.setObjectName(MACRO_TOOLBAR_NAME)
+            toolbar.setWindowTitle(MACRO_TOOLBAR_NAME)
+            main_window.addToolBar(toolbar)
+            log_info("Runtime toolbar created: " + MACRO_TOOLBAR_NAME)
+        except Exception as exc:
+            log_error("Could not create runtime toolbar: " + str(exc))
+            return
+
+    _set_runtime_toolbar_visible(toolbar)
+
+    object_name = "FA_FacilArquitecturaLoader_Action"
+    try:
+        for action in toolbar.actions():
+            if str(action.objectName()) == object_name:
+                _bind_runtime_action(action)
+                _set_runtime_toolbar_visible(toolbar)
+                log_info("Runtime loader button already exists")
+                return
+    except Exception:
+        pass
+
+    try:
+        action = QtGui.QAction(QtGui.QIcon(icon_path()), MACRO_COMMAND_MENU, main_window)
+    except Exception:
+        action = toolbar.addAction(MACRO_COMMAND_MENU)
+    try:
+        action.setObjectName(object_name)
+        action.setToolTip(MACRO_COMMAND_TOOLTIP)
+        _bind_runtime_action(action)
+        toolbar.addAction(action)
+        _set_runtime_toolbar_visible(toolbar)
+        log_info("Runtime loader button added to toolbar: " + MACRO_TOOLBAR_NAME)
+    except Exception as exc:
+        log_error("Could not add runtime loader button: " + str(exc))
+
+
+def _set_runtime_toolbar_visible(toolbar=None):
+    """Keep the global Macros toolbar visible after workbench changes."""
+    try:
+        App.ParamGet("User parameter:BaseApp/Preferences/MainWindow/Toolbars").SetBool(MACRO_TOOLBAR_NAME, True)
+    except Exception:
+        pass
+    toolbars = []
+    if toolbar is None:
+        try:
+            toolbars = _find_qt_toolbars(Gui.getMainWindow(), MACRO_TOOLBAR_NAME)
+        except Exception:
+            toolbars = []
+    else:
+        toolbars = [toolbar]
+    if not toolbars:
+        return False
+    shown = False
+    for candidate in toolbars:
+        try:
+            toggle = candidate.toggleViewAction()
+            if toggle is not None:
+                toggle.setChecked(True)
+        except Exception:
+            pass
+        try:
+            candidate.show()
+            candidate.setVisible(True)
+            shown = True
+        except Exception:
+            pass
+    return shown
+
+
+def install_toolbar_persistence():
+    """Re-show the global Macros toolbar whenever FreeCAD changes workbench."""
+    QtCore = _qt_core_module()
+    if QtCore is None:
+        log_error("Could not access QtCore to keep loader toolbar visible")
+        return
+    try:
+        main_window = Gui.getMainWindow()
+    except Exception as exc:
+        log_error("Could not access FreeCAD main window for toolbar persistence: " + str(exc))
+        return
+    if main_window is None:
+        return
+
+    existing = getattr(main_window, TOOLBAR_CONTROLLER_ATTR, None)
+    if existing is not None and hasattr(existing, "schedule_show"):
+        existing.schedule_show(0)
+        return
+
+    class _ToolbarPersistenceController(QtCore.QObject):
+        def __init__(self, parent):
+            super().__init__(parent)
+            self._timer = QtCore.QTimer(self)
+            self._timer.setSingleShot(True)
+            self._timer.timeout.connect(self._show_toolbar)
+
+        def schedule_show(self, delay=300):
+            self._timer.start(max(0, int(delay)))
+
+        def on_workbench_activated(self, *args):
+            del args
+            self.schedule_show(350)
+
+        def _show_toolbar(self):
+            ensure_runtime_toolbar_button()
+
+    controller = _ToolbarPersistenceController(main_window)
+    try:
+        main_window.workbenchActivated.connect(controller.on_workbench_activated)
+    except Exception as exc:
+        log_error("Could not connect loader toolbar to workbench changes: " + str(exc))
+    setattr(main_window, TOOLBAR_CONTROLLER_ATTR, controller)
+    controller.schedule_show(0)
+    log_info("Global loader toolbar persistence installed")
+
+
+def purge_modules():
+    removed = 0
+    for name in list(sys.modules.keys()):
+        name_l = str(name).lower()
+        if any(name == prefix or name.startswith(prefix + ".") for prefix in MODULE_PREFIXES) or "facilarquitecturawb" in name_l:
+            sys.modules.pop(name, None)
+            removed += 1
+    log_info("Purged modules: " + str(removed))
+
+
+def close_active_dialog():
+    try:
+        control = getattr(Gui, "Control", None)
+        if control is not None and hasattr(control, "activeDialog") and control.activeDialog():
+            control.closeDialog()
+            log_info("Closed active task dialog")
+    except Exception as exc:
+        log_error("Could not close active task dialog: " + str(exc))
+
+
+def deactivate_workbench():
+    for wb_name in ("StartWorkbench", "NoneWorkbench"):
+        try:
+            Gui.activateWorkbench(wb_name)
+            log_info("Activated neutral workbench: " + wb_name)
+            return
+        except Exception:
+            pass
+
+
+def remove_old_commands():
+    if not hasattr(Gui, "removeCommand"):
+        log_info("removeCommand not available in this FreeCAD build")
+        return
+    command_names = set(COMMAND_CANDIDATES)
+    try:
+        for command_name in getattr(Gui, "listCommands", lambda: [])() or []:
+            if str(command_name).startswith("FA_"):
+                command_names.add(str(command_name))
+    except Exception:
+        pass
+    removed = 0
+    for command_name in sorted(command_names):
+        try:
+            Gui.removeCommand(command_name)
+            removed += 1
+            log_info("Removed command: " + command_name)
+        except Exception:
+            pass
+    log_info("Removed commands: " + str(removed))
+
+
+def remove_old_workbench():
+    try:
+        workbenches = dict(getattr(Gui, "listWorkbenches", lambda: {})() or {})
+    except Exception:
+        workbenches = {}
+
+    if not hasattr(Gui, "removeWorkbench"):
+        return
+
+    deactivate_workbench()
+    remove_runtime_workbench_ui()
+
+    names_to_remove = set(WB_CANDIDATES)
+    for existing_name in workbenches.keys():
+        if "facilarquitectura" in str(existing_name).lower():
+            names_to_remove.add(existing_name)
+
+    for wb_name in names_to_remove:
+        if wb_name in workbenches:
+            try:
+                Gui.removeWorkbench(wb_name)
+                log_info("Removed previous workbench: " + wb_name)
+            except Exception as exc:
+                log_error("Could not remove workbench " + wb_name + ": " + str(exc))
+
+
+def remove_runtime_workbench_ui():
+    """Delete stale Facil Arquitectura toolbars and menus before rebuilding them."""
+    _qtgui, qtwidgets = _qt_modules()
+    if qtwidgets is None:
+        return
+    try:
+        main_window = Gui.getMainWindow()
+    except Exception:
+        return
+    if main_window is None:
+        return
+
+    removed_toolbars = 0
+    for toolbar in _find_qt_toolbars(main_window, "Facil Arquitectura"):
+        try:
+            toolbar.clear()
+        except Exception:
+            pass
+        try:
+            main_window.removeToolBar(toolbar)
+        except Exception:
+            pass
+        try:
+            toolbar.setParent(None)
+            toolbar.deleteLater()
+            removed_toolbars += 1
+        except Exception:
+            pass
+
+    removed_menus = 0
+    try:
+        menus = list(main_window.findChildren(qtwidgets.QMenu))
+    except Exception:
+        menus = []
+    for menu in menus:
+        try:
+            title = str(menu.title() or "").replace("&", "").strip()
+        except Exception:
+            title = ""
+        if title != "Facil Arquitectura":
+            continue
+        try:
+            main_window.menuBar().removeAction(menu.menuAction())
+        except Exception:
+            pass
+        try:
+            menu.clear()
+            menu.setParent(None)
+            menu.deleteLater()
+            removed_menus += 1
+        except Exception:
+            pass
+
+    if removed_toolbars or removed_menus:
+        log_info(
+            "Removed stale workbench UI: toolbars=%d menus=%d"
+            % (removed_toolbars, removed_menus)
+        )
+    try:
+        if hasattr(Gui, "updateGui"):
+            Gui.updateGui()
+    except Exception:
+        pass
+    try:
+        application = qtwidgets.QApplication.instance()
+        if application is not None:
+            application.processEvents()
+    except Exception:
+        pass
+    QtCore = _qt_core_module()
+    if QtCore is not None:
+        try:
+            QtCore.QCoreApplication.sendPostedEvents(None, QtCore.QEvent.DeferredDelete)
+        except Exception:
+            pass
+
+
+def report_current_workbench_ui(module):
+    command_names = list(getattr(module, "REGISTERED_COMMANDS", []) or [])
+    command_set = set(str(name) for name in command_names)
+    close_commands = [
+        name for name in command_names if str(name).startswith("FA_CloseWallSketch_")
+    ]
+    if close_commands:
+        log_info("Current close-wall command: " + close_commands[-1])
+    else:
+        log_error("Current close-wall command was not registered")
+    log_info("Current workbench command count: " + str(len(command_names)))
+
+    try:
+        main_window = Gui.getMainWindow()
+    except Exception:
+        main_window = None
+    stale_actions = []
+    current_actions = []
+    if main_window is not None:
+        for toolbar in _find_qt_toolbars(main_window, "Facil Arquitectura"):
+            try:
+                actions = list(toolbar.actions())
+            except Exception:
+                actions = []
+            for action in actions:
+                try:
+                    action_name = str(action.objectName() or "")
+                except Exception:
+                    action_name = ""
+                if not action_name.startswith("FA_"):
+                    continue
+                if action_name in command_set:
+                    current_actions.append(action_name)
+                    continue
+                stale_actions.append(action_name)
+                try:
+                    toolbar.removeAction(action)
+                except Exception:
+                    pass
+    if stale_actions:
+        log_info("Removed stale workbench actions: " + ", ".join(stale_actions))
+    current_close_actions = [
+        name for name in current_actions if name.startswith("FA_CloseWallSketch_")
+    ]
+    if current_close_actions:
+        log_info("Toolbar close-wall action: " + current_close_actions[-1])
+
+
+def import_workbench_initgui():
+    last_error = None
+    for module_name in MODULE_CANDIDATES:
+        try:
+            module = importlib.import_module(module_name)
+            importlib.reload(module)
+            log_info("Loaded InitGui from: " + str(getattr(module, "__file__", "unknown")))
+            return module
+        except Exception as exc:
+            last_error = exc
+    if last_error:
+        raise last_error
+    raise RuntimeError("No FacilArquitectura InitGui module candidate was attempted")
+
+
+def activate_workbench():
+    last_error = None
+    for wb_name in WB_CANDIDATES:
+        try:
+            Gui.activateWorkbench(wb_name)
+            log_info("Activated workbench: " + wb_name)
+            return
+        except Exception as exc:
+            last_error = exc
+    if last_error:
+        raise last_error
+    raise RuntimeError("No FacilArquitectura workbench candidate was attempted")
+
+
+def main():
+    log_info("Hot restart requested")
+    ensure_loader_toolbar_button()
+    ensure_runtime_toolbar_button()
+    install_toolbar_persistence()
+    close_active_dialog()
+    repo_roots = candidate_repo_roots()
+    for repo_root in reversed(repo_roots):
+        ensure_repo_on_path(repo_root)
+    deactivate_workbench()
+    remove_old_workbench()
+    remove_old_commands()
+    purge_modules()
+    importlib.invalidate_caches()
+    initgui_module = import_workbench_initgui()
+    activate_workbench()
+    try:
+        if hasattr(Gui, "updateGui"):
+            Gui.updateGui()
+    except Exception:
+        pass
+    report_current_workbench_ui(initgui_module)
+    ensure_runtime_toolbar_button()
+    install_toolbar_persistence()
+    log_info("Workbench hot restart completed")
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except Exception as exc:
+        log_error("Failed to load workbench: " + str(exc))
+        raise

@@ -1,0 +1,110 @@
+import FreeCAD as App
+import FreeCADGui as Gui
+import Part
+
+# Silla de madera sencilla; todas las dimensiones estan en milimetros.
+DOC_NAME = "Silla_Madera"
+OUT_FILE = r"C:\Users\marco\OneDrive - Caja Costarricense de Seguro Social\Documentos\FreeCAD\Macros\Silla_Madera.FCStd"
+STEP_FILE = r"C:\Users\marco\OneDrive - Caja Costarricense de Seguro Social\Documentos\FreeCAD\Macros\Silla_Madera.step"
+
+old = App.listDocuments().get(DOC_NAME)
+if old is not None:
+    App.closeDocument(DOC_NAME)
+doc = App.newDocument(DOC_NAME, "Silla de madera")
+
+# Dimensiones principales
+seat_w, seat_d, seat_t = 460.0, 440.0, 35.0
+seat_z = 440.0
+leg = 42.0
+back_h = 900.0
+
+params = doc.addObject("App::FeaturePython", "Parametros")
+params.Label = "Dimensiones (mm)"
+for name, label, value in [
+    ("AnchoAsiento", "Ancho del asiento", seat_w),
+    ("FondoAsiento", "Fondo del asiento", seat_d),
+    ("AlturaAsiento", "Altura del asiento", seat_z + seat_t),
+    ("AlturaTotal", "Altura total", back_h),
+    ("SeccionPatas", "Seccion de las patas", leg),
+]:
+    params.addProperty("App::PropertyLength", name, "Silla", label)
+    setattr(params, name, value)
+
+wood = (0.72, 0.45, 0.22)
+dark = (0.48, 0.25, 0.10)
+
+def feature(name, label, shape, color=wood):
+    obj = doc.addObject("Part::Feature", name)
+    obj.Label = label
+    obj.Shape = shape
+    obj.ViewObject.ShapeColor = color
+    return obj
+
+# Asiento con bordes suavizados.
+seat_shape = Part.makeBox(seat_w, seat_d, seat_t, App.Vector(-seat_w/2, -seat_d/2, seat_z))
+try:
+    seat_shape = seat_shape.makeFillet(10, seat_shape.Edges)
+except Exception:
+    pass
+seat = feature("Asiento", "Asiento", seat_shape)
+
+# Cuatro patas, ligeramente remetidas.
+inset = 28.0
+leg_positions = [
+    (-seat_w/2 + inset, -seat_d/2 + inset, "Delantera izquierda"),
+    ( seat_w/2 - inset - leg, -seat_d/2 + inset, "Delantera derecha"),
+    (-seat_w/2 + inset,  seat_d/2 - inset - leg, "Trasera izquierda"),
+    ( seat_w/2 - inset - leg,  seat_d/2 - inset - leg, "Trasera derecha"),
+]
+legs = []
+for i, (x, y, label) in enumerate(leg_positions, 1):
+    legs.append(feature("Pata%d" % i, "Pata " + label,
+                        Part.makeBox(leg, leg, seat_z, App.Vector(x, y, 0))))
+
+# Travesanos laterales y frontal para rigidizar la estructura.
+rail_z, rail_t = 245.0, 28.0
+rails = [
+    feature("TravesanoFrontal", "Travesano frontal",
+            Part.makeBox(seat_w-2*(inset+leg), rail_t, rail_t,
+                         App.Vector(-seat_w/2+inset+leg, -seat_d/2+inset+7, rail_z)), dark),
+    feature("TravesanoIzquierdo", "Travesano lateral izquierdo",
+            Part.makeBox(rail_t, seat_d-2*(inset+leg), rail_t,
+                         App.Vector(-seat_w/2+inset+7, -seat_d/2+inset+leg, rail_z)), dark),
+    feature("TravesanoDerecho", "Travesano lateral derecho",
+            Part.makeBox(rail_t, seat_d-2*(inset+leg), rail_t,
+                         App.Vector(seat_w/2-inset-leg+7, -seat_d/2+inset+leg, rail_z)), dark),
+]
+
+# Montantes y respaldo con una inclinacion suave hacia atras.
+post_y = seat_d/2 - inset - leg
+post_z = seat_z + seat_t
+posts = [
+    feature("MontanteIzquierdo", "Montante izquierdo del respaldo",
+            Part.makeBox(leg, leg, back_h-post_z,
+                         App.Vector(-seat_w/2+inset, post_y, post_z))),
+    feature("MontanteDerecho", "Montante derecho del respaldo",
+            Part.makeBox(leg, leg, back_h-post_z,
+                         App.Vector(seat_w/2-inset-leg, post_y, post_z))),
+]
+
+back = Part.makeBox(seat_w-2*(inset+leg), 28, 230,
+                    App.Vector(-seat_w/2+inset+leg, post_y+7, 575))
+try:
+    back = back.makeFillet(12, back.Edges)
+except Exception:
+    pass
+back_obj = feature("Respaldo", "Panel del respaldo", back)
+
+parts = [seat] + legs + rails + posts + [back_obj]
+group = doc.addObject("App::DocumentObjectGroup", "Silla")
+group.Label = "Silla de madera"
+group.addObjects(parts)
+
+doc.recompute()
+doc.saveAs(OUT_FILE)
+Part.export(parts, STEP_FILE)
+
+Gui.activeDocument().activeView().viewAxonometric()
+Gui.activeDocument().activeView().fitAll()
+Gui.activeDocument().activeView().setAnimationEnabled(False)
+print("Silla creada: " + OUT_FILE)

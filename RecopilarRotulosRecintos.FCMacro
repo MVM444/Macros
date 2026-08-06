@@ -1,0 +1,49 @@
+# -*- coding: utf-8 -*-
+# Macro de compatibilidad para Facil Arquitectura 0.3.0.
+# Ejecuta el mismo nucleo que el comando FA Recopilar rotulos de recintos.
+
+from __future__ import annotations
+
+import os
+import sys
+
+import FreeCAD as App
+
+
+MACRO_DIR = os.path.normpath(os.path.abspath(os.path.dirname(__file__)))
+REPO_ROOT = os.path.join(MACRO_DIR, "Macros-de-Freecad")
+if REPO_ROOT not in sys.path:
+    sys.path.insert(0, REPO_ROOT)
+
+from FacilArquitecturaWB.core.room_label_utils import (  # noqa: E402
+    collect_room_labels,
+    write_room_label_spreadsheet,
+)
+
+
+def _find_parameters_group(doc):
+    for name in ("FA_Parameters", "01_Parameters"):
+        group = doc.getObject(name)
+        if group is not None and hasattr(group, "addObject"):
+            return group
+    for obj in doc.Objects:
+        if str(getattr(obj, "Label", "") or "") == "01_Parameters" and hasattr(obj, "addObject"):
+            return obj
+    return None
+
+
+doc = App.ActiveDocument
+if doc is None:
+    raise RuntimeError("Abra un documento de FreeCAD antes de ejecutar la macro.")
+
+records = collect_room_labels(doc)
+if not records:
+    App.Console.PrintWarning(
+        "[FACILARQ] No se encontraron rotulos de recintos con propiedad Text.\n"
+    )
+else:
+    sheet = write_room_label_spreadsheet(doc, records, _find_parameters_group(doc))
+    App.Console.PrintMessage(
+        "[FACILARQ] Macro compatible completada: %d rotulos | hoja: %s\n"
+        % (len(records), sheet.Label)
+    )

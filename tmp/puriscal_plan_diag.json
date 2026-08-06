@@ -1,0 +1,1949 @@
+{
+  "groups": [
+    {
+      "name": "Site",
+      "label": "Sitio y terreno - Puriscal",
+      "vis": true,
+      "count": 3,
+      "parent": []
+    },
+    {
+      "name": "BuildingPart",
+      "label": "Edificio Puriscal - un nivel",
+      "vis": true,
+      "count": 5,
+      "parent": [
+        "Sitio y terreno - Puriscal"
+      ]
+    },
+    {
+      "name": "PD_SiteWorks",
+      "label": "Terreno y obras exteriores",
+      "vis": true,
+      "count": 1,
+      "parent": [
+        "Sitio y terreno - Puriscal"
+      ]
+    },
+    {
+      "name": "PD_Construction",
+      "label": "Elementos constructivos",
+      "vis": true,
+      "count": 2,
+      "parent": [
+        "Edificio Puriscal - un nivel"
+      ]
+    },
+    {
+      "name": "PD_Openings",
+      "label": "Puertas y ventanas",
+      "vis": true,
+      "count": 28,
+      "parent": [
+        "Edificio Puriscal - un nivel"
+      ]
+    },
+    {
+      "name": "PD_Ceilings",
+      "label": "Cielos suspendidos",
+      "vis": true,
+      "count": 18,
+      "parent": [
+        "Edificio Puriscal - un nivel"
+      ]
+    },
+    {
+      "name": "PD_Spaces",
+      "label": "Espacios de referencia",
+      "vis": true,
+      "count": 18,
+      "parent": [
+        "Edificio Puriscal - un nivel"
+      ]
+    },
+    {
+      "name": "PD_References",
+      "label": "Fuentes y auxiliares",
+      "vis": true,
+      "count": 67,
+      "parent": [
+        "Edificio Puriscal - un nivel"
+      ]
+    },
+    {
+      "name": "FA_RectangularAreas",
+      "label": "Análisis de áreas rectangulares",
+      "vis": true,
+      "count": 28,
+      "parent": []
+    },
+    {
+      "name": "Hojas_de_Calculo",
+      "label": "Hojas de Calculo",
+      "vis": true,
+      "count": 2,
+      "parent": []
+    },
+    {
+      "name": "Etiquetas",
+      "label": "Etiquetas",
+      "vis": true,
+      "count": 26,
+      "parent": [
+        "Análisis de áreas rectangulares"
+      ]
+    },
+    {
+      "name": "Group",
+      "label": "Etiquetas Análisis de Áreas",
+      "vis": true,
+      "count": 27,
+      "parent": [
+        "Análisis de áreas rectangulares"
+      ]
+    },
+    {
+      "name": "Areas",
+      "label": "Areas",
+      "vis": true,
+      "count": 2,
+      "parent": []
+    },
+    {
+      "name": "_CSV_Asis_Config",
+      "label": "CSV_Asis_Config",
+      "vis": false,
+      "count": 0,
+      "parent": []
+    },
+    {
+      "name": "electrico",
+      "label": "electrico",
+      "vis": true,
+      "count": 2,
+      "parent": []
+    },
+    {
+      "name": "_lib",
+      "label": "_lib",
+      "vis": true,
+      "count": 1,
+      "parent": [
+        "electrico"
+      ]
+    },
+    {
+      "name": "Luminarias_Link_Masters",
+      "label": "Luminarias_Link_Masters",
+      "vis": true,
+      "count": 3,
+      "parent": [
+        "_lib"
+      ]
+    },
+    {
+      "name": "Luminaria_Link",
+      "label": "Luminaria_Link",
+      "vis": true,
+      "count": 62,
+      "parent": [
+        "electrico"
+      ]
+    }
+  ],
+  "candidates": [
+    {
+      "name": "Rectangle018",
+      "label": "ARCHIVO001",
+      "type": "Part::Part2DObjectPython",
+      "vis": true,
+      "bbox": [
+        14470.5,
+        26453.1,
+        20.0,
+        22949.5,
+        32822.1,
+        20.0
+      ],
+      "parents": [
+        "Puerta BIM - ARCHIVO - 04",
+        "Puerta BIM - ARCHIVO - 16",
+        "Fuentes y auxiliares"
+      ]
+    },
+    {
+      "name": "Rectangle020",
+      "label": "BÓVEDA001",
+      "type": "Part::Part2DObjectPython",
+      "vis": true,
+      "bbox": [
+        18340.5,
+        18602.6,
+        20.0,
+        19720.5,
+        20981.8,
+        20.0
+      ],
+      "parents": [
+        "Puerta BIM - BÓVEDA - 10",
+        "Fuentes y auxiliares"
+      ]
+    },
+    {
+      "name": "Rectangle021",
+      "label": "JEFATURA001",
+      "type": "Part::Part2DObjectPython",
+      "vis": true,
+      "bbox": [
+        14470.5,
+        16912.6,
+        20.0,
+        18220.5,
+        20981.8,
+        20.0
+      ],
+      "parents": [
+        "Ventana BIM - JEFATURA / PASILLO A PLATAFORMA - 01",
+        "Ventana BIM - JEFATURA / PASILLO PLATAFORMA - 02",
+        "Fuentes y auxiliares"
+      ]
+    },
+    {
+      "name": "Rectangle022",
+      "label": "PASILLO PRINCIPAL001",
+      "type": "Part::Part2DObjectPython",
+      "vis": true,
+      "bbox": [
+        19840.5,
+        15556.9,
+        20.0,
+        22949.5,
+        26333.1,
+        20.0
+      ],
+      "parents": [
+        "Puerta BIM - PASILLO PRINCIPAL - 09",
+        "Fuentes y auxiliares"
+      ]
+    },
+    {
+      "name": "Rectangle024",
+      "label": "S.S. FUNCIONARIAS001",
+      "type": "Part::Part2DObjectPython",
+      "vis": true,
+      "bbox": [
+        24405.5,
+        16912.6,
+        20.0,
+        26685.5,
+        18592.6,
+        20.0
+      ],
+      "parents": [
+        "Puerta BIM - S.S. FUNCIONARIAS - 05",
+        "Fuentes y auxiliares"
+      ]
+    },
+    {
+      "name": "Rectangle025",
+      "label": "SERVIDOR001",
+      "type": "Part::Part2DObjectPython",
+      "vis": true,
+      "bbox": [
+        23069.5,
+        23512.6,
+        20.0,
+        26685.5,
+        26333.1,
+        20.0
+      ],
+      "parents": [
+        "Puerta BIM - SERVIDOR - 07",
+        "Fuentes y auxiliares"
+      ]
+    },
+    {
+      "name": "Rectangle026",
+      "label": "COMEDOR001",
+      "type": "Part::Part2DObjectPython",
+      "vis": true,
+      "bbox": [
+        23069.5,
+        26453.1,
+        20.0,
+        26685.5,
+        32822.1,
+        20.0
+      ],
+      "parents": [
+        "Puerta BIM - COMEDOR - 06",
+        "Fuentes y auxiliares"
+      ]
+    },
+    {
+      "name": "Rectangle027",
+      "label": "SALA LACTANCIA001",
+      "type": "Part::Part2DObjectPython",
+      "vis": true,
+      "bbox": [
+        23069.5,
+        14362.6,
+        20.0,
+        26685.5,
+        16792.6,
+        20.0
+      ],
+      "parents": [
+        "Puerta BIM - SALA LACTANCIA - 11",
+        "Fuentes y auxiliares"
+      ]
+    },
+    {
+      "name": "Rectangle028",
+      "label": "PENSIONES001",
+      "type": "Part::Part2DObjectPython",
+      "vis": true,
+      "bbox": [
+        23069.5,
+        11366.9,
+        20.0,
+        26685.5,
+        14242.6,
+        20.0
+      ],
+      "parents": [
+        "Puerta BIM - PENSIONES - 17",
+        "Ventana BIM - SALA DE ESPERA / PENSIONES - 08",
+        "Fuentes y auxiliares"
+      ]
+    },
+    {
+      "name": "Rectangle029",
+      "label": "S.S. HOMBRES001",
+      "type": "Part::Part2DObjectPython",
+      "vis": true,
+      "bbox": [
+        24105.5,
+        8966.9,
+        20.0,
+        26685.5,
+        11246.9,
+        20.0
+      ],
+      "parents": [
+        "Puerta BIM - S.S. HOMBRES - 14",
+        "Fuentes y auxiliares"
+      ]
+    },
+    {
+      "name": "Rectangle030",
+      "label": "S.S. MUJERES001",
+      "type": "Part::Part2DObjectPython",
+      "vis": true,
+      "bbox": [
+        24105.5,
+        6036.9,
+        20.0,
+        26685.5,
+        8316.9,
+        20.0
+      ],
+      "parents": [
+        "Puerta BIM - S.S. MUJERES - 15",
+        "Fuentes y auxiliares"
+      ]
+    },
+    {
+      "name": "Rectangle031",
+      "label": "PASILLO A PLATAFORMA001",
+      "type": "Part::Part2DObjectPython",
+      "vis": true,
+      "bbox": [
+        15900.5,
+        15045.8,
+        20.0,
+        19720.5,
+        16792.6,
+        20.0
+      ],
+      "parents": [
+        "Ventana BIM - JEFATURA / PASILLO A PLATAFORMA - 01",
+        "Fuentes y auxiliares"
+      ]
+    },
+    {
+      "name": "Rectangle032",
+      "label": "CAJA001",
+      "type": "Part::Part2DObjectPython",
+      "vis": true,
+      "bbox": [
+        16020.5,
+        9096.9,
+        20.0,
+        18600.5,
+        12276.9,
+        20.0
+      ],
+      "parents": [
+        "Puerta BIM - CAJA - 13",
+        "Ventana BIM - SALA DE ESPERA / CAJA - 07",
+        "Fuentes y auxiliares"
+      ]
+    },
+    {
+      "name": "Rectangle034",
+      "label": "ASEO001",
+      "type": "Part::Part2DObjectPython",
+      "vis": true,
+      "bbox": [
+        24405.5,
+        20512.6,
+        20.0,
+        26685.5,
+        23392.6,
+        20.0
+      ],
+      "parents": [
+        "Puerta BIM - ASEO - 08",
+        "Fuentes y auxiliares"
+      ]
+    },
+    {
+      "name": "Rectangle035",
+      "label": "SALA DE ESPERA001",
+      "type": "Part::Part2DObjectPython",
+      "vis": true,
+      "bbox": [
+        18600.5,
+        3376.5,
+        20.0,
+        23111.8,
+        15027.3,
+        20.0
+      ],
+      "parents": [
+        "Ventana BIM - DECLARACIONES / SALA DE ESPERA - 05",
+        "Ventana BIM - SALA DE ESPERA - 06",
+        "Ventana BIM - SALA DE ESPERA / CAJA - 07",
+        "Ventana BIM - SALA DE ESPERA / PENSIONES - 08"
+      ]
+    },
+    {
+      "name": "Rectangle036",
+      "label": "PASILLO PLATAFORMA001",
+      "type": "Part::Part2DObjectPython",
+      "vis": true,
+      "bbox": [
+        14470.5,
+        2966.9,
+        20.0,
+        15900.5,
+        16792.6,
+        20.0
+      ],
+      "parents": [
+        "Ventana BIM - JEFATURA / PASILLO PLATAFORMA - 02",
+        "Puerta BIM frente - PASILLO PLATAFORMA - sencilla",
+        "Fuentes y auxiliares"
+      ]
+    },
+    {
+      "name": "Rectangle037",
+      "label": "PASILLO SALIDA TRASERA001",
+      "type": "Part::Part2DObjectPython",
+      "vis": true,
+      "bbox": [
+        1068.1,
+        30794.4,
+        20.0,
+        14350.5,
+        32822.1,
+        20.0
+      ],
+      "parents": [
+        "Puerta BIM - PASILLO SALIDA TRASERA - 02",
+        "Fuentes y auxiliares"
+      ]
+    },
+    {
+      "name": "Rectangle038",
+      "label": "DECLARACIONES001",
+      "type": "Part::Part2DObjectPython",
+      "vis": true,
+      "bbox": [
+        16020.5,
+        12396.9,
+        20.0,
+        18600.5,
+        15436.9,
+        20.0
+      ],
+      "parents": [
+        "Puerta BIM - DECLARACIONES - 03",
+        "Puerta BIM - DECLARACIONES - 12",
+        "Ventana BIM - DECLARACIONES / SALA DE ESPERA - 05",
+        "Fuentes y auxiliares"
+      ]
+    },
+    {
+      "name": "Rectangle039",
+      "label": "INGRESOS001",
+      "type": "Part::Part2DObjectPython",
+      "vis": true,
+      "bbox": [
+        15900.5,
+        4770.2,
+        20.0,
+        18600.5,
+        6036.9,
+        20.0
+      ],
+      "parents": [
+        "Ventana BIM - INGRESOS / COBROS - 03",
+        "Fuentes y auxiliares"
+      ]
+    },
+    {
+      "name": "Rectangle040",
+      "label": "COBROS001",
+      "type": "Part::Part2DObjectPython",
+      "vis": true,
+      "bbox": [
+        15900.5,
+        3376.5,
+        20.0,
+        18340.5,
+        4770.2,
+        20.0
+      ],
+      "parents": [
+        "Ventana BIM - INGRESOS / COBROS - 03",
+        "Fuentes y auxiliares"
+      ]
+    },
+    {
+      "name": "Rectangle041",
+      "label": "EGRESOS001",
+      "type": "Part::Part2DObjectPython",
+      "vis": true,
+      "bbox": [
+        16418.0,
+        6693.6,
+        20.0,
+        18220.5,
+        9096.9,
+        20.0
+      ],
+      "parents": [
+        "Ventana BIM - EGRESOS - 04",
+        "Fuentes y auxiliares"
+      ]
+    },
+    {
+      "name": "Rectangle042",
+      "label": "SEGURIDAD001",
+      "type": "Part::Part2DObjectPython",
+      "vis": true,
+      "bbox": [
+        23111.8,
+        2846.9,
+        20.0,
+        26685.5,
+        6036.9,
+        20.0
+      ],
+      "parents": [
+        "Puerta BIM frente - SEGURIDAD - doble hoja A",
+        "Puerta BIM frente - SEGURIDAD - doble hoja B",
+        "Fuentes y auxiliares"
+      ]
+    },
+    {
+      "name": "Text",
+      "label": "Etiqueta_ARCHIVO",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "ARCHIVO001",
+        "Fuentes y auxiliares",
+        "ARCHIVO"
+      ]
+    },
+    {
+      "name": "Text002",
+      "label": "Etiqueta_BOVEDA",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "BÓVEDA001",
+        "Fuentes y auxiliares",
+        "BÓVEDA"
+      ]
+    },
+    {
+      "name": "Text003",
+      "label": "Etiqueta_JEFATURA",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "JEFATURA001",
+        "Fuentes y auxiliares",
+        "JEFATURA"
+      ]
+    },
+    {
+      "name": "Text004",
+      "label": "Etiqueta_PASILLO_PRINCIPAL",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "PASILLO PRINCIPAL001",
+        "Fuentes y auxiliares",
+        "PASILLO PRINCIPAL"
+      ]
+    },
+    {
+      "name": "Text006",
+      "label": "Etiqueta_S_S_FUNCIONARIAS",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "S.S. FUNCIONARIAS001",
+        "Fuentes y auxiliares",
+        "S.S. FUNCIONARIAS"
+      ]
+    },
+    {
+      "name": "Text007",
+      "label": "Etiqueta_SERVIDOR",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "SERVIDOR001",
+        "Fuentes y auxiliares",
+        "SERVIDOR"
+      ]
+    },
+    {
+      "name": "Text008",
+      "label": "Etiqueta_COMEDOR",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "COMEDOR001",
+        "Fuentes y auxiliares",
+        "COMEDOR"
+      ]
+    },
+    {
+      "name": "Text009",
+      "label": "Etiqueta_SALA_LACTANCIA",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "SALA LACTANCIA001",
+        "Fuentes y auxiliares",
+        "SALA LACTANCIA"
+      ]
+    },
+    {
+      "name": "Text010",
+      "label": "Etiqueta_PENSIONES",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "PENSIONES001",
+        "Fuentes y auxiliares",
+        "PENSIONES"
+      ]
+    },
+    {
+      "name": "Text011",
+      "label": "Etiqueta_S_S_HOMBRES",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "S.S. HOMBRES001",
+        "Fuentes y auxiliares",
+        "S.S. HOMBRES"
+      ]
+    },
+    {
+      "name": "Text012",
+      "label": "Etiqueta_S_S_MUJERES",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "S.S. MUJERES001",
+        "Fuentes y auxiliares",
+        "S.S. MUJERES"
+      ]
+    },
+    {
+      "name": "Text013",
+      "label": "Etiqueta_PASILLO_A_PLATAFORMA",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "PASILLO A PLATAFORMA001",
+        "Fuentes y auxiliares",
+        "PASILLO A PLATAFORMA"
+      ]
+    },
+    {
+      "name": "Text014",
+      "label": "Etiqueta_CAJA",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "CAJA001",
+        "Fuentes y auxiliares",
+        "CAJA"
+      ]
+    },
+    {
+      "name": "Text016",
+      "label": "Etiqueta_ASEO",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "ASEO001",
+        "Fuentes y auxiliares",
+        "ASEO"
+      ]
+    },
+    {
+      "name": "Text017",
+      "label": "Etiqueta_SALA_DE_ESPERA",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "SALA DE ESPERA001",
+        "Fuentes y auxiliares",
+        "SALA DE ESPERA"
+      ]
+    },
+    {
+      "name": "Text018",
+      "label": "Etiqueta_PASILLO_PLATAFORMA",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "PASILLO PLATAFORMA001",
+        "Fuentes y auxiliares"
+      ]
+    },
+    {
+      "name": "Text019",
+      "label": "Etiqueta_PASILLO_SALIDA_TRASERA",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "PASILLO SALIDA TRASERA001",
+        "Fuentes y auxiliares",
+        "PASILLO SALIDA TRASERA"
+      ]
+    },
+    {
+      "name": "Text020",
+      "label": "Etiqueta_DECLARACIONES",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "DECLARACIONES001",
+        "Fuentes y auxiliares",
+        "DECLARACIONES"
+      ]
+    },
+    {
+      "name": "Text021",
+      "label": "Etiqueta_INGRESOS",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "INGRESOS001",
+        "Fuentes y auxiliares",
+        "INGRESOS"
+      ]
+    },
+    {
+      "name": "Text022",
+      "label": "Etiqueta_COBROS",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "COBROS001",
+        "Fuentes y auxiliares",
+        "COBROS"
+      ]
+    },
+    {
+      "name": "Text023",
+      "label": "Etiqueta_EGRESOS",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "EGRESOS001",
+        "Fuentes y auxiliares",
+        "EGRESOS"
+      ]
+    },
+    {
+      "name": "Text024",
+      "label": "Etiqueta_SEGURIDAD",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "SEGURIDAD001",
+        "Fuentes y auxiliares"
+      ]
+    },
+    {
+      "name": "Rectangle",
+      "label": "ARCHIVO",
+      "type": "Part::Part2DObjectPython",
+      "vis": true,
+      "bbox": [
+        14470.5,
+        26453.1,
+        20.0,
+        22949.5,
+        32822.1,
+        20.0
+      ],
+      "parents": [
+        "Análisis de áreas rectangulares",
+        "Etiqueta área - ARCHIVO"
+      ]
+    },
+    {
+      "name": "Text025",
+      "label": "Etiqueta área - ARCHIVO",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas Análisis de Áreas"
+      ]
+    },
+    {
+      "name": "Rectangle076",
+      "label": "BÓVEDA",
+      "type": "Part::Part2DObjectPython",
+      "vis": true,
+      "bbox": [
+        18340.5,
+        18602.6,
+        20.0,
+        19720.5,
+        20981.8,
+        20.0
+      ],
+      "parents": [
+        "Análisis de áreas rectangulares",
+        "Etiqueta área - BÓVEDA"
+      ]
+    },
+    {
+      "name": "Text026",
+      "label": "Etiqueta área - BÓVEDA",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas Análisis de Áreas"
+      ]
+    },
+    {
+      "name": "Rectangle077",
+      "label": "JEFATURA",
+      "type": "Part::Part2DObjectPython",
+      "vis": true,
+      "bbox": [
+        14470.5,
+        16912.6,
+        20.0,
+        18220.5,
+        20981.8,
+        20.0
+      ],
+      "parents": [
+        "Análisis de áreas rectangulares",
+        "Etiqueta área - JEFATURA"
+      ]
+    },
+    {
+      "name": "Text027",
+      "label": "Etiqueta área - JEFATURA",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas Análisis de Áreas"
+      ]
+    },
+    {
+      "name": "Rectangle078",
+      "label": "PASILLO PRINCIPAL",
+      "type": "Part::Part2DObjectPython",
+      "vis": true,
+      "bbox": [
+        19840.5,
+        15556.9,
+        20.0,
+        22949.5,
+        26333.1,
+        20.0
+      ],
+      "parents": [
+        "Análisis de áreas rectangulares",
+        "Etiqueta área - PASILLO PRINCIPAL"
+      ]
+    },
+    {
+      "name": "Text028",
+      "label": "Etiqueta área - PASILLO PRINCIPAL",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas Análisis de Áreas"
+      ]
+    },
+    {
+      "name": "Rectangle079",
+      "label": "S.S. FUNCIONARIAS",
+      "type": "Part::Part2DObjectPython",
+      "vis": true,
+      "bbox": [
+        24405.5,
+        16912.6,
+        20.0,
+        26685.5,
+        18592.6,
+        20.0
+      ],
+      "parents": [
+        "Análisis de áreas rectangulares",
+        "Etiqueta área - S.S. FUNCIONARIAS"
+      ]
+    },
+    {
+      "name": "Text029",
+      "label": "Etiqueta área - S.S. FUNCIONARIAS",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas Análisis de Áreas"
+      ]
+    },
+    {
+      "name": "Rectangle080",
+      "label": "SERVIDOR",
+      "type": "Part::Part2DObjectPython",
+      "vis": true,
+      "bbox": [
+        23069.5,
+        23512.6,
+        20.0,
+        26685.5,
+        26333.1,
+        20.0
+      ],
+      "parents": [
+        "Análisis de áreas rectangulares",
+        "Etiqueta área - SERVIDOR"
+      ]
+    },
+    {
+      "name": "Text030",
+      "label": "Etiqueta área - SERVIDOR",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas Análisis de Áreas"
+      ]
+    },
+    {
+      "name": "Rectangle081",
+      "label": "COMEDOR",
+      "type": "Part::Part2DObjectPython",
+      "vis": true,
+      "bbox": [
+        23069.5,
+        26453.1,
+        20.0,
+        26685.5,
+        32822.1,
+        20.0
+      ],
+      "parents": [
+        "Análisis de áreas rectangulares",
+        "Etiqueta área - COMEDOR"
+      ]
+    },
+    {
+      "name": "Text031",
+      "label": "Etiqueta área - COMEDOR",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas Análisis de Áreas"
+      ]
+    },
+    {
+      "name": "Rectangle082",
+      "label": "SALA LACTANCIA",
+      "type": "Part::Part2DObjectPython",
+      "vis": true,
+      "bbox": [
+        23069.5,
+        14362.6,
+        20.0,
+        26685.5,
+        16792.6,
+        20.0
+      ],
+      "parents": [
+        "Análisis de áreas rectangulares",
+        "Etiqueta área - SALA LACTANCIA"
+      ]
+    },
+    {
+      "name": "Text032",
+      "label": "Etiqueta área - SALA LACTANCIA",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas Análisis de Áreas"
+      ]
+    },
+    {
+      "name": "Rectangle083",
+      "label": "PENSIONES",
+      "type": "Part::Part2DObjectPython",
+      "vis": true,
+      "bbox": [
+        23069.5,
+        11366.9,
+        20.0,
+        26685.5,
+        14242.6,
+        20.0
+      ],
+      "parents": [
+        "Análisis de áreas rectangulares",
+        "Etiqueta área - PENSIONES"
+      ]
+    },
+    {
+      "name": "Text033",
+      "label": "Etiqueta área - PENSIONES",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas Análisis de Áreas"
+      ]
+    },
+    {
+      "name": "Rectangle084",
+      "label": "S.S. HOMBRES",
+      "type": "Part::Part2DObjectPython",
+      "vis": true,
+      "bbox": [
+        24105.5,
+        8966.9,
+        20.0,
+        26685.5,
+        11246.9,
+        20.0
+      ],
+      "parents": [
+        "Análisis de áreas rectangulares",
+        "Etiqueta área - S.S. HOMBRES"
+      ]
+    },
+    {
+      "name": "Text034",
+      "label": "Etiqueta área - S.S. HOMBRES",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas Análisis de Áreas"
+      ]
+    },
+    {
+      "name": "Rectangle085",
+      "label": "S.S. MUJERES",
+      "type": "Part::Part2DObjectPython",
+      "vis": true,
+      "bbox": [
+        24105.5,
+        6036.9,
+        20.0,
+        26685.5,
+        8316.9,
+        20.0
+      ],
+      "parents": [
+        "Análisis de áreas rectangulares",
+        "Etiqueta área - S.S. MUJERES"
+      ]
+    },
+    {
+      "name": "Text035",
+      "label": "Etiqueta área - S.S. MUJERES",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas Análisis de Áreas"
+      ]
+    },
+    {
+      "name": "Rectangle086",
+      "label": "PASILLO A PLATAFORMA",
+      "type": "Part::Part2DObjectPython",
+      "vis": true,
+      "bbox": [
+        15900.5,
+        15556.9,
+        20.0,
+        19840.5,
+        16792.6,
+        20.0
+      ],
+      "parents": [
+        "Análisis de áreas rectangulares",
+        "Etiqueta área - PASILLO A PLATAFORMA"
+      ]
+    },
+    {
+      "name": "Text036",
+      "label": "Etiqueta área - PASILLO A PLATAFORMA",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas Análisis de Áreas"
+      ]
+    },
+    {
+      "name": "Rectangle087",
+      "label": "CAJA",
+      "type": "Part::Part2DObjectPython",
+      "vis": true,
+      "bbox": [
+        16020.5,
+        9096.9,
+        20.0,
+        18600.5,
+        12276.9,
+        20.0
+      ],
+      "parents": [
+        "Análisis de áreas rectangulares",
+        "Etiqueta área - CAJA"
+      ]
+    },
+    {
+      "name": "Text037",
+      "label": "Etiqueta área - CAJA",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas Análisis de Áreas"
+      ]
+    },
+    {
+      "name": "Rectangle088",
+      "label": "ASEO",
+      "type": "Part::Part2DObjectPython",
+      "vis": true,
+      "bbox": [
+        24405.5,
+        20512.6,
+        20.0,
+        26685.5,
+        23392.6,
+        20.0
+      ],
+      "parents": [
+        "Análisis de áreas rectangulares",
+        "Etiqueta área - ASEO"
+      ]
+    },
+    {
+      "name": "Text038",
+      "label": "Etiqueta área - ASEO",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas Análisis de Áreas"
+      ]
+    },
+    {
+      "name": "Rectangle089",
+      "label": "SALA DE ESPERA",
+      "type": "Part::Part2DObjectPython",
+      "vis": true,
+      "bbox": [
+        18720.5,
+        2668.3,
+        20.0,
+        22949.5,
+        15436.9,
+        20.0
+      ],
+      "parents": [
+        "Análisis de áreas rectangulares",
+        "Etiqueta área - SALA DE ESPERA"
+      ]
+    },
+    {
+      "name": "Text039",
+      "label": "Etiqueta área - SALA DE ESPERA",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas Análisis de Áreas"
+      ]
+    },
+    {
+      "name": "Text040",
+      "label": "Etiqueta área - PASILLO PLATAFORMA",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas Análisis de Áreas"
+      ]
+    },
+    {
+      "name": "Rectangle091",
+      "label": "PASILLO SALIDA TRASERA",
+      "type": "Part::Part2DObjectPython",
+      "vis": true,
+      "bbox": [
+        1068.1,
+        30794.4,
+        20.0,
+        14350.5,
+        32822.1,
+        20.0
+      ],
+      "parents": [
+        "Análisis de áreas rectangulares",
+        "Etiqueta área - PASILLO SALIDA TRASERA"
+      ]
+    },
+    {
+      "name": "Text041",
+      "label": "Etiqueta área - PASILLO SALIDA TRASERA",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas Análisis de Áreas"
+      ]
+    },
+    {
+      "name": "Rectangle092",
+      "label": "DECLARACIONES",
+      "type": "Part::Part2DObjectPython",
+      "vis": true,
+      "bbox": [
+        16020.5,
+        12396.9,
+        20.0,
+        18600.5,
+        15436.9,
+        20.0
+      ],
+      "parents": [
+        "Análisis de áreas rectangulares",
+        "Etiqueta área - DECLARACIONES"
+      ]
+    },
+    {
+      "name": "Text042",
+      "label": "Etiqueta área - DECLARACIONES",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas Análisis de Áreas"
+      ]
+    },
+    {
+      "name": "Rectangle093",
+      "label": "INGRESOS",
+      "type": "Part::Part2DObjectPython",
+      "vis": true,
+      "bbox": [
+        15900.5,
+        4830.2,
+        20.0,
+        18720.5,
+        6573.6,
+        20.0
+      ],
+      "parents": [
+        "Análisis de áreas rectangulares",
+        "Etiqueta área - INGRESOS"
+      ]
+    },
+    {
+      "name": "Text043",
+      "label": "Etiqueta área - INGRESOS",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas Análisis de Áreas"
+      ]
+    },
+    {
+      "name": "Rectangle094",
+      "label": "COBROS",
+      "type": "Part::Part2DObjectPython",
+      "vis": true,
+      "bbox": [
+        15900.5,
+        2966.9,
+        20.0,
+        18600.5,
+        4710.2,
+        20.0
+      ],
+      "parents": [
+        "Análisis de áreas rectangulares",
+        "Etiqueta área - COBROS"
+      ]
+    },
+    {
+      "name": "Text044",
+      "label": "Etiqueta área - COBROS",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas Análisis de Áreas"
+      ]
+    },
+    {
+      "name": "Rectangle095",
+      "label": "EGRESOS",
+      "type": "Part::Part2DObjectPython",
+      "vis": true,
+      "bbox": [
+        14501.3,
+        6693.6,
+        20.0,
+        18600.5,
+        8976.9,
+        20.0
+      ],
+      "parents": [
+        "Análisis de áreas rectangulares",
+        "Etiqueta área - EGRESOS"
+      ]
+    },
+    {
+      "name": "Text045",
+      "label": "Etiqueta área - EGRESOS",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas Análisis de Áreas"
+      ]
+    },
+    {
+      "name": "Rectangle101",
+      "label": "Cubículos",
+      "type": "Part::Part2DObjectPython",
+      "vis": true,
+      "bbox": [
+        14470.5,
+        21101.8,
+        20.0,
+        19840.5,
+        26333.1,
+        20.0
+      ],
+      "parents": [
+        "Análisis de áreas rectangulares",
+        "Etiqueta área - Cubículos"
+      ]
+    },
+    {
+      "name": "Rectangle102",
+      "label": "S.S. FUNCIONARIOS",
+      "type": "Part::Part2DObjectPython",
+      "vis": true,
+      "bbox": [
+        24405.5,
+        18712.6,
+        20.0,
+        26685.5,
+        20392.6,
+        20.0
+      ],
+      "parents": [
+        "Análisis de áreas rectangulares",
+        "Etiqueta área - S.S. FUNCIONARIOS"
+      ]
+    },
+    {
+      "name": "Rectangle103",
+      "label": "Pasillo de S.S.",
+      "type": "Part::Part2DObjectPython",
+      "vis": true,
+      "bbox": [
+        23069.5,
+        16912.6,
+        20.0,
+        24285.5,
+        23392.6,
+        20.0
+      ],
+      "parents": [
+        "Análisis de áreas rectangulares",
+        "Etiqueta área - Pasillo de S.S."
+      ]
+    },
+    {
+      "name": "Rectangle104",
+      "label": "SEGURIDAD002",
+      "type": "Part::Part2DObjectPython",
+      "vis": true,
+      "bbox": [
+        22949.5,
+        3619.4,
+        20.0,
+        26685.5,
+        5916.9,
+        20.0
+      ],
+      "parents": [
+        "Análisis de áreas rectangulares",
+        "Etiqueta área - ÁREA SIN NOMBRE 001"
+      ]
+    },
+    {
+      "name": "Text047",
+      "label": "Etiqueta área - Cubículos",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas Análisis de Áreas"
+      ]
+    },
+    {
+      "name": "Text048",
+      "label": "Etiqueta área - S.S. FUNCIONARIOS",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas Análisis de Áreas"
+      ]
+    },
+    {
+      "name": "Text049",
+      "label": "Etiqueta área - Pasillo de S.S.",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas Análisis de Áreas"
+      ]
+    },
+    {
+      "name": "Text050",
+      "label": "Etiqueta área - ÁREA SIN NOMBRE 001",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas Análisis de Áreas"
+      ]
+    },
+    {
+      "name": "Etiquetas",
+      "label": "Etiquetas",
+      "type": "App::DocumentObjectGroup",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Análisis de áreas rectangulares"
+      ]
+    },
+    {
+      "name": "Group",
+      "label": "Etiquetas Análisis de Áreas",
+      "type": "App::DocumentObjectGroup",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Análisis de áreas rectangulares"
+      ]
+    },
+    {
+      "name": "Rectangle106",
+      "label": "Pasillo Plataforma (fuente)",
+      "type": "Part::Part2DObjectPython",
+      "vis": true,
+      "bbox": [
+        14460.1,
+        2907.0,
+        20.0,
+        15900.5,
+        8976.9,
+        20.0
+      ],
+      "parents": [
+        "Areas"
+      ]
+    },
+    {
+      "name": "Rectangle107",
+      "label": "Pasillo Caja y Declaraciones. (fuente)",
+      "type": "Part::Part2DObjectPython",
+      "vis": true,
+      "bbox": [
+        14457.1,
+        8974.4,
+        20.0,
+        15900.5,
+        16795.1,
+        20.0
+      ],
+      "parents": [
+        "Areas"
+      ]
+    },
+    {
+      "name": "Rectangle108",
+      "label": "Pasillo Plataforma",
+      "type": "Part::Part2DObjectPython",
+      "vis": true,
+      "bbox": [
+        14464.2,
+        2907.0,
+        20.0,
+        15900.5,
+        6579.0,
+        20.0
+      ],
+      "parents": [
+        "Análisis de áreas rectangulares",
+        "Pasillo Plataforma (fuente)",
+        "Etiqueta área - Pasillo Plataforma"
+      ]
+    },
+    {
+      "name": "Text076",
+      "label": "Etiqueta área - Pasillo Plataforma",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas Análisis de Áreas"
+      ]
+    },
+    {
+      "name": "Rectangle109",
+      "label": "Pasillo Caja y Declaraciones.",
+      "type": "Part::Part2DObjectPython",
+      "vis": true,
+      "bbox": [
+        14457.1,
+        8974.4,
+        20.0,
+        15900.5,
+        16795.1,
+        20.0
+      ],
+      "parents": [
+        "Análisis de áreas rectangulares",
+        "Pasillo Caja y Declaraciones. (fuente)",
+        "Etiqueta área - Pasillo Caja y Declaraciones."
+      ]
+    },
+    {
+      "name": "Text077",
+      "label": "Etiqueta área - Pasillo Caja y Declaraciones.",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas Análisis de Áreas"
+      ]
+    },
+    {
+      "name": "Part__FeaturePython001",
+      "label": "Master Link Luminaria 60x60 3000mm Ambos",
+      "type": "Part::FeaturePython",
+      "vis": true,
+      "bbox": [
+        -300.0,
+        -300.0,
+        0.0,
+        300.0,
+        300.0,
+        3100.0
+      ],
+      "parents": [
+        "Luminarias_Link_Masters"
+      ]
+    },
+    {
+      "name": "Luminarias_Link_Masters",
+      "label": "Luminarias_Link_Masters",
+      "type": "App::DocumentObjectGroup",
+      "vis": true,
+      "bbox": [
+        -300.0,
+        -300.0,
+        0.0,
+        300.0,
+        300.0,
+        3100.0
+      ],
+      "parents": [
+        "_lib"
+      ]
+    },
+    {
+      "name": "Text078",
+      "label": "Etiqueta_ARCHIVO002",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas"
+      ]
+    },
+    {
+      "name": "Text079",
+      "label": "Etiqueta_BOVEDA002",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas"
+      ]
+    },
+    {
+      "name": "Text080",
+      "label": "Etiqueta_JEFATURA002",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas"
+      ]
+    },
+    {
+      "name": "Text081",
+      "label": "Etiqueta_PASILLO_PRINCIPAL002",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas"
+      ]
+    },
+    {
+      "name": "Text082",
+      "label": "Etiqueta_S_S_FUNCIONARIAS002",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas"
+      ]
+    },
+    {
+      "name": "Text083",
+      "label": "Etiqueta_SERVIDOR002",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas"
+      ]
+    },
+    {
+      "name": "Text084",
+      "label": "Etiqueta_COMEDOR002",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas"
+      ]
+    },
+    {
+      "name": "Text085",
+      "label": "Etiqueta_SALA_LACTANCIA002",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas"
+      ]
+    },
+    {
+      "name": "Text086",
+      "label": "Etiqueta_PENSIONES002",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas"
+      ]
+    },
+    {
+      "name": "Text087",
+      "label": "Etiqueta_S_S_HOMBRES002",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas"
+      ]
+    },
+    {
+      "name": "Text088",
+      "label": "Etiqueta_S_S_MUJERES002",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas"
+      ]
+    },
+    {
+      "name": "Text089",
+      "label": "Etiqueta_PASILLO_A_PLATAFORMA002",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas"
+      ]
+    },
+    {
+      "name": "Text090",
+      "label": "Etiqueta_CAJA002",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas"
+      ]
+    },
+    {
+      "name": "Text091",
+      "label": "Etiqueta_ASEO002",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas"
+      ]
+    },
+    {
+      "name": "Text092",
+      "label": "Etiqueta_SALA_DE_ESPERA002",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas"
+      ]
+    },
+    {
+      "name": "Text093",
+      "label": "Etiqueta_PASILLO_SALIDA_TRASERA002",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas"
+      ]
+    },
+    {
+      "name": "Text094",
+      "label": "Etiqueta_DECLARACIONES002",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas"
+      ]
+    },
+    {
+      "name": "Text095",
+      "label": "Etiqueta_INGRESOS002",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas"
+      ]
+    },
+    {
+      "name": "Text096",
+      "label": "Etiqueta_COBROS002",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas"
+      ]
+    },
+    {
+      "name": "Text097",
+      "label": "Etiqueta_EGRESOS002",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas"
+      ]
+    },
+    {
+      "name": "Text098",
+      "label": "Etiqueta_Cubiculos001",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas"
+      ]
+    },
+    {
+      "name": "Text099",
+      "label": "Etiqueta_S_S_FUNCIONARIOS001",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas"
+      ]
+    },
+    {
+      "name": "Text100",
+      "label": "Etiqueta_Pasillo_de_S_S001",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas"
+      ]
+    },
+    {
+      "name": "Text101",
+      "label": "Etiqueta_SEGURIDAD003",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas"
+      ]
+    },
+    {
+      "name": "Text102",
+      "label": "Etiqueta_Pasillo_Plataforma",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas"
+      ]
+    },
+    {
+      "name": "Text103",
+      "label": "Etiqueta_Pasillo_Caja_y_Declaraciones",
+      "type": "App::FeaturePython",
+      "vis": true,
+      "bbox": null,
+      "parents": [
+        "Etiquetas"
+      ]
+    },
+    {
+      "name": "Part__FeaturePython",
+      "label": "Master Link Luminaria 60x60 2700mm Ambos",
+      "type": "Part::FeaturePython",
+      "vis": true,
+      "bbox": [
+        -300.0,
+        -300.0,
+        0.0,
+        300.0,
+        300.0,
+        2800.0
+      ],
+      "parents": [
+        "Luminarias_Link_Masters"
+      ]
+    },
+    {
+      "name": "Part__FeaturePython002",
+      "label": "Master Link Luminaria 60x60 2640mm Ambos",
+      "type": "Part::FeaturePython",
+      "vis": true,
+      "bbox": [
+        -300.0,
+        -300.0,
+        0.0,
+        300.0,
+        300.0,
+        2740.0
+      ],
+      "parents": [
+        "Luminarias_Link_Masters",
+        "ARCHIVO_Luminaria_001",
+        "ARCHIVO_Luminaria_002",
+        "ARCHIVO_Luminaria_003"
+      ]
+    }
+  ]
+}

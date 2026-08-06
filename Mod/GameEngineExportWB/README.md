@@ -61,6 +61,46 @@ El panel permite activar `Aplanar terreno bajo edificio`. Con esa opcion, el are
 
 El generador tambien crea `AI_Contexto_QuickExample`, un `App::TextDocument` con JSON del ejemplo: dimensiones, semilla, recintos aproximados, sketches, muros, buques, terreno, losa y objetos creados. La opcion `Copiar contexto JSON al portapapeles` copia ese JSON al generar.
 
+El comando **Importar JSON / Import JSON** (`GameEngineExport_ImportJSONExample`) abre un dialogo para pegar JSON de ChatGPT y reconstruir una casa u oficina con el mismo motor del Quick Example. Acepta JSON puro o texto con encabezado y extrae automaticamente el bloque desde el primer `{` hasta el ultimo `}`. La reconstruccion usa `dimensions`, `terrain`, `segments` y `rooms`; la seccion `objects` se ignora porque pertenece al documento anterior.
+
+Flujo recomendado:
+
+- Genere un `Quick Example`.
+- Copie el JSON desde `AI_Contexto_QuickExample`.
+- Modifique ese JSON en ChatGPT.
+- Abra `Importar JSON / Import JSON`.
+- Pegue el JSON y pulse `Generar`.
+
+Hay un ejemplo en `examples/json/quick_example_house_sample.json`.
+
+El comando **Puertas y ventanas BIM** agrega objetos de puerta/ventana sobre el ultimo `GEE_QuickExample_*`. Lee los sketches `GEE_SK_DoorOpenings` y `GEE_SK_WindowOpenings`, intenta crear objetos con `Arch.makeWindow(...)` y agrega hojas de puerta abiertas a 90 grados para pruebas visuales y de exportacion.
+
+El comando **Agregar techo / Add Roof** agrega un techo sencillo al ultimo `GEE_QuickExample_*` generado o importado desde JSON. Lee `GEE_ContextJSON` cuando esta disponible, toma `width_mm`, `depth_mm`, `wall_height_mm` y los segmentos exteriores, y crea un techo a dos aguas como solido `Part::Feature` exportable a X3D. Internamente ejecuta `macros/AgregarTechoBIM_QuickExample.FCMacro`.
+
+Parametros iniciales del techo:
+
+- Tipo: dos aguas con cumbrera longitudinal.
+- Alero: `600 mm`.
+- Altura de cumbrera: `1800 mm` sobre la altura de muro.
+- Espesor: `120 mm`.
+- Material visual: teja oscura.
+
+Por ahora no usa un objeto techo BIM complejo. Queda etiquetado con propiedades `GEE_Role = roof`, `IfcType = Roof`, `GEE_QuickExampleObject = True` y `GEE_BIMFallback = True` para exportacion, filtrado y futuras conversiones BIM.
+
+Para proyectos que no vienen del Quick Example existen macros genericas:
+
+- `CrearPuertasBIMDesdeSketch.FCMacro`: convierte el sketch seleccionado en puertas `Arch_Window` con `IfcType = Door` y apertura nativa `Opening = 100`.
+- `CrearVentanasBIMDesdeSketch.FCMacro`: convierte el sketch seleccionado en ventanas `Arch_Window` con marco y vidrio definidos en `WindowParts`.
+
+En ambos casos el sketch debe contener lineas de centro de los buques. No dependen de nombres `GEE_*` ni de grupos del generador. Las macros usan una transaccion de FreeCAD, por lo que `Ctrl+Z` elimina el conjunto completo creado.
+
+Reglas de ventana:
+
+- La cota `Z` del sketch o de la linea seleccionada se usa como base/antepecho de la ventana.
+- La altura de ventana se indica en un dialogo.
+- Si el sketch contiene geometria con variacion vertical suficiente en `Z`, la macro puede deducir la altura del buque.
+- La macro genera un sketch rectangular de perfil por cada buque y llama `Arch.makeWindow(baseobj=perfil_sketch, parts=...)`, replicando el flujo de la herramienta BIM `Arch_Window` sin agregar geometria auxiliar `Part`.
+
 ## Materiales e iluminacion interior
 
 En la pestana **Iluminacion / Lighting**, marca **Mejorar iluminacion interior / Improve interior lighting** y usa **Architectural** o **Bright** para interiores cerrados. Este ajuste solo modifica el X3D exportado mediante atributos `ambientIntensity`, `emissiveColor` y `shininess`; no cambia los materiales del archivo `.FCStd`.
@@ -97,6 +137,30 @@ Durante la exportacion X3D, cada Link genera sus propios `PointLight` usando su 
 
 La vista previa crea objetos temporales `CGE_TempLightPreview*`, que se excluyen de la geometria exportada.
 
+### Luminarias 3D automaticas
+
+La opcion **Detectar luminarias 3D automaticamente / Auto-detect 3D luminaires** crea una luz para cada instancia `App::Link` de luminaria que tenga un solido con volumen. El origen se calcula con la envolvente de los solidos, no con la envolvente completa del objeto. Asi se ignoran simbolos 2D, lineas y anotaciones incluidos dentro del mismo master.
+
+En distribuciones `Grid`, `Line` o `Ring`, la intensidad configurada representa la potencia total de la luminaria y se reparte entre los puntos generados. Esto evita que un panel de cuatro puntos produzca cuatro veces la intensidad solicitada.
+
+Cuando la lista de exportacion esta vacia, el Workbench crea una seleccion 3D automatica. Si existe una lista explicita guardada, la conserva y aplica la misma politica para completarla con objetos 3D ocultos. Cuando esta activa **Incluir objetos 3D ocultos / Include hidden 3D objects**, incluye cualquier objeto con un solido de volumen positivo o una malla real aunque el objeto o su grupo esten ocultos. Esto cubre cielorrasos, columnas, equipos, mobiliario e instancias `App::Link` sin depender de los nombres usados por un proyecto. Excluye sketches, objetos `Part2DObject`, geometria de solo lineas, objetos identificados como 2D aunque tengan un espesor artificial, textos auxiliares, masters usados por `App::Link` y contenido de grupos de biblioteca, masters, internos, referencias, prototipos o catalogos.
+
+Antes de llamar al exportador GUI, el Workbench activa temporalmente la visibilidad de los objetos seleccionados y sus grupos padre. Esto evita que FreeCAD omita dispositivos de grupos electricos o HVAC ocultos. Al terminar, incluso si ocurre una excepcion, restaura una instantanea completa de `ViewObject.Visibility` sin guardar el documento.
+
+Para excepciones documentales, un objeto o su master enlazado puede tener propiedades booleanas `GameExportInclude` o `GameExportExclude`. La exclusion tiene prioridad. Estas propiedades son opcionales; el Workbench no las agrega ni modifica automaticamente.
+
+La deteccion automatica de luminarias acepta nombres comunes, metadatos semanticos como `IfcType`, `PredefinedType`, `ObjectType`, `Category`, `Role`, `EquipmentType`, `DeviceType` y `GameExportRole`, o una propiedad booleana `IsGameExportLuminaire`, `IsLuminaire` o `IsLightFixture`. Siempre exige un solido 3D con volumen antes de generar una luz.
+
+## Vista previa Web
+
+En **Salida / Output**, el boton **Vista previa Web / Web preview** exporta el X3D con el mismo flujo normal, genera un `index.html` junto al X3D e inicia un servidor HTTP local en segundo plano. El navegador abre siempre `http://127.0.0.1:<puerto>/index.html`; no se utiliza `file://`.
+
+El servidor usa solo librerias estandar de Python, escucha exclusivamente en `127.0.0.1`, busca un puerto libre entre 8000 y 9000 y sirve unicamente la carpeta del HTML. Se reutiliza para vistas de la misma carpeta y se cierra al cambiar de carpeta, tras 15 minutos sin solicitudes, durante la recarga del Workbench o al terminar FreeCAD.
+
+La pagina usa X3DOM estable desde `https://www.x3dom.org/release/`. El `Scene` del X3D se inserta directamente dentro del HTML, conservando `Viewpoint` y `NavigationInfo`. El generador convierte etiquetas X3D autocerradas a cierres explicitos compatibles con HTML y muestra un estado de carga en la barra superior. Los assets relativos, como texturas y cielos en `<BaseName>_assets/`, siguen funcionando. Las referencias locales absolutas o `file://` se convierten a rutas relativas; si apuntan fuera de la carpeta servida, el recurso se copia a `.gee_web_assets/`.
+
+Para evitar interiores oscuros en archivos sin iluminacion, el HTML activa `headlight="true"` en una copia del `NavigationInfo` solo cuando no existen nodos `DirectionalLight`, `PointLight` o `SpotLight`. Si el X3D ya contiene luces, conserva el valor exportado para no sobreexponer la vista previa. Este ajuste no modifica el X3D exportado, el documento FreeCAD ni la iluminacion usada por Castle Game Engine.
+
 ## Archivos incluidos
 
 - `Init.py`, `InitGui.py`: arranque del workbench y registro de comandos.
@@ -104,11 +168,24 @@ La vista previa crea objetos temporales `CGE_TempLightPreview*`, que se excluyen
 - `ui/`: paneles TaskPanel de escena, configuracion y texto informativo.
 - `commands/`: comando principal GameEngineExport_Open.
 - `core/quick_examples.py`: generador de ejemplos rapidos con Sketcher y Arch Wall.
+- `core/json_importer.py`: lectura, validacion y reconstruccion de Quick Example desde JSON.
+- `macros/AgregarPuertasVentanasBIM_QuickExample.FCMacro`: macro usada por el comando de puertas y ventanas BIM.
+- `macros/AgregarTechoBIM_QuickExample.FCMacro`: macro independiente para agregar un techo simple exportable al ultimo Quick Example.
+- `macros/bim_from_selected_sketch.py`: base reutilizable para crear puertas o ventanas desde el sketch seleccionado.
+- `macros/CrearPuertasBIMDesdeSketch.FCMacro`: macro generica de puertas desde sketch seleccionado.
+- `macros/CrearVentanasBIMDesdeSketch.FCMacro`: macro generica de ventanas desde sketch seleccionado.
 - `resources/icons/gameexport.svg`: icono del workbench.
 - `resources/icons/add_light_properties.svg`: icono del comando para propiedades de luz.
 - `resources/icons/quick_example.svg`: icono del comando de ejemplo rapido.
+- `resources/icons/import_json_example.svg`: icono del comando para importar JSON.
+- `resources/icons/bim_doors_windows.svg`: icono del comando para puertas y ventanas BIM.
+- `resources/icons/quick_example_roof.svg`: icono del comando para agregar techo simple.
+- `examples/json/quick_example_house_sample.json`: payload de prueba para importacion JSON.
 - `notes/GameEngineExportWB_chat.md`: registro de conversaciones y decisiones relevantes.
 - `notes/add_light_properties.md`: nota tecnica del comando de propiedades de luz.
+- `notes/web_preview.md`: nota tecnica de la vista previa Web con X3DOM.
+- `notes/puriscal_complete_export.md`: diagnostico y validacion de la exportacion completa de Puriscal.
+- `notes/reusable_export_pipeline.md`: politica general reutilizable de seleccion, visibilidad, luminarias y diagnostico.
 - `notes/environment_skybox.md`: nota tecnica de cielo cubemap X3D.
 - `notes/ground_texture.md`: nota tecnica de textura aplicada a objeto suelo exportado.
 - `../GameEngineExportLoader.FCMacro`: macro para recargar el workbench en FreeCAD sin reiniciar.

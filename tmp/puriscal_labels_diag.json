@@ -1,0 +1,1818 @@
+[
+  {
+    "name": "Text",
+    "label": "Etiqueta_ARCHIVO",
+    "type": "App::FeaturePython",
+    "content": [
+      "ARCHIVO",
+      "56.41 m2",
+      "Archivo",
+      "0%"
+    ],
+    "pos": [
+      18703.0,
+      29653.2,
+      0.0
+    ],
+    "parents": [
+      {
+        "name": "Rectangle018",
+        "label": "ARCHIVO001"
+      },
+      {
+        "name": "PD_References",
+        "label": "Fuentes y auxiliares"
+      },
+      {
+        "name": "Rectangle",
+        "label": "ARCHIVO"
+      }
+    ]
+  },
+  {
+    "name": "Text002",
+    "label": "Etiqueta_BOVEDA",
+    "type": "App::FeaturePython",
+    "content": [
+      "BÓVEDA",
+      "3.28 m2",
+      "Bodega",
+      "0%"
+    ],
+    "pos": [
+      19030.5,
+      19792.6,
+      0.0
+    ],
+    "parents": [
+      {
+        "name": "Rectangle020",
+        "label": "BÓVEDA001"
+      },
+      {
+        "name": "PD_References",
+        "label": "Fuentes y auxiliares"
+      },
+      {
+        "name": "Rectangle076",
+        "label": "BÓVEDA"
+      }
+    ]
+  },
+  {
+    "name": "Text003",
+    "label": "Etiqueta_JEFATURA",
+    "type": "App::FeaturePython",
+    "content": [
+      "JEFATURA",
+      "15.39 m2",
+      "Oficina",
+      "0%"
+    ],
+    "pos": [
+      16345.5,
+      18930.2,
+      0.0
+    ],
+    "parents": [
+      {
+        "name": "Rectangle021",
+        "label": "JEFATURA001"
+      },
+      {
+        "name": "PD_References",
+        "label": "Fuentes y auxiliares"
+      },
+      {
+        "name": "Rectangle077",
+        "label": "JEFATURA"
+      }
+    ]
+  },
+  {
+    "name": "Text004",
+    "label": "Etiqueta_PASILLO_PRINCIPAL",
+    "type": "App::FeaturePython",
+    "content": [
+      "PASILLO PRINCIPAL",
+      "33.31 m2",
+      "Pasillo",
+      "0%"
+    ],
+    "pos": [
+      21388.0,
+      20939.5,
+      0.0
+    ],
+    "parents": [
+      {
+        "name": "Rectangle022",
+        "label": "PASILLO PRINCIPAL001"
+      },
+      {
+        "name": "PD_References",
+        "label": "Fuentes y auxiliares"
+      },
+      {
+        "name": "Rectangle078",
+        "label": "PASILLO PRINCIPAL"
+      }
+    ]
+  },
+  {
+    "name": "Text006",
+    "label": "Etiqueta_S_S_FUNCIONARIAS",
+    "type": "App::FeaturePython",
+    "content": [
+      "S.S. FUNCIONARIAS",
+      "3.83 m2",
+      "Servicio Sanitario",
+      "0%"
+    ],
+    "pos": [
+      25545.5,
+      17752.6,
+      0.0
+    ],
+    "parents": [
+      {
+        "name": "Rectangle024",
+        "label": "S.S. FUNCIONARIAS001"
+      },
+      {
+        "name": "PD_References",
+        "label": "Fuentes y auxiliares"
+      },
+      {
+        "name": "Rectangle079",
+        "label": "S.S. FUNCIONARIAS"
+      }
+    ]
+  },
+  {
+    "name": "Text007",
+    "label": "Etiqueta_SERVIDOR",
+    "type": "App::FeaturePython",
+    "content": [
+      "SERVIDOR",
+      "10.19 m2",
+      "Taller",
+      "0%"
+    ],
+    "pos": [
+      24870.5,
+      24916.3,
+      0.0
+    ],
+    "parents": [
+      {
+        "name": "Rectangle025",
+        "label": "SERVIDOR001"
+      },
+      {
+        "name": "PD_References",
+        "label": "Fuentes y auxiliares"
+      },
+      {
+        "name": "Rectangle080",
+        "label": "SERVIDOR"
+      }
+    ]
+  },
+  {
+    "name": "Text008",
+    "label": "Etiqueta_COMEDOR",
+    "type": "App::FeaturePython",
+    "content": [
+      "COMEDOR",
+      "24.25 m2",
+      "Cocina",
+      "0%"
+    ],
+    "pos": [
+      24867.2,
+      29653.9,
+      0.0
+    ],
+    "parents": [
+      {
+        "name": "Rectangle026",
+        "label": "COMEDOR001"
+      },
+      {
+        "name": "PD_References",
+        "label": "Fuentes y auxiliares"
+      },
+      {
+        "name": "Rectangle081",
+        "label": "COMEDOR"
+      }
+    ]
+  },
+  {
+    "name": "Text009",
+    "label": "Etiqueta_SALA_LACTANCIA",
+    "type": "App::FeaturePython",
+    "content": [
+      "SALA LACTANCIA",
+      "8.82 m2",
+      "Sala de Reuniones",
+      "0%"
+    ],
+    "pos": [
+      24870.5,
+      15577.6,
+      0.0
+    ],
+    "parents": [
+      {
+        "name": "Rectangle027",
+        "label": "SALA LACTANCIA001"
+      },
+      {
+        "name": "PD_References",
+        "label": "Fuentes y auxiliares"
+      },
+      {
+        "name": "Rectangle082",
+        "label": "SALA LACTANCIA"
+      }
+    ]
+  },
+  {
+    "name": "Text010",
+    "label": "Etiqueta_PENSIONES",
+    "type": "App::FeaturePython",
+    "content": [
+      "PENSIONES",
+      "10.44 m2",
+      "Oficina",
+      "0%"
+    ],
+    "pos": [
+      24870.5,
+      12804.8,
+      0.0
+    ],
+    "parents": [
+      {
+        "name": "Rectangle028",
+        "label": "PENSIONES001"
+      },
+      {
+        "name": "PD_References",
+        "label": "Fuentes y auxiliares"
+      },
+      {
+        "name": "Rectangle083",
+        "label": "PENSIONES"
+      }
+    ]
+  },
+  {
+    "name": "Text011",
+    "label": "Etiqueta_S_S_HOMBRES",
+    "type": "App::FeaturePython",
+    "content": [
+      "S.S. HOMBRES",
+      "5.88 m2",
+      "Servicio Sanitario",
+      "0%"
+    ],
+    "pos": [
+      25395.5,
+      10106.9,
+      0.0
+    ],
+    "parents": [
+      {
+        "name": "Rectangle029",
+        "label": "S.S. HOMBRES001"
+      },
+      {
+        "name": "PD_References",
+        "label": "Fuentes y auxiliares"
+      },
+      {
+        "name": "Rectangle084",
+        "label": "S.S. HOMBRES"
+      }
+    ]
+  },
+  {
+    "name": "Text012",
+    "label": "Etiqueta_S_S_MUJERES",
+    "type": "App::FeaturePython",
+    "content": [
+      "S.S. MUJERES",
+      "5.88 m2",
+      "Servicio Sanitario",
+      "0%"
+    ],
+    "pos": [
+      25395.5,
+      7176.9,
+      0.0
+    ],
+    "parents": [
+      {
+        "name": "Rectangle030",
+        "label": "S.S. MUJERES001"
+      },
+      {
+        "name": "PD_References",
+        "label": "Fuentes y auxiliares"
+      },
+      {
+        "name": "Rectangle085",
+        "label": "S.S. MUJERES"
+      }
+    ]
+  },
+  {
+    "name": "Text013",
+    "label": "Etiqueta_PASILLO_A_PLATAFORMA",
+    "type": "App::FeaturePython",
+    "content": [
+      "PASILLO A PLATAFORMA",
+      "6.64 m2",
+      "Pasillo",
+      "675%"
+    ],
+    "pos": [
+      17155.5,
+      16174.8,
+      0.0
+    ],
+    "parents": [
+      {
+        "name": "Rectangle031",
+        "label": "PASILLO A PLATAFORMA001"
+      },
+      {
+        "name": "PD_References",
+        "label": "Fuentes y auxiliares"
+      },
+      {
+        "name": "Rectangle086",
+        "label": "PASILLO A PLATAFORMA"
+      }
+    ]
+  },
+  {
+    "name": "Text014",
+    "label": "Etiqueta_CAJA",
+    "type": "App::FeaturePython",
+    "content": [
+      "CAJA",
+      "8.20 m2",
+      "Oficina",
+      "55%"
+    ],
+    "pos": [
+      17310.5,
+      10686.9,
+      0.0
+    ],
+    "parents": [
+      {
+        "name": "Rectangle032",
+        "label": "CAJA001"
+      },
+      {
+        "name": "PD_References",
+        "label": "Fuentes y auxiliares"
+      },
+      {
+        "name": "Rectangle087",
+        "label": "CAJA"
+      }
+    ]
+  },
+  {
+    "name": "Text016",
+    "label": "Etiqueta_ASEO",
+    "type": "App::FeaturePython",
+    "content": [
+      "ASEO",
+      "6.57 m2",
+      "Bodega",
+      "487%"
+    ],
+    "pos": [
+      25545.5,
+      21952.6,
+      0.0
+    ],
+    "parents": [
+      {
+        "name": "Rectangle034",
+        "label": "ASEO001"
+      },
+      {
+        "name": "PD_References",
+        "label": "Fuentes y auxiliares"
+      },
+      {
+        "name": "Rectangle088",
+        "label": "ASEO"
+      }
+    ]
+  },
+  {
+    "name": "Text017",
+    "label": "Etiqueta_SALA_DE_ESPERA",
+    "type": "App::FeaturePython",
+    "content": [
+      "SALA DE ESPERA",
+      "52.56 m2",
+      "Sala de Espera",
+      "128%"
+    ],
+    "pos": [
+      20828.0,
+      9201.9,
+      0.0
+    ],
+    "parents": [
+      {
+        "name": "Rectangle035",
+        "label": "SALA DE ESPERA001"
+      },
+      {
+        "name": "PD_References",
+        "label": "Fuentes y auxiliares"
+      },
+      {
+        "name": "Rectangle089",
+        "label": "SALA DE ESPERA"
+      }
+    ]
+  },
+  {
+    "name": "Text018",
+    "label": "Etiqueta_PASILLO_PLATAFORMA",
+    "type": "App::FeaturePython",
+    "content": [
+      "PASILLO PLATAFORMA",
+      "18.00 m2",
+      "Pasillo",
+      "249%"
+    ],
+    "pos": [
+      15185.5,
+      9261.9,
+      0.0
+    ],
+    "parents": [
+      {
+        "name": "Rectangle036",
+        "label": "PASILLO PLATAFORMA001"
+      },
+      {
+        "name": "PD_References",
+        "label": "Fuentes y auxiliares"
+      }
+    ]
+  },
+  {
+    "name": "Text019",
+    "label": "Etiqueta_PASILLO_SALIDA_TRASERA",
+    "type": "App::FeaturePython",
+    "content": [
+      "PASILLO SALIDA TRASERA",
+      "29.18 m2",
+      "Pasillo",
+      "154%"
+    ],
+    "pos": [
+      7647.5,
+      31898.6,
+      0.0
+    ],
+    "parents": [
+      {
+        "name": "Rectangle037",
+        "label": "PASILLO SALIDA TRASERA001"
+      },
+      {
+        "name": "PD_References",
+        "label": "Fuentes y auxiliares"
+      },
+      {
+        "name": "Rectangle091",
+        "label": "PASILLO SALIDA TRASERA"
+      }
+    ]
+  },
+  {
+    "name": "Text020",
+    "label": "Etiqueta_DECLARACIONES",
+    "type": "App::FeaturePython",
+    "content": [
+      "DECLARACIONES",
+      "7.88 m2",
+      "Oficina",
+      "57%"
+    ],
+    "pos": [
+      17315.9,
+      13916.9,
+      0.0
+    ],
+    "parents": [
+      {
+        "name": "Rectangle038",
+        "label": "DECLARACIONES001"
+      },
+      {
+        "name": "PD_References",
+        "label": "Fuentes y auxiliares"
+      },
+      {
+        "name": "Rectangle092",
+        "label": "DECLARACIONES"
+      }
+    ]
+  },
+  {
+    "name": "Text021",
+    "label": "Etiqueta_INGRESOS",
+    "type": "App::FeaturePython",
+    "content": [
+      "INGRESOS",
+      "3.40 m2",
+      "Oficina",
+      "132%"
+    ],
+    "pos": [
+      17675.5,
+      5701.9,
+      0.0
+    ],
+    "parents": [
+      {
+        "name": "Rectangle039",
+        "label": "INGRESOS001"
+      },
+      {
+        "name": "PD_References",
+        "label": "Fuentes y auxiliares"
+      },
+      {
+        "name": "Rectangle093",
+        "label": "INGRESOS"
+      }
+    ]
+  },
+  {
+    "name": "Text022",
+    "label": "Etiqueta_COBROS",
+    "type": "App::FeaturePython",
+    "content": [
+      "COBROS",
+      "3.40 m2",
+      "Oficina",
+      "132%"
+    ],
+    "pos": [
+      17675.5,
+      3838.6,
+      0.0
+    ],
+    "parents": [
+      {
+        "name": "Rectangle040",
+        "label": "COBROS001"
+      },
+      {
+        "name": "PD_References",
+        "label": "Fuentes y auxiliares"
+      },
+      {
+        "name": "Rectangle094",
+        "label": "COBROS"
+      }
+    ]
+  },
+  {
+    "name": "Text023",
+    "label": "Etiqueta_EGRESOS",
+    "type": "App::FeaturePython",
+    "content": [
+      "EGRESOS",
+      "4.34 m2",
+      "Oficina",
+      "103%"
+    ],
+    "pos": [
+      17650.5,
+      7835.2,
+      0.0
+    ],
+    "parents": [
+      {
+        "name": "Rectangle041",
+        "label": "EGRESOS001"
+      },
+      {
+        "name": "PD_References",
+        "label": "Fuentes y auxiliares"
+      },
+      {
+        "name": "Rectangle095",
+        "label": "EGRESOS"
+      }
+    ]
+  },
+  {
+    "name": "Text024",
+    "label": "Etiqueta_SEGURIDAD",
+    "type": "App::FeaturePython",
+    "content": [
+      "SEGURIDAD",
+      "11.42 m2",
+      "Oficina",
+      "39%"
+    ],
+    "pos": [
+      24870.5,
+      4441.9,
+      3000.0
+    ],
+    "parents": [
+      {
+        "name": "Rectangle042",
+        "label": "SEGURIDAD001"
+      },
+      {
+        "name": "PD_References",
+        "label": "Fuentes y auxiliares"
+      }
+    ]
+  },
+  {
+    "name": "Text025",
+    "label": "Etiqueta área - ARCHIVO",
+    "type": "App::FeaturePython",
+    "content": [
+      "ARCHIVO",
+      "54.00 m²"
+    ],
+    "pos": [
+      18710.0,
+      29637.6,
+      35.0
+    ],
+    "parents": [
+      {
+        "name": "Group",
+        "label": "Etiquetas Análisis de Áreas"
+      }
+    ]
+  },
+  {
+    "name": "Text026",
+    "label": "Etiqueta área - BÓVEDA",
+    "type": "App::FeaturePython",
+    "content": [
+      "BÓVEDA",
+      "3.28 m²"
+    ],
+    "pos": [
+      19030.5,
+      19792.2,
+      35.0
+    ],
+    "parents": [
+      {
+        "name": "Group",
+        "label": "Etiquetas Análisis de Áreas"
+      }
+    ]
+  },
+  {
+    "name": "Text027",
+    "label": "Etiqueta área - JEFATURA",
+    "type": "App::FeaturePython",
+    "content": [
+      "JEFATURA",
+      "15.26 m²"
+    ],
+    "pos": [
+      16345.5,
+      18947.2,
+      35.0
+    ],
+    "parents": [
+      {
+        "name": "Group",
+        "label": "Etiquetas Análisis de Áreas"
+      }
+    ]
+  },
+  {
+    "name": "Text028",
+    "label": "Etiqueta área - PASILLO PRINCIPAL",
+    "type": "App::FeaturePython",
+    "content": [
+      "PASILLO PRINCIPAL",
+      "33.50 m²"
+    ],
+    "pos": [
+      21395.0,
+      20945.0,
+      35.0
+    ],
+    "parents": [
+      {
+        "name": "Group",
+        "label": "Etiquetas Análisis de Áreas"
+      }
+    ]
+  },
+  {
+    "name": "Text029",
+    "label": "Etiqueta área - S.S. FUNCIONARIAS",
+    "type": "App::FeaturePython",
+    "content": [
+      "S.S. FUNCIONARIAS",
+      "3.83 m²"
+    ],
+    "pos": [
+      25545.5,
+      17752.6,
+      35.0
+    ],
+    "parents": [
+      {
+        "name": "Group",
+        "label": "Etiquetas Análisis de Áreas"
+      }
+    ]
+  },
+  {
+    "name": "Text030",
+    "label": "Etiqueta área - SERVIDOR",
+    "type": "App::FeaturePython",
+    "content": [
+      "SERVIDOR",
+      "10.20 m²"
+    ],
+    "pos": [
+      24877.5,
+      24922.9,
+      35.0
+    ],
+    "parents": [
+      {
+        "name": "Group",
+        "label": "Etiquetas Análisis de Áreas"
+      }
+    ]
+  },
+  {
+    "name": "Text031",
+    "label": "Etiqueta área - COMEDOR",
+    "type": "App::FeaturePython",
+    "content": [
+      "COMEDOR",
+      "23.03 m²"
+    ],
+    "pos": [
+      24877.5,
+      29637.6,
+      35.0
+    ],
+    "parents": [
+      {
+        "name": "Group",
+        "label": "Etiquetas Análisis de Áreas"
+      }
+    ]
+  },
+  {
+    "name": "Text032",
+    "label": "Etiqueta área - SALA LACTANCIA",
+    "type": "App::FeaturePython",
+    "content": [
+      "SALA LACTANCIA",
+      "8.79 m²"
+    ],
+    "pos": [
+      24877.5,
+      15577.6,
+      35.0
+    ],
+    "parents": [
+      {
+        "name": "Group",
+        "label": "Etiquetas Análisis de Áreas"
+      }
+    ]
+  },
+  {
+    "name": "Text033",
+    "label": "Etiqueta área - PENSIONES",
+    "type": "App::FeaturePython",
+    "content": [
+      "PENSIONES",
+      "10.40 m²"
+    ],
+    "pos": [
+      24877.5,
+      12804.8,
+      35.0
+    ],
+    "parents": [
+      {
+        "name": "Group",
+        "label": "Etiquetas Análisis de Áreas"
+      }
+    ]
+  },
+  {
+    "name": "Text034",
+    "label": "Etiqueta área - S.S. HOMBRES",
+    "type": "App::FeaturePython",
+    "content": [
+      "S.S. HOMBRES",
+      "5.88 m²"
+    ],
+    "pos": [
+      25395.5,
+      10106.9,
+      35.0
+    ],
+    "parents": [
+      {
+        "name": "Group",
+        "label": "Etiquetas Análisis de Áreas"
+      }
+    ]
+  },
+  {
+    "name": "Text035",
+    "label": "Etiqueta área - S.S. MUJERES",
+    "type": "App::FeaturePython",
+    "content": [
+      "S.S. MUJERES",
+      "5.88 m²"
+    ],
+    "pos": [
+      25395.5,
+      7176.9,
+      35.0
+    ],
+    "parents": [
+      {
+        "name": "Group",
+        "label": "Etiquetas Análisis de Áreas"
+      }
+    ]
+  },
+  {
+    "name": "Text036",
+    "label": "Etiqueta área - PASILLO A PLATAFORMA",
+    "type": "App::FeaturePython",
+    "content": [
+      "PASILLO A PLATAFORMA",
+      "4.87 m²"
+    ],
+    "pos": [
+      17870.5,
+      16174.8,
+      35.0
+    ],
+    "parents": [
+      {
+        "name": "Group",
+        "label": "Etiquetas Análisis de Áreas"
+      }
+    ]
+  },
+  {
+    "name": "Text037",
+    "label": "Etiqueta área - CAJA",
+    "type": "App::FeaturePython",
+    "content": [
+      "CAJA",
+      "8.20 m²"
+    ],
+    "pos": [
+      17310.5,
+      10686.9,
+      35.0
+    ],
+    "parents": [
+      {
+        "name": "Group",
+        "label": "Etiquetas Análisis de Áreas"
+      }
+    ]
+  },
+  {
+    "name": "Text038",
+    "label": "Etiqueta área - ASEO",
+    "type": "App::FeaturePython",
+    "content": [
+      "ASEO",
+      "6.57 m²"
+    ],
+    "pos": [
+      25545.5,
+      21952.6,
+      35.0
+    ],
+    "parents": [
+      {
+        "name": "Group",
+        "label": "Etiquetas Análisis de Áreas"
+      }
+    ]
+  },
+  {
+    "name": "Text039",
+    "label": "Etiqueta área - SALA DE ESPERA",
+    "type": "App::FeaturePython",
+    "content": [
+      "SALA DE ESPERA",
+      "54.00 m²"
+    ],
+    "pos": [
+      20835.0,
+      9052.6,
+      35.0
+    ],
+    "parents": [
+      {
+        "name": "Group",
+        "label": "Etiquetas Análisis de Áreas"
+      }
+    ]
+  },
+  {
+    "name": "Text040",
+    "label": "Etiqueta área - PASILLO PLATAFORMA",
+    "type": "App::FeaturePython",
+    "content": [
+      "PASILLO PLATAFORMA",
+      "19.77 m²"
+    ],
+    "pos": [
+      15185.5,
+      9879.8,
+      35.0
+    ],
+    "parents": [
+      {
+        "name": "Group",
+        "label": "Etiquetas Análisis de Áreas"
+      }
+    ]
+  },
+  {
+    "name": "Text041",
+    "label": "Etiqueta área - PASILLO SALIDA TRASERA",
+    "type": "App::FeaturePython",
+    "content": [
+      "PASILLO SALIDA TRASERA",
+      "26.93 m²"
+    ],
+    "pos": [
+      7709.3,
+      31808.2,
+      35.0
+    ],
+    "parents": [
+      {
+        "name": "Group",
+        "label": "Etiquetas Análisis de Áreas"
+      }
+    ]
+  },
+  {
+    "name": "Text042",
+    "label": "Etiqueta área - DECLARACIONES",
+    "type": "App::FeaturePython",
+    "content": [
+      "DECLARACIONES",
+      "7.84 m²"
+    ],
+    "pos": [
+      17310.5,
+      13916.9,
+      35.0
+    ],
+    "parents": [
+      {
+        "name": "Group",
+        "label": "Etiquetas Análisis de Áreas"
+      }
+    ]
+  },
+  {
+    "name": "Text043",
+    "label": "Etiqueta área - INGRESOS",
+    "type": "App::FeaturePython",
+    "content": [
+      "INGRESOS",
+      "4.92 m²"
+    ],
+    "pos": [
+      17310.5,
+      5701.9,
+      35.0
+    ],
+    "parents": [
+      {
+        "name": "Group",
+        "label": "Etiquetas Análisis de Áreas"
+      }
+    ]
+  },
+  {
+    "name": "Text044",
+    "label": "Etiqueta área - COBROS",
+    "type": "App::FeaturePython",
+    "content": [
+      "COBROS",
+      "4.71 m²"
+    ],
+    "pos": [
+      17250.5,
+      3838.6,
+      35.0
+    ],
+    "parents": [
+      {
+        "name": "Group",
+        "label": "Etiquetas Análisis de Áreas"
+      }
+    ]
+  },
+  {
+    "name": "Text045",
+    "label": "Etiqueta área - EGRESOS",
+    "type": "App::FeaturePython",
+    "content": [
+      "EGRESOS",
+      "6.17 m²"
+    ],
+    "pos": [
+      17250.5,
+      7835.2,
+      35.0
+    ],
+    "parents": [
+      {
+        "name": "Group",
+        "label": "Etiquetas Análisis de Áreas"
+      }
+    ]
+  },
+  {
+    "name": "Text047",
+    "label": "Etiqueta área - Cubículos",
+    "type": "App::FeaturePython",
+    "content": [
+      "Cubículos",
+      "28.09 m²"
+    ],
+    "pos": [
+      17155.5,
+      23717.4,
+      35.0
+    ],
+    "parents": [
+      {
+        "name": "Group",
+        "label": "Etiquetas Análisis de Áreas"
+      }
+    ]
+  },
+  {
+    "name": "Text048",
+    "label": "Etiqueta área - S.S. FUNCIONARIOS",
+    "type": "App::FeaturePython",
+    "content": [
+      "S.S. FUNCIONARIOS",
+      "3.83 m²"
+    ],
+    "pos": [
+      25545.5,
+      19552.6,
+      35.0
+    ],
+    "parents": [
+      {
+        "name": "Group",
+        "label": "Etiquetas Análisis de Áreas"
+      }
+    ]
+  },
+  {
+    "name": "Text049",
+    "label": "Etiqueta área - Pasillo de S.S.",
+    "type": "App::FeaturePython",
+    "content": [
+      "Pasillo de S.S.",
+      "7.88 m²"
+    ],
+    "pos": [
+      23677.5,
+      20152.6,
+      35.0
+    ],
+    "parents": [
+      {
+        "name": "Group",
+        "label": "Etiquetas Análisis de Áreas"
+      }
+    ]
+  },
+  {
+    "name": "Text050",
+    "label": "Etiqueta área - ÁREA SIN NOMBRE 001",
+    "type": "App::FeaturePython",
+    "content": [
+      "SEGURIDAD",
+      "8.58 m²"
+    ],
+    "pos": [
+      24817.5,
+      4768.1,
+      35.0
+    ],
+    "parents": [
+      {
+        "name": "Group",
+        "label": "Etiquetas Análisis de Áreas"
+      }
+    ]
+  },
+  {
+    "name": "Etiquetas",
+    "label": "Etiquetas",
+    "type": "App::DocumentObjectGroup",
+    "content": null,
+    "pos": null,
+    "parents": [
+      {
+        "name": "FA_RectangularAreas",
+        "label": "Análisis de áreas rectangulares"
+      }
+    ]
+  },
+  {
+    "name": "Group",
+    "label": "Etiquetas Análisis de Áreas",
+    "type": "App::DocumentObjectGroup",
+    "content": null,
+    "pos": null,
+    "parents": [
+      {
+        "name": "FA_RectangularAreas",
+        "label": "Análisis de áreas rectangulares"
+      }
+    ]
+  },
+  {
+    "name": "Text076",
+    "label": "Etiqueta área - Pasillo Plataforma",
+    "type": "App::FeaturePython",
+    "content": [
+      "Pasillo Plataforma",
+      "8.68 m²"
+    ],
+    "pos": [
+      15180.3,
+      5941.9,
+      35.0
+    ],
+    "parents": [
+      {
+        "name": "Group",
+        "label": "Etiquetas Análisis de Áreas"
+      }
+    ]
+  },
+  {
+    "name": "Text077",
+    "label": "Etiqueta área - Pasillo Caja y Declaraciones.",
+    "type": "App::FeaturePython",
+    "content": [
+      "Pasillo Caja y Declaraciones.",
+      "11.18 m²"
+    ],
+    "pos": [
+      15178.8,
+      12884.8,
+      35.0
+    ],
+    "parents": [
+      {
+        "name": "Group",
+        "label": "Etiquetas Análisis de Áreas"
+      }
+    ]
+  },
+  {
+    "name": "Text078",
+    "label": "Etiqueta_ARCHIVO002",
+    "type": "App::FeaturePython",
+    "content": [
+      "ARCHIVO",
+      "54.00 m2",
+      "Archivo",
+      "104%",
+      "10 luminarias (2x5)"
+    ],
+    "pos": [
+      18710.0,
+      29637.6,
+      20.0
+    ],
+    "parents": [
+      {
+        "name": "Etiquetas",
+        "label": "Etiquetas"
+      }
+    ]
+  },
+  {
+    "name": "Text079",
+    "label": "Etiqueta_BOVEDA002",
+    "type": "App::FeaturePython",
+    "content": [
+      "BÓVEDA",
+      "3.28 m2",
+      "Bodega",
+      "976%",
+      "1 luminaria (1x1)"
+    ],
+    "pos": [
+      19030.5,
+      19792.2,
+      20.0
+    ],
+    "parents": [
+      {
+        "name": "Etiquetas",
+        "label": "Etiquetas"
+      }
+    ]
+  },
+  {
+    "name": "Text080",
+    "label": "Etiqueta_JEFATURA002",
+    "type": "App::FeaturePython",
+    "content": [
+      "JEFATURA",
+      "15.26 m2",
+      "Oficina",
+      "117%",
+      "4 luminarias (2x2)"
+    ],
+    "pos": [
+      16345.5,
+      18947.2,
+      20.0
+    ],
+    "parents": [
+      {
+        "name": "Etiquetas",
+        "label": "Etiquetas"
+      }
+    ]
+  },
+  {
+    "name": "Text081",
+    "label": "Etiqueta_PASILLO_PRINCIPAL002",
+    "type": "App::FeaturePython",
+    "content": [
+      "PASILLO PRINCIPAL",
+      "33.50 m2",
+      "Pasillo",
+      "134%",
+      "1 luminaria (1x1)"
+    ],
+    "pos": [
+      21395.0,
+      20945.0,
+      20.0
+    ],
+    "parents": [
+      {
+        "name": "Etiquetas",
+        "label": "Etiquetas"
+      }
+    ]
+  },
+  {
+    "name": "Text082",
+    "label": "Etiqueta_S_S_FUNCIONARIAS002",
+    "type": "App::FeaturePython",
+    "content": [
+      "S.S. FUNCIONARIAS",
+      "3.83 m2",
+      "Servicio Sanitario",
+      "585%",
+      "1 luminaria (1x1)"
+    ],
+    "pos": [
+      25545.5,
+      17752.6,
+      20.0
+    ],
+    "parents": [
+      {
+        "name": "Etiquetas",
+        "label": "Etiquetas"
+      }
+    ]
+  },
+  {
+    "name": "Text083",
+    "label": "Etiqueta_SERVIDOR002",
+    "type": "App::FeaturePython",
+    "content": [
+      "SERVIDOR",
+      "10.20 m2",
+      "Taller",
+      "110%",
+      "1 luminaria (1x1)"
+    ],
+    "pos": [
+      24877.5,
+      24922.9,
+      20.0
+    ],
+    "parents": [
+      {
+        "name": "Etiquetas",
+        "label": "Etiquetas"
+      }
+    ]
+  },
+  {
+    "name": "Text084",
+    "label": "Etiqueta_COMEDOR002",
+    "type": "App::FeaturePython",
+    "content": [
+      "COMEDOR",
+      "23.03 m2",
+      "Cocina",
+      "130%",
+      "4 luminarias (2x2)"
+    ],
+    "pos": [
+      24877.5,
+      29637.6,
+      20.0
+    ],
+    "parents": [
+      {
+        "name": "Etiquetas",
+        "label": "Etiquetas"
+      }
+    ]
+  },
+  {
+    "name": "Text085",
+    "label": "Etiqueta_SALA_LACTANCIA002",
+    "type": "App::FeaturePython",
+    "content": [
+      "SALA LACTANCIA",
+      "8.79 m2",
+      "Sala de Reuniones",
+      "170%",
+      "2 luminarias (1x2)"
+    ],
+    "pos": [
+      24877.5,
+      15577.6,
+      20.0
+    ],
+    "parents": [
+      {
+        "name": "Etiquetas",
+        "label": "Etiquetas"
+      }
+    ]
+  },
+  {
+    "name": "Text086",
+    "label": "Etiqueta_PENSIONES002",
+    "type": "App::FeaturePython",
+    "content": [
+      "PENSIONES",
+      "10.40 m2",
+      "Oficina",
+      "129%",
+      "3 luminarias (1x3)"
+    ],
+    "pos": [
+      24877.5,
+      12804.8,
+      20.0
+    ],
+    "parents": [
+      {
+        "name": "Etiquetas",
+        "label": "Etiquetas"
+      }
+    ]
+  },
+  {
+    "name": "Text087",
+    "label": "Etiqueta_S_S_HOMBRES002",
+    "type": "App::FeaturePython",
+    "content": [
+      "S.S. HOMBRES",
+      "5.88 m2",
+      "Servicio Sanitario",
+      "381%",
+      "1 luminaria (1x1)"
+    ],
+    "pos": [
+      25395.5,
+      10106.9,
+      20.0
+    ],
+    "parents": [
+      {
+        "name": "Etiquetas",
+        "label": "Etiquetas"
+      }
+    ]
+  },
+  {
+    "name": "Text088",
+    "label": "Etiqueta_S_S_MUJERES002",
+    "type": "App::FeaturePython",
+    "content": [
+      "S.S. MUJERES",
+      "5.88 m2",
+      "Servicio Sanitario",
+      "381%",
+      "1 luminaria (1x1)"
+    ],
+    "pos": [
+      25395.5,
+      7176.9,
+      20.0
+    ],
+    "parents": [
+      {
+        "name": "Etiquetas",
+        "label": "Etiquetas"
+      }
+    ]
+  },
+  {
+    "name": "Text089",
+    "label": "Etiqueta_PASILLO_A_PLATAFORMA002",
+    "type": "App::FeaturePython",
+    "content": [
+      "PASILLO A PLATAFORMA",
+      "4.87 m2",
+      "Pasillo",
+      "920%",
+      "1 luminaria (1x1)"
+    ],
+    "pos": [
+      17870.5,
+      16174.8,
+      20.0
+    ],
+    "parents": [
+      {
+        "name": "Etiquetas",
+        "label": "Etiquetas"
+      }
+    ]
+  },
+  {
+    "name": "Text090",
+    "label": "Etiqueta_CAJA002",
+    "type": "App::FeaturePython",
+    "content": [
+      "CAJA",
+      "8.20 m2",
+      "Oficina",
+      "109%",
+      "2 luminarias (2x1)"
+    ],
+    "pos": [
+      17310.5,
+      10686.9,
+      20.0
+    ],
+    "parents": [
+      {
+        "name": "Etiquetas",
+        "label": "Etiquetas"
+      }
+    ]
+  },
+  {
+    "name": "Text091",
+    "label": "Etiqueta_ASEO002",
+    "type": "App::FeaturePython",
+    "content": [
+      "ASEO",
+      "6.57 m2",
+      "Bodega",
+      "487%",
+      "1 luminaria (1x1)"
+    ],
+    "pos": [
+      25545.5,
+      21952.6,
+      20.0
+    ],
+    "parents": [
+      {
+        "name": "Etiquetas",
+        "label": "Etiquetas"
+      }
+    ]
+  },
+  {
+    "name": "Text092",
+    "label": "Etiqueta_SALA_DE_ESPERA002",
+    "type": "App::FeaturePython",
+    "content": [
+      "SALA DE ESPERA",
+      "54.00 m2",
+      "Sala de Espera",
+      "104%",
+      "5 luminarias (5x1)"
+    ],
+    "pos": [
+      20835.0,
+      9052.6,
+      20.0
+    ],
+    "parents": [
+      {
+        "name": "Etiquetas",
+        "label": "Etiquetas"
+      }
+    ]
+  },
+  {
+    "name": "Text093",
+    "label": "Etiqueta_PASILLO_SALIDA_TRASERA002",
+    "type": "App::FeaturePython",
+    "content": [
+      "PASILLO SALIDA TRASERA",
+      "26.93 m2",
+      "Pasillo",
+      "166%",
+      "1 luminaria (1x1)"
+    ],
+    "pos": [
+      7709.3,
+      31808.2,
+      20.0
+    ],
+    "parents": [
+      {
+        "name": "Etiquetas",
+        "label": "Etiquetas"
+      }
+    ]
+  },
+  {
+    "name": "Text094",
+    "label": "Etiqueta_DECLARACIONES002",
+    "type": "App::FeaturePython",
+    "content": [
+      "DECLARACIONES",
+      "7.84 m2",
+      "Oficina",
+      "114%",
+      "2 luminarias (2x1)"
+    ],
+    "pos": [
+      17310.5,
+      13916.9,
+      20.0
+    ],
+    "parents": [
+      {
+        "name": "Etiquetas",
+        "label": "Etiquetas"
+      }
+    ]
+  },
+  {
+    "name": "Text095",
+    "label": "Etiqueta_INGRESOS002",
+    "type": "App::FeaturePython",
+    "content": [
+      "INGRESOS",
+      "4.92 m2",
+      "Oficina",
+      "182%",
+      "2 luminarias (1x2)"
+    ],
+    "pos": [
+      17310.5,
+      5701.9,
+      20.0
+    ],
+    "parents": [
+      {
+        "name": "Etiquetas",
+        "label": "Etiquetas"
+      }
+    ]
+  },
+  {
+    "name": "Text096",
+    "label": "Etiqueta_COBROS002",
+    "type": "App::FeaturePython",
+    "content": [
+      "COBROS",
+      "4.71 m2",
+      "Oficina",
+      "190%",
+      "2 luminarias (1x2)"
+    ],
+    "pos": [
+      17250.5,
+      3838.6,
+      20.0
+    ],
+    "parents": [
+      {
+        "name": "Etiquetas",
+        "label": "Etiquetas"
+      }
+    ]
+  },
+  {
+    "name": "Text097",
+    "label": "Etiqueta_EGRESOS002",
+    "type": "App::FeaturePython",
+    "content": [
+      "EGRESOS",
+      "9.36 m2",
+      "Oficina",
+      "144%",
+      "3 luminarias (1x3)"
+    ],
+    "pos": [
+      16550.9,
+      7835.2,
+      20.0
+    ],
+    "parents": [
+      {
+        "name": "Etiquetas",
+        "label": "Etiquetas"
+      }
+    ]
+  },
+  {
+    "name": "Text098",
+    "label": "Etiqueta_Cubiculos001",
+    "type": "App::FeaturePython",
+    "content": [
+      "Cubículos",
+      "28.09 m2",
+      "Oficina",
+      "128%",
+      "8 luminarias (2x4)"
+    ],
+    "pos": [
+      17155.5,
+      23717.4,
+      20.0
+    ],
+    "parents": [
+      {
+        "name": "Etiquetas",
+        "label": "Etiquetas"
+      }
+    ]
+  },
+  {
+    "name": "Text099",
+    "label": "Etiqueta_S_S_FUNCIONARIOS001",
+    "type": "App::FeaturePython",
+    "content": [
+      "S.S. FUNCIONARIOS",
+      "3.83 m2",
+      "Servicio Sanitario",
+      "585%",
+      "1 luminaria (1x1)"
+    ],
+    "pos": [
+      25545.5,
+      19552.6,
+      20.0
+    ],
+    "parents": [
+      {
+        "name": "Etiquetas",
+        "label": "Etiquetas"
+      }
+    ]
+  },
+  {
+    "name": "Text100",
+    "label": "Etiqueta_Pasillo_de_S_S001",
+    "type": "App::FeaturePython",
+    "content": [
+      "Pasillo de S.S.",
+      "7.88 m2",
+      "Pasillo",
+      "569%",
+      "1 luminaria (1x1)"
+    ],
+    "pos": [
+      23677.5,
+      20152.6,
+      20.0
+    ],
+    "parents": [
+      {
+        "name": "Etiquetas",
+        "label": "Etiquetas"
+      }
+    ]
+  },
+  {
+    "name": "Text101",
+    "label": "Etiqueta_SEGURIDAD003",
+    "type": "App::FeaturePython",
+    "content": [
+      "SEGURIDAD002",
+      "8.58 m2",
+      "Oficina",
+      "104%",
+      "2 luminarias (1x2)"
+    ],
+    "pos": [
+      24817.5,
+      4768.1,
+      20.0
+    ],
+    "parents": [
+      {
+        "name": "Etiquetas",
+        "label": "Etiquetas"
+      }
+    ]
+  },
+  {
+    "name": "Text102",
+    "label": "Etiqueta_Pasillo_Plataforma",
+    "type": "App::FeaturePython",
+    "content": [
+      "Pasillo Plataforma",
+      "5.25 m2",
+      "Pasillo",
+      "853%",
+      "1 luminaria (1x1)"
+    ],
+    "pos": [
+      15182.4,
+      4743.0,
+      20.0
+    ],
+    "parents": [
+      {
+        "name": "Etiquetas",
+        "label": "Etiquetas"
+      }
+    ]
+  },
+  {
+    "name": "Text103",
+    "label": "Etiqueta_Pasillo_Caja_y_Declaraciones",
+    "type": "App::FeaturePython",
+    "content": [
+      "Pasillo Caja y Declaraciones.",
+      "11.18 m2",
+      "Pasillo",
+      "401%",
+      "1 luminaria (1x1)"
+    ],
+    "pos": [
+      15178.8,
+      12884.8,
+      20.0
+    ],
+    "parents": [
+      {
+        "name": "Etiquetas",
+        "label": "Etiquetas"
+      }
+    ]
+  }
+]

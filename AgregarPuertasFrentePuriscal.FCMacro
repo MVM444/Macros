@@ -1,0 +1,334 @@
+# -*- coding: utf-8 -*-
+# MenuText: FA Agregar puertas del frente de Puriscal
+# ToolTip: Agrega una puerta sencilla y una puerta doble desde los ejes corregidos.
+
+"""Agrega las dos aperturas faltantes del frente del modelo de Puriscal.
+
+La geometria 17 crea una puerta sencilla. Las geometrias contiguas 0 y 18
+forman un unico vano de doble hoja. La operacion es idempotente y solamente
+reemplaza puertas vinculadas con esos tres indices.
+"""
+
+from __future__ import annotations
+
+import math
+from pathlib import Path
+
+import Arch
+import FreeCAD as App
+import FreeCADGui as Gui
+
+
+SOURCE_MACRO = Path(__file__).with_name("InsertarPuertasBIMDesdeRecintos.FCMacro")
+SINGLE_INDEX = 17
+DOUBLE_INDICES = (0, 18)
+
+
+def load_shared_functions():
+    namespace = {}
+    source = SOURCE_MACRO.read_text(encoding="utf-8-sig")
+    definitions = source.split("\ndoc = App.ActiveDocument", 1)[0]
+    exec(compile(definitions, str(SOURCE_MACRO), "exec"), namespace)
+    return namespace
+
+
+def add_front_properties(add_prop, door, door_type, logical_id, leaf_role, indices, width):
+    add_prop(door, "App::PropertyString", "FA_DoorType", "FacilArquitectura", "Tipo logico de puerta")
+    add_prop(door, "App::PropertyString", "FA_LogicalDoorID", "FacilArquitectura", "Identificador del vano")
+    add_prop(door, "App::PropertyString", "FA_LeafRole", "FacilArquitectura", "Hoja dentro del vano")
+    add_prop(door, "App::PropertyString", "FA_SourceGeometryIndices", "FacilArquitectura", "Indices asociados")
+    add_prop(door, "App::PropertyLength", "FA_OverallOpeningWidth", "FacilArquitectura", "Ancho total del vano")
+    door.FA_DoorType = door_type
+    door.FA_LogicalDoorID = logical_id
+    door.FA_LeafRole = leaf_role
+    door.FA_SourceGeometryIndices = indices
+    door.FA_OverallOpeningWidth = width
+
+
+def remove_previous_front_doors(doc):
+    door_names = []
+    base_names = []
+    for obj in list(doc.Objects):
+        if str(getattr(obj, "FA_Role", "")) != "door":
+            continue
+        indices = str(getattr(obj, "FA_SourceGeometryIndices", ""))
+        source_index = int(getattr(obj, "FA_SourceGeometryIndex", -1))
+        if source_index not in (0, 17, 18) and indices not in ("0,18", "18,0"):
+            continue
+        door_names.append(obj.Name)
+        base = getattr(obj, "Base", None)
+        if base is not None:
+            base_names.append(base.Name)
+    for name in door_names:
+        obj = doc.getObject(name)
+        if obj is None:
+            continue
+        try:
+            obj.Hosts = []
+        except Exception:
+            pass
+        doc.removeObject(name)
+    for name in base_names:
+        if doc.getObject(name) is not None:
+            doc.removeObject(name)
+
+
+def make_leaf(
+    shared,
+    group,
+    wall,
+    axes_object,
+    wall_width,
+    hinge,
+    other,
+    room,
+    source_index,
+    corner_distance,
+    wall_offset,
+    label,
+    door_type,
+    logical_id,
+    leaf_role,
+    source_indices,
+    overall_width,
+):
+    vector = other.sub(hinge)
+    width = vector.Length
+    unit = (vector.x / width, vector.y / width)
+    normal = (-unit[1], unit[0])
+    midpoint = hinge.add(other).multiply(0.5)
+    rect = room["rect"]
+    room_center = App.Vector((rect[0] + rect[2]) * 0.5, (rect[1] + rect[3]) * 0.5, 0.0)
+    inward = room_center.sub(midpoint)
+    invert = normal[0] * inward.x + normal[1] * inward.y < 0.0
+    wall_half = wall_width * 0.5
+    origin = App.Vector(hinge.x - normal[0] * wall_half, hinge.y - normal[1] * wall_half, 0.0)
+    angle = math.degrees(math.atan2(unit[1], unit[0]))
+    rotation = App.Rotation(App.Vector(0, 0, 1), angle).multiply(
+        App.Rotation(App.Vector(1, 0, 0), 90)
+    )
+    door = Arch.makeWindowPreset(
+        "Simple door",
+        width=width,
+        height=2100.0,
+        h1=50.0,
+        h2=50.0,
+        h3=0.0,
+        w1=wall_width,
+        w2=40.0,
+        o1=0.0,
+        o2=(wall_width - 40.0) * 0.5,
+        placement=App.Placement(origin, rotation),
+    )
+    if door is None:
+        raise RuntimeError("No se pudo crear " + label)
+    door.Label = label
+    door.Opening = 100
+    door.SymbolPlan = True
+    if invert:
+        door.ViewObject.Proxy.invertOpening()
+    door.Hosts = [wall]
+    record = {
+        "axis_index": source_index,
+        "room": room,
+        "hinge_endpoint": 1,
+        "hinge": hinge,
+        "corner_distance": corner_distance,
+        "wall_offset": wall_offset,
+        "opening_side": "Invertida" if invert else "Predeterminada",
+        "confidence": 0.95,
+    }
+    shared["tag_door"](door, door.Base, wall, axes_object, record)
+    add_front_properties(
+        shared["add_prop"], door, door_type, logical_id, leaf_role,
+        source_indices, overall_width,
+    )
+    group.addObject(door)
+    door.ViewObject.ShapeColor = (0.72, 0.48, 0.20)
+    door.ViewObject.LineColor = (0.22, 0.12, 0.05)
+    return door, record
+
+
+def cell_text(sheet, address):
+    try:
+        return str(sheet.get(address)).strip()
+    except Exception:
+        return ""
+
+
+def write_report_rows(sheet, single_data, double_data):
+    double_row = next(
+        (row for row in range(2, 80) if cell_text(sheet, "A%d" % row) in ("0", "0+18")),
+        None,
+    )
+    if double_row is None:
+        double_row = 2
+        while cell_text(sheet, "A%d" % double_row):
+            double_row += 1
+    values = (
+        "0+18", "%.2f" % double_data["width"], "%.2f" % double_data["offset"],
+        double_data["room"], "Extremos", "%.2f" % double_data["corner"],
+        "Dos hojas interior", "0.95", "Creada: doble hoja",
+    )
+    for column, value in zip("ABCDEFGHI", values):
+        sheet.set("%s%d" % (column, double_row), str(value))
+
+    single_row = next((row for row in range(2, 80) if cell_text(sheet, "A%d" % row) == "17"), None)
+    if single_row is None:
+        single_row = 2
+        while cell_text(sheet, "A%d" % single_row):
+            single_row += 1
+    values = (
+        17, "%.2f" % single_data["width"], "%.2f" % single_data["offset"],
+        single_data["room"], 1, "%.2f" % single_data["corner"],
+        single_data["opening"], "0.95", "Creada",
+    )
+    for column, value in zip("ABCDEFGHI", values):
+        sheet.set("%s%d" % (column, single_row), str(value))
+
+
+shared = load_shared_functions()
+doc = App.ActiveDocument
+if doc is None:
+    raise RuntimeError("Abra el modelo de Puriscal antes de ejecutar la macro.")
+wall = shared["find_wall"](doc)
+if wall is None:
+    raise RuntimeError("No se encontro el muro BIM anfitrion.")
+trace = shared["wall_centerline"](wall)
+axes_object = doc.getObject("Sketch_Centros_Puertas")
+if axes_object is None:
+    raise RuntimeError("No se encontro Sketch_Centros_Puertas.")
+rooms = shared["area_rectangles"](doc)
+wall_segments = shared["source_segments"](trace)
+axes = {axis["index"]: axis for axis in shared["source_segments"](axes_object)}
+for required in (0, 17, 18):
+    if required not in axes:
+        raise RuntimeError("Falta la geometria %d en Sketch_Centros_Puertas." % required)
+
+wall_width = shared["quantity_value"](getattr(wall, "Width", 0.0), 120.0)
+wall_half = wall_width * 0.5
+group = doc.getObject("FA_BIMDoors") or shared["ensure_group"](doc, wall, axes_object)
+
+doc.openTransaction("Agregar dos puertas BIM del frente")
+created = []
+try:
+    remove_previous_front_doors(doc)
+    doc.recompute()
+
+    axis = axes[SINGLE_INDEX]
+    match = shared["closest_parallel_wall"](axis, wall_segments)
+    if match is None:
+        raise RuntimeError("La puerta sencilla no coincide con un muro.")
+    offset, _wall_segment, first, second, _t0, _t1 = match
+    direction = second.sub(first)
+    unit = (direction.x / direction.Length, direction.y / direction.Length)
+    midpoint = first.add(second).multiply(0.5)
+    _side, room, _samples, _side_rooms = shared["choose_target_room"](
+        midpoint, unit, wall_half, rooms
+    )
+    if room is None:
+        raise RuntimeError("No se determino el recinto de la puerta sencilla.")
+    first_corner = shared["corner_distance"](first, room)
+    second_corner = shared["corner_distance"](second, room)
+    hinge, other = (first, second) if first_corner <= second_corner else (second, first)
+    single, single_record = make_leaf(
+        shared, group, wall, axes_object, wall_width, hinge, other, room, 17,
+        min(first_corner, second_corner), offset,
+        "Puerta BIM frente - %s - sencilla" % room["name"],
+        "SingleLeaf", "FRONT_SINGLE_17", "Unica", "17", direction.Length,
+    )
+    created.append(single)
+
+    axis_a = axes[DOUBLE_INDICES[0]]
+    axis_b = axes[DOUBLE_INDICES[1]]
+    pairs = [
+        (point_a, point_b, point_a.distanceToPoint(point_b))
+        for point_a in (axis_a["first"], axis_a["second"])
+        for point_b in (axis_b["first"], axis_b["second"])
+    ]
+    shared_a, shared_b, shared_distance = min(pairs, key=lambda item: item[2])
+    if shared_distance > 20.0:
+        raise RuntimeError("Los ejes 0 y 18 no forman un vano continuo.")
+    center = shared_a.add(shared_b).multiply(0.5)
+    outer_a = max((axis_a["first"], axis_a["second"]), key=lambda point: point.distanceToPoint(center))
+    outer_b = max((axis_b["first"], axis_b["second"]), key=lambda point: point.distanceToPoint(center))
+    total_width = outer_a.distanceToPoint(outer_b)
+    combined = {
+        "index": 0,
+        "first": outer_a,
+        "second": outer_b,
+        "unit": ((outer_b.x - outer_a.x) / total_width, (outer_b.y - outer_a.y) / total_width),
+        "length": total_width,
+    }
+    match = shared["closest_parallel_wall"](combined, wall_segments)
+    if match is None:
+        raise RuntimeError("La puerta doble no coincide con un muro.")
+    double_offset, double_wall, hinge_a, hinge_b, _ta, _tb = match
+    _, meeting, _ = shared["project_to_segment"](center, double_wall["first"], double_wall["second"])
+    projected_width = hinge_a.distanceToPoint(hinge_b)
+    direction = hinge_b.sub(hinge_a)
+    unit = (direction.x / direction.Length, direction.y / direction.Length)
+    midpoint = hinge_a.add(hinge_b).multiply(0.5)
+    _side, double_room, _samples, _side_rooms = shared["choose_target_room"](
+        midpoint, unit, wall_half, rooms
+    )
+    if double_room is None:
+        double_room = next((room for room in rooms if room["name"].upper() == "SEGURIDAD"), None)
+    if double_room is None:
+        raise RuntimeError("No se determino el recinto de la puerta doble.")
+    corner_a = shared["corner_distance"](hinge_a, double_room)
+    corner_b = shared["corner_distance"](hinge_b, double_room)
+    leaf_a, _record_a = make_leaf(
+        shared, group, wall, axes_object, wall_width, hinge_a, meeting, double_room, 0,
+        corner_a, double_offset,
+        "Puerta BIM frente - %s - doble hoja A" % double_room["name"],
+        "DoubleLeaf", "FRONT_DOUBLE_0_18", "Hoja A", "0,18", projected_width,
+    )
+    leaf_b, _record_b = make_leaf(
+        shared, group, wall, axes_object, wall_width, hinge_b, meeting, double_room, 18,
+        corner_b, double_offset,
+        "Puerta BIM frente - %s - doble hoja B" % double_room["name"],
+        "DoubleLeaf", "FRONT_DOUBLE_0_18", "Hoja B", "0,18", projected_width,
+    )
+    created.extend((leaf_a, leaf_b))
+
+    shared["add_prop"](group, "App::PropertyInteger", "FA_DoorLeafCount", "FacilArquitectura", "Cantidad de hojas BIM")
+    shared["add_prop"](group, "App::PropertyInteger", "FA_DoubleDoorCount", "FacilArquitectura", "Cantidad de puertas dobles")
+    group.FA_DoorCount = 18
+    group.FA_DoorLeafCount = len([obj for obj in doc.Objects if str(getattr(obj, "FA_Role", "")) == "door"])
+    group.FA_DoubleDoorCount = 1
+    group.FA_RejectedAxisCount = 0
+
+    sheet = doc.getObject("Spreadsheet_Puertas_BIM")
+    if sheet is not None:
+        write_report_rows(
+            sheet,
+            {
+                "width": single.FA_OverallOpeningWidth.Value,
+                "offset": offset,
+                "room": room["name"],
+                "corner": min(first_corner, second_corner),
+                "opening": single_record["opening_side"],
+            },
+            {
+                "width": projected_width,
+                "offset": double_offset,
+                "room": double_room["name"],
+                "corner": min(corner_a, corner_b),
+            },
+        )
+
+    wall.touch()
+    doc.recompute()
+    doc.commitTransaction()
+    doc.recompute()
+    doc.save()
+except Exception:
+    doc.abortTransaction()
+    raise
+
+Gui.activeDocument().activeView().viewTop()
+Gui.activeDocument().activeView().fitAll()
+App.Console.PrintMessage(
+    "[FACILARQ] Frente Puriscal: 2 puertas logicas, 3 hojas BIM; documento guardado.\n"
+)

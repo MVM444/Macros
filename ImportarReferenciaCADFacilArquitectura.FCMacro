@@ -1,0 +1,20 @@
+# -*- coding: utf-8 -*-
+# Icon: ImportarReferenciaCADFacilArquitectura.svg
+# Description: Importar DWG/DXF de forma controlada con Facil Arquitectura.
+# Version: 2026-07-31.1
+
+import os
+import sys
+
+
+macro_dir = os.path.dirname(__file__)
+repo_root = os.path.join(macro_dir, "Macros-de-Freecad")
+repo_root = os.path.normpath(os.path.abspath(repo_root))
+if repo_root not in sys.path:
+    sys.path.insert(0, repo_root)
+
+from FacilArquitecturaWB.commands.cmd_import_cad_reference import run_import_dialog
+
+
+run_import_dialog()
+

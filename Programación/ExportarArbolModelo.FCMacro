@@ -97,6 +97,7 @@ _ensure_qt_compat()
 
 import FreeCAD as App
 import FreeCADGui as Gui
+import os
 import time
 
 # Intentar soporte de Qt para portapapeles (PySide2 o PySide)
@@ -266,6 +267,55 @@ def roots_from_document(doc):
         log_warn("RootObjects no disponible, usando doc.Objects como fallback")
         return [o for o in doc.Objects if hasattr(o, "ViewObject")]
 
+def _parent_groups(obj):
+    """Grupos que contienen directamente al objeto, sin depender del TreeView."""
+    parents = []
+    for parent in list(getattr(obj, "InList", []) or []):
+        try:
+            if hasattr(parent, "Group") and obj in list(parent.Group or []):
+                parents.append(parent)
+        except Exception:
+            continue
+    return parents
+
+def _hierarchy_paths(obj, branch=None):
+    """Rutas completas desde una raiz documental hasta el objeto seleccionado."""
+    branch = set(branch or set())
+    name = getattr(obj, "Name", "")
+    if name and name in branch:
+        return [[obj]]
+    if name:
+        branch.add(name)
+    parents = _parent_groups(obj)
+    if not parents:
+        return [[obj]]
+    paths = []
+    for parent in parents:
+        for path in _hierarchy_paths(parent, branch):
+            paths.append(path + [obj])
+    return paths or [[obj]]
+
+def _path_token(obj):
+    label = safe_label(obj)
+    name = getattr(obj, "Name", "")
+    return "{} {{{}}}".format(label, name or "?")
+
+def source_paths(doc, sources):
+    """Texto de direccion jerarquica, incluyendo documento y archivo FCStd."""
+    doc_token = "{} {{{}}}".format(
+        getattr(doc, "Label", "") or getattr(doc, "Name", "Documento"),
+        getattr(doc, "Name", "Documento"),
+    )
+    result = []
+    seen = set()
+    for source in sources:
+        for path in _hierarchy_paths(source):
+            value = " / ".join([doc_token] + [_path_token(obj) for obj in path])
+            if value not in seen:
+                seen.add(value)
+                result.append(value)
+    return result
+
 # -------------------------
 # Ejecucion principal
 # -------------------------
@@ -296,6 +346,11 @@ def main():
     lines = build_tree_lines(sources, baseline="")
     header = []
     header.append("Arbol del modelo - doc='{}' - fecha_hora='{}'".format(doc.Name, time.strftime("%Y-%m-%d %H:%M:%S")))
+    file_name = getattr(doc, "FileName", "") or "(documento aun no guardado)"
+    header.append("Archivo fuente: {}".format(os.path.abspath(file_name) if file_name and not file_name.startswith("(") else file_name))
+    header.append("Direccion de origen:")
+    for path in source_paths(doc, sources):
+        header.append(" - " + path)
     header.append("Total lineas: {}".format(len(lines)))
     header.append("-" * 60)
 

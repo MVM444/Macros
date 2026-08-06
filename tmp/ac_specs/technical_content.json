@@ -1,0 +1,459 @@
+{
+  "title": "Especificaciones técnicas consolidadas para adquisición, instalación y mantenimiento de sistemas de aire acondicionado",
+  "subtitle": "Gerencia Financiera - Equipo de Infraestructura y Mantenimiento",
+  "status": "Borrador técnico consolidado para revisión institucional",
+  "cutoff_date": "2026-07-23",
+  "scope_note": "Aplica a equipos tipo mini-split, multi-split, cassette, piso-cielo, manejadora con ductos, VRF cuando se indique expresamente y equipos portátiles. No incluye chillers ni unidades paquete.",
+  "base_documents": [
+    {
+      "role": "Base principal de compra e instalación",
+      "document": "GF-EIM-IT-0031-2025 - Especificaciones técnicas de aires acondicionados",
+      "authority": "PDF firmado en EIMGF; DOCX de trabajo cotejado para recuperar estructura",
+      "date": "2025-08-19"
+    },
+    {
+      "role": "Base principal de mantenimiento",
+      "document": "GF-EIM-IT-0020-2023 - Especificaciones técnicas de mantenimiento de aire acondicionado",
+      "authority": "PDF firmado en EIMGF; DOCX de trabajo cotejado para recuperar tablas",
+      "date": "2023-06-19"
+    },
+    {
+      "role": "Lecciones de desempeño y recepción",
+      "document": "GF-EIM-N-0005-2026 - Criterio técnico del sistema de aire acondicionado de Santa Cruz",
+      "authority": "PDF ubicado en EIMGF",
+      "date": "2026-01-15"
+    },
+    {
+      "role": "Lecciones de instalación",
+      "document": "GF-EIM-IT-0025-2026 - Visita técnica a la Sucursal de Turrialba",
+      "authority": "PDF ubicado en EIMGF",
+      "date": "2026-05-06"
+    }
+  ],
+  "normative_sources": [
+    {
+      "instrument": "Decreto Ejecutivo 45239-MINAE",
+      "status": "Recomendación vigente para el sector público",
+      "application": "Para aires acondicionados hasta 19 050 W (65 000 BTU/h), recomienda REEE igual o mayor a 17 BTU/hW y señala cómo demostrarla mediante etiqueta y evaluación de conformidad.",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_articulo.aspx?nValor1=1&nValor2=105653&nValor3=148373&nValor5=2&param1=NRA"
+    },
+    {
+      "instrument": "RTCA 23.01.78:20, publicado mediante Decreto Ejecutivo 43616-COMEX-MEIC-MINAE, y Decreto 44037-MINAE",
+      "status": "Reglamento técnico aplicable",
+      "application": "Eficiencia, evaluación de conformidad y etiquetado de equipos divididos inverter, con flujo de refrigerante variable, descarga libre y sin ductos.",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?nValor1=1&nValor2=97459"
+    },
+    {
+      "instrument": "RTCA 23.01.80:21, publicado mediante Decreto Ejecutivo 44016-COMEX-MEIC-MINAE, y Decreto 44964",
+      "status": "Reglamento técnico aplicable",
+      "application": "Eficiencia, evaluación de conformidad y etiquetado de equipos divididos de velocidad fija, descarga libre y sin ductos, hasta 65 000 BTU/h.",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?nValor1=1&nValor2=99765&nValor3=136577"
+    },
+    {
+      "instrument": "Decreto Ejecutivo 44321-MINAE",
+      "status": "Vigente desde 2023-12-20",
+      "application": "Mecanismo de cuotas para la reducción gradual del uso de HFC. Obliga a evitar especificaciones que ignoren la transición a refrigerantes de menor potencial de calentamiento global.",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_norma.aspx?nValor1=1&nValor2=101111&nValor3=138933&param1=NRM&strTipM=FN"
+    },
+    {
+      "instrument": "Decreto Ejecutivo 37614-MINAE y Decreto Ejecutivo 35676-S-H-MAG-MINAET",
+      "status": "Marco nacional sobre HCFC y sustancias agotadoras de ozono",
+      "application": "Control de HCFC y de sustancias agotadoras de ozono. Desde 2020 se prohíbe importar equipos de refrigeración o climatización con HCFC; el R-22 queda limitado a equipos existentes y debe recuperarse sin liberarlo.",
+      "url": "https://cambioclimatico.minae.go.cr/wp-content/uploads/2019/08/Gestion-y-uso-seguro-de-refrigerantes.pdf"
+    },
+    {
+      "instrument": "RTCR 458:2011, Decreto Ejecutivo 36979-MEIC y reformas",
+      "status": "Obligatorio",
+      "application": "Código Eléctrico de Costa Rica para la Seguridad de la Vida y de la Propiedad; aplica a instalaciones nuevas, ampliaciones y remodelaciones. El dimensionamiento debe obedecer placa, fabricante, cálculo y versión oficial de NFPA 70 adoptada.",
+      "url": "https://pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?nValor1=1&nValor2=72027&nValor3=0&param1=NRTC&strTipM=TC"
+    },
+    {
+      "instrument": "Ley 8839 y Decreto Ejecutivo 37567-S-MINAET-H",
+      "status": "Obligatorio",
+      "application": "Gestión integral de residuos y responsabilidad por su disposición, incluidos aceites, refrigerantes, componentes eléctricos y electrónicos y materiales retirados.",
+      "url": "https://www.pgrweb.go.cr/docsdescargar/Normas/No%20R-12-27112024/Version1/PlanNacionaldeCompraPublica.pdf"
+    },
+    {
+      "instrument": "ANSI/ASHRAE 15-2024 y ANSI/ASHRAE 34-2024",
+      "status": "Referencia técnica",
+      "application": "Seguridad de sistemas de refrigeración, designación, toxicidad, inflamabilidad y límites de concentración de refrigerantes, especialmente para refrigerantes A2L.",
+      "url": "https://www.ashrae.org/File%20Library/About/Government%20Affairs/Public%20Policy%20Resources/Standards-15-and-24-2024-Fact-Sheet.pdf"
+    },
+    {
+      "instrument": "ANSI/ASHRAE 62.1-2025",
+      "status": "Referencia técnica",
+      "application": "Ventilación y calidad de aire interior. Un equipo mini-split no sustituye el aporte de aire exterior cuando este sea requerido.",
+      "url": "https://www.ashrae.org/technical-resources/bookstore/standards-62-1-62-2"
+    },
+    {
+      "instrument": "AHRI 210/240-2024 o versión aplicable",
+      "status": "Referencia para certificación de desempeño",
+      "application": "Desempeño de equipos unitarios menores de 65 000 BTU/h. Debe verificarse la combinación certificada de unidad interior y exterior, no cada componente por separado.",
+      "url": "https://www.ahrinet.org/search-standards/ahri-210240-i-p-performance-rating-unitary-air-conditioning-and-air-source-heat-pump-equipment"
+    },
+    {
+      "instrument": "ASTM B280-23 y ASME B31.5-2022",
+      "status": "Referencias técnicas",
+      "application": "Tubería de cobre ACR y requisitos de materiales, diseño, fabricación, ensamble, prueba e inspección de tuberías de refrigeración.",
+      "url": "https://store.astm.org/products-services/standards-and-publications/standards/copper-standards.html"
+    },
+    {
+      "instrument": "ASTM B117-26",
+      "status": "Método de ensayo, no predicción de vida útil",
+      "application": "La exposición a niebla salina permite comparar recubrimientos bajo condiciones controladas, pero sus horas no deben interpretarse por sí solas como años de servicio.",
+      "url": "https://store.astm.org/standards/b117"
+    },
+    {
+      "instrument": "INTE-ISO/IEC 17065, 17025 y 17020",
+      "status": "Evaluación de conformidad",
+      "application": "La certificación, ensayo o inspección debe provenir de organismos con acreditación vigente y alcance pertinente. El ECA acredita organismos; no certifica productos.",
+      "url": "https://eca.or.cr/faqs/"
+    }
+  ],
+  "technical_findings": [
+    {
+      "priority": "Alta",
+      "topic": "Eficiencia energética",
+      "historical_text": "La matriz 2025 puntúa EER de 12,5 / 12 / 11,5 según capacidad.",
+      "finding": "La regulación y la recomendación pública vigente utilizan REEE y etiqueta energética. El Decreto 45239-MINAE recomienda REEE >= 17 BTU/hW hasta 65 000 BTU/h.",
+      "action": "Sustituir la tabla histórica de EER por REEE y el mecanismo de demostración del RTCA aplicable."
+    },
+    {
+      "priority": "Alta",
+      "topic": "Refrigerante",
+      "historical_text": "Se exige R-410A de forma general.",
+      "finding": "R-410A es HFC de alto PCG y está dentro de la reducción gradual. Exigirlo de forma exclusiva puede provocar obsolescencia y contradice la transición de Kigali.",
+      "action": "Exigir PAO igual a cero, declarar PCG y preferir alternativas de menor PCG compatibles con normativa, seguridad, disponibilidad y servicio local."
+    },
+    {
+      "priority": "Alta",
+      "topic": "Certificación ECA",
+      "historical_text": "Se solicita 'certificación ECA de los equipos'.",
+      "finding": "El ECA no certifica productos; acredita o reconoce organismos de evaluación de la conformidad.",
+      "action": "Solicitar certificado de producto, informe de ensayo o inspección emitido por un organismo acreditado con alcance aplicable, conforme al RTCA."
+    },
+    {
+      "priority": "Alta",
+      "topic": "Dimensionamiento eléctrico",
+      "historical_text": "Se fijan breaker y calibre solamente por rangos de BTU.",
+      "finding": "BTU/h no determina por sí solo la corriente. Los valores dependen de MCA, MOCP, placa, tensión, fases, longitud, caída de tensión y método de instalación.",
+      "action": "Usar placa y manual del fabricante, cálculo del profesional responsable y Código Eléctrico vigente. Mantener los valores históricos solo como referencia preliminar."
+    },
+    {
+      "priority": "Alta",
+      "topic": "Tubería de refrigerante",
+      "historical_text": "Se especifica 'tubería de cobre nitrogenada tipo L, ASTM B280'.",
+      "finding": "ASTM B280 define tubo ACR; la designación Tipo L pertenece a otra familia de tubería y genera ambigüedad.",
+      "action": "Pedir tubo de cobre ACR ASTM B280, limpio, deshidratado, sellado y con espesor/presión compatibles con el refrigerante y el fabricante."
+    },
+    {
+      "priority": "Alta",
+      "topic": "Prueba de presión y vacío",
+      "historical_text": "Prueba con nitrógeno a no menos de 9 bar durante cuatro horas.",
+      "finding": "Un mínimo único puede ser insuficiente o improcedente según el refrigerante y el equipo. No se define vacío objetivo ni criterio de estabilidad.",
+      "action": "Aplicar presión y duración del fabricante y ASME B31.5 sin superar límites; usar nitrógeno seco regulado, prueba de fugas y vacío profundo medido en micrones con prueba de sostenimiento."
+    },
+    {
+      "priority": "Alta",
+      "topic": "Diseño y distribución de aire",
+      "historical_text": "Predomina el reemplazo en la ubicación existente.",
+      "finding": "El criterio de Santa Cruz documenta desempeño deficiente en manejadora/ductos y capacidad térmica no esperada en cassette.",
+      "action": "Exigir cálculo de carga, selección, caudal, retorno, distribución y balance; no aceptar ubicación o capacidad únicamente por equivalencia con el equipo anterior."
+    },
+    {
+      "priority": "Alta",
+      "topic": "Ventilación",
+      "historical_text": "Las especificaciones se concentran en enfriamiento.",
+      "finding": "Los equipos divididos recirculan aire y normalmente no suministran aire exterior.",
+      "action": "Verificar por separado los requerimientos de ventilación y calidad de aire interior según uso y ASHRAE 62.1 cuando corresponda."
+    },
+    {
+      "priority": "Media",
+      "topic": "Protección anticorrosiva",
+      "historical_text": "Se exige ASTM B117 por más de 10 000 horas.",
+      "finding": "ASTM B117 no prescribe duración ni permite convertir horas directamente en vida útil real.",
+      "action": "Pedir sistema anticorrosivo costero de fábrica, informe B117 con criterio de aceptación definido y garantía específica; confirmar disponibilidad mediante estudio de mercado."
+    },
+    {
+      "priority": "Media",
+      "topic": "Tubería flexible multicapa",
+      "historical_text": "Se admite de forma general con listados y normas diversas.",
+      "finding": "La compatibilidad depende del refrigerante, presión, temperatura, accesorios y aprobación del fabricante del equipo.",
+      "action": "Permitirla únicamente si el sistema completo está listado para refrigeración, aprobado por fabricante/profesional y respaldado con trazabilidad y garantía."
+    },
+    {
+      "priority": "Media",
+      "topic": "Mantenimiento",
+      "historical_text": "En 2023 se indica frecuencia cuatrimestral; en 2025 se exige trimestral durante la garantía.",
+      "finding": "La frecuencia evolucionó y debe vincularse a garantía, ambiente salino, uso y recomendación del fabricante.",
+      "action": "Mantener trimestral como mínimo durante garantía y definir frecuencia posterior por criticidad, sin ser menos exigente que fabricante o contrato."
+    },
+    {
+      "priority": "Media",
+      "topic": "Recepción",
+      "historical_text": "Se exige funcionamiento correcto, pero las pruebas no están agrupadas en un protocolo único.",
+      "finding": "Los casos de 2026 evidencian necesidad de recibir por sistema y documentar correcciones.",
+      "action": "Crear protocolo de puesta en marcha y recepción por conjunto interior-exterior, con mediciones, drenaje, electricidad, ruido, temperatura, caudal, alarmas y acta de pendientes."
+    }
+  ],
+  "sections": [
+    {
+      "heading": "1. Objeto y alcance",
+      "requirements": [
+        "La contratación comprenderá, según cada línea, el suministro, desinstalación, sustitución, instalación, puesta en marcha, recepción y mantenimiento de sistemas de aire acondicionado en instalaciones de la CCSS.",
+        "El alcance incluirá materiales, mano de obra, transporte, herramientas, izaje, protecciones, drenajes, tuberías de refrigerante, alimentación eléctrica, controles, soportes, sellos, acabados, pruebas y documentación necesarios para una solución completa y funcional.",
+        "Los tipos de equipo comprendidos son mini-split, multi-split, cassette, piso-cielo, manejadora con ductos, VRF cuando se indique y portátiles. Se excluyen chillers y unidades paquete.",
+        "Las cantidades, capacidades, ubicaciones y condiciones particulares se definirán en la tabla de equipos, planos, croquis y visita técnica de cada procedimiento."
+      ]
+    },
+    {
+      "heading": "2. Jerarquía y coordinación documental",
+      "requirements": [
+        "El contratista deberá cumplir el pliego, estas especificaciones, anexos, planos y aclaraciones emitidas formalmente. Ante contradicción, deberá solicitar aclaración antes de ofertar o ejecutar.",
+        "Los planos o croquis de referencia no sustituyen la verificación de campo ni el diseño ejecutivo cuando este sea requerido.",
+        "Toda desviación o ajuste de ubicación deberá contar con aprobación previa de la inspección y quedar documentado en planos conforme a obra.",
+        "La omisión de un accesorio indispensable para funcionamiento, seguridad, mantenimiento o acabado no libera al contratista de suministrarlo, siempre que sea inherente al alcance técnicamente definido."
+      ]
+    },
+    {
+      "heading": "3. Visita, levantamiento y diseño",
+      "requirements": [
+        "El oferente deberá verificar en sitio dimensiones, accesos, rutas de tubería y drenaje, capacidad eléctrica, ubicación de tableros, estructura, techo, cielorraso, ambiente corrosivo, seguridad, interferencias y condiciones de operación.",
+        "La capacidad no se definirá únicamente por el equipo existente. Para equipos nuevos, cambios de tipo o espacios con desempeño deficiente se presentará cálculo de carga térmica y criterio de selección.",
+        "La selección deberá considerar temperatura y humedad de diseño, ocupación, orientación, envolvente, infiltración, cargas internas, horarios y condiciones climáticas del lugar.",
+        "En equipos con ductos se presentarán memoria de caudal, pérdidas, presión estática, retornos, distribución, selección de rejillas/difusores y balance.",
+        "Se verificará que la solución no produzca corrientes molestas, zonas sin cobertura, recirculación de aire de descarga, cortocircuito entre suministro y retorno ni afectación de archivos, mobiliario o equipos.",
+        "Los requerimientos de ventilación y aire exterior se evaluarán separadamente; un equipo dividido de recirculación no se considerará por sí solo un sistema de ventilación."
+      ]
+    },
+    {
+      "heading": "4. Equipos y desempeño mínimo",
+      "requirements": [
+        "Los equipos serán nuevos, sin uso, de fabricación vigente y con disponibilidad de repuestos y servicio técnico en Costa Rica.",
+        "Los equipos serán de tecnología inverter, salvo portátiles u otra excepción expresamente justificada en la tabla de equipos.",
+        "La unidad interior y la unidad exterior deberán constituir una combinación aprobada por el fabricante y certificada como conjunto cuando el esquema de certificación así lo requiera.",
+        "La capacidad nominal, consumo, REEE, EER, SEER, IEER u otras métricas aplicables deberán corresponder a la combinación ofertada y estar respaldadas por etiqueta, certificado o informe válido.",
+        "Para equipos cubiertos por los RTCA vigentes se exigirá etiqueta de eficiencia energética y documentación de evaluación de conformidad. Para equipos hasta 65 000 BTU/h se adoptará como objetivo REEE igual o mayor a 17 BTU/hW, salvo justificación técnica y estudio de mercado.",
+        "Los equipos deberán incorporar controles, protecciones y autodiagnóstico propios del fabricante, incluidos los necesarios por sobrecarga, temperatura, congelamiento, pérdida o inversión de fase cuando aplique y variaciones eléctricas.",
+        "Las unidades interiores deberán incluir filtros lavables de fácil acceso, control remoto o termostato, bandeja de condensados y elementos de difusión adecuados.",
+        "El nivel sonoro declarado deberá ser compatible con oficinas. Como referencia histórica, la unidad interior no superará 56 dB(A) en máxima velocidad y la exterior 65 dB(A) a un metro; cualquier excepción por capacidad deberá justificarse y no causar molestias.",
+        "Los equipos instalados en ambiente costero deberán tener tratamiento anticorrosivo de fábrica en serpentín, gabinete, tubería expuesta y herrajes, con evidencia de ensayo y garantía para ambiente salino.",
+        "No se aceptarán materiales o componentes sin identificación, catálogo, modelo, trazabilidad o procedencia verificable."
+      ]
+    },
+    {
+      "heading": "5. Refrigerantes y gestión ambiental",
+      "requirements": [
+        "El refrigerante de equipos nuevos tendrá potencial de agotamiento de ozono igual a cero y deberá estar permitido por la normativa nacional vigente.",
+        "El oferente declarará tipo de refrigerante, carga, clasificación de seguridad ASHRAE 34 y potencial de calentamiento global.",
+        "Se preferirán refrigerantes de menor potencial de calentamiento global que R-410A, siempre que el equipo, la instalación, el mercado local y las medidas de seguridad resulten adecuados.",
+        "Cuando se utilicen refrigerantes A2L u otra clasificación con inflamabilidad, se cumplirán las limitaciones de carga, volumen de recinto, ventilación, fuentes de ignición, señalización, herramientas, transporte y competencia técnica que correspondan.",
+        "No se permitirá liberar refrigerante a la atmósfera. Todo refrigerante retirado se recuperará con equipo adecuado, se identificará, pesará, almacenará y entregará a un gestor o centro autorizado.",
+        "El R-22 solo podrá manejarse en equipos existentes durante recuperación o mantenimiento permitido; no se aceptará en equipos nuevos.",
+        "El contratista entregará registro de refrigerante recuperado, reutilizado, añadido y dispuesto, con tipo, masa, equipo de procedencia y destino."
+      ]
+    },
+    {
+      "heading": "6. Certificaciones y evaluación de conformidad",
+      "requirements": [
+        "Los equipos cubiertos por reglamentos técnicos deberán contar con la evaluación de conformidad y etiquetado exigidos por el RTCA aplicable.",
+        "Los certificados de producto serán emitidos por organismos acreditados bajo ISO/IEC 17065 o equivalente, con alcance aplicable y reconocimiento pertinente.",
+        "Los informes de ensayo o inspección serán emitidos por organismos acreditados bajo ISO/IEC 17025 o ISO/IEC 17020, según corresponda.",
+        "No se solicitará una 'certificación ECA del equipo'. Cuando proceda, se exigirá que el organismo emisor esté acreditado o reconocido por el ECA o por un organismo signatario de acuerdos multilaterales aplicables.",
+        "Cuando se solicite AHRI, el certificado deberá identificar la combinación exacta de unidad interior y exterior y su número de referencia vigente en el directorio.",
+        "La certificación UL, ETL u otra equivalente demostrará seguridad del producto bajo una norma aplicable; su alcance deberá corresponder al modelo ofertado.",
+        "La documentación deberá permitir verificar fabricante, marca, modelos, capacidades, tensión, fases, refrigerante y métricas de eficiencia sin depender de declaraciones genéricas."
+      ]
+    },
+    {
+      "heading": "7. Instalación eléctrica y controles",
+      "requirements": [
+        "Toda instalación cumplirá el Código Eléctrico de Costa Rica vigente, planos aprobados cuando correspondan y requisitos de la empresa distribuidora.",
+        "El circuito, conductores, protección contra sobrecorriente y medio de desconexión se dimensionarán según placa, MCA, MOCP, manual del fabricante, tensión, fases, longitud, caída de tensión, temperatura, agrupamiento y método de instalación.",
+        "Los valores históricos asociados a rangos de BTU solo podrán usarse para estimación preliminar y nunca sustituirán el cálculo ni la placa del equipo.",
+        "Se utilizará canalización EMT en interiores e IMC u otra canalización aprobada donde exista intemperie o riesgo de daño mecánico. Accesorios y cajas exteriores serán adecuados al ambiente.",
+        "No se permitirá cable TSJ o similar oculto en entretecho o dentro de tuberías cuando no esté listado para ese uso.",
+        "Cada unidad exterior tendrá un medio de desconexión visible, accesible y con envolvente adecuada a la ubicación.",
+        "Se instalará protección de tensión y fases cuando corresponda, coordinada con los rangos de operación del fabricante y las condiciones reales del suministro.",
+        "Se verificará tensión, corriente, secuencia de fases, puesta a tierra, apriete de terminales, aislamiento, protecciones y rotulación antes de energizar.",
+        "Toda modificación de tableros, circuitos o acometida será realizada por personal competente y documentada en planos conforme a obra."
+      ]
+    },
+    {
+      "heading": "8. Tubería de refrigerante",
+      "requirements": [
+        "La tubería será cobre ACR sin costura conforme ASTM B280, limpia, deshidratada, sellada y adecuada a la presión, temperatura y refrigerante.",
+        "Diámetros, espesores, longitudes máximas, desniveles, trampas de aceite y carga adicional se ajustarán al manual del fabricante y al diseño.",
+        "Las juntas soldadas se ejecutarán con purga de nitrógeno seco para reducir óxidos internos; se emplearán materiales y procedimientos compatibles.",
+        "Los soportes se espaciarán según diámetro y diseño, sin aplastar aislamiento ni permitir contacto galvánico entre metales disímiles.",
+        "La línea de succión y cualquier línea susceptible a condensación se aislarán con espesor adecuado; en exteriores el aislamiento tendrá protección impermeable, ultravioleta y mecánica.",
+        "La prueba de presión se hará con nitrógeno seco regulado, a presión y duración definidas por el fabricante y el código aplicable, sin exceder la presión admisible de ningún componente.",
+        "Se verificará ausencia de fugas en uniones y válvulas con método compatible. No se usará oxígeno ni aire comprimido para presurizar.",
+        "El vacío se medirá con vacuómetro en micrones, se alcanzará el valor indicado por el fabricante y se ejecutará una prueba de sostenimiento antes de liberar o cargar refrigerante.",
+        "Las líneas prefabricadas o multicapa solo se admitirán cuando el sistema completo esté listado para refrigeración, sea compatible con refrigerante/presión y cuente con aprobación del fabricante y de la inspección.",
+        "Las tuberías expuestas se protegerán contra radiación, daño mecánico, vandalismo y robo sin impedir inspección ni mantenimiento."
+      ]
+    },
+    {
+      "heading": "9. Drenaje de condensados",
+      "requirements": [
+        "Se suministrarán bandejas, bombas y tuberías de condensado necesarias para cada unidad.",
+        "La tubería será PVC u otro material aprobado, con diámetro suficiente y pendiente continua no menor al 2 por ciento cuando funcione por gravedad.",
+        "Las tuberías interiores se aislarán para evitar condensación superficial y goteos.",
+        "Se evitarán contrapendientes y bolsas de agua; se incorporarán registros para limpieza y sifones donde exista presión negativa o conexión sanitaria.",
+        "No se descargará condensado sobre cubiertas, canoas, bajantes o estructuras metálicas si puede causar corrosión, ruido, humedad o molestias.",
+        "La ruta y el punto de descarga deberán impedir daño a personas, documentos, mobiliario, equipos, paredes, cielos y pisos.",
+        "Durante la recepción se probará el drenaje con caudal suficiente y se verificará la operación de bombas y alarmas."
+      ]
+    },
+    {
+      "heading": "10. Soportes, obra civil y protección",
+      "requirements": [
+        "Las unidades se fijarán sobre soportes, plataformas o losas calculados para su peso, vibración, viento y condiciones del sitio, con amortiguadores y anclajes apropiados.",
+        "Se respetarán las separaciones del fabricante para entrada/salida de aire, servicio, retiro de paneles y sustitución futura.",
+        "La ubicación en techo será excepcional o expresamente indicada; no deberá perforar ni debilitar elementos estructurales ni producir goteras.",
+        "Las unidades en cubierta se ubicarán de forma que permita mantenimiento y sustitución de láminas de techo, con acceso seguro.",
+        "No se perforarán vigas, columnas u otros elementos estructurales sin diseño y autorización profesional.",
+        "Los huecos y pasos se sellarán contra agua, plagas, humo y fuego según la clasificación del elemento atravesado.",
+        "Los acabados afectados se repondrán con materiales, textura y color compatibles con el estado original.",
+        "Las protecciones contra vandalismo permitirán flujo de aire, apertura de paneles, lectura de placa, mantenimiento y desmontaje; no deberán transferir vibración ni bloquear descarga.",
+        "Las estructuras metálicas tendrán preparación de superficie, sistema anticorrosivo y acabado adecuado a interior, exterior o ambiente marino.",
+        "Escombros, embalajes y materiales retirados se evacuarán regularmente; los activos institucionales se entregarán mediante control de la Administración."
+      ]
+    },
+    {
+      "heading": "11. Ductos y distribución de aire cuando aplique",
+      "requirements": [
+        "Ningún sistema con manejadora y ductos se instalará sin diseño de caudal, presión estática, suministro, retorno, balance y selección de equipo.",
+        "Los materiales de ducto deberán cumplir requisitos de reacción al fuego, rigidez, aislamiento, estanqueidad, humedad y limpieza adecuados al edificio.",
+        "Los ductos, accesorios, compuertas, difusores y equipos tendrán soporte independiente conforme a su peso y al diseño.",
+        "Se incorporarán accesos para inspección y limpieza, así como compuertas de balance donde sean necesarias.",
+        "Las conexiones flexibles se limitarán a longitudes aprobadas, sin estrangulamientos, aplastamiento ni radios incompatibles.",
+        "Antes de recepción se medirán caudales, presión estática y balance; se comprobará que cada recinto alcance condiciones uniformes sin ruido ni corrientes molestas.",
+        "Se verificará que el retorno tenga área y ubicación suficientes. No se aceptará usar cavidades contaminadas como plenum sin autorización técnica y cumplimiento normativo.",
+        "Cuando se requiera ventilación exterior, esta se diseñará y verificará de manera independiente del sistema de recirculación."
+      ]
+    },
+    {
+      "heading": "12. Ejecución, puesta en marcha y recepción",
+      "requirements": [
+        "Los trabajos se coordinarán para reducir afectación a oficinas en operación y se ejecutarán de forma continua por frente de trabajo.",
+        "Antes de instalar se confirmarán modelos, ubicaciones, rutas, soportes y condiciones eléctricas con la inspección.",
+        "La puesta en marcha será ejecutada por personal competente conforme al procedimiento del fabricante.",
+        "Cada conjunto interior-exterior se identificará con código, ubicación, marca, modelos, series, refrigerante, carga y placa institucional cuando corresponda.",
+        "El protocolo de recepción incluirá inspección visual, aprietes, aislamiento, soportes, drenaje, tensión, corriente, protecciones, presiones o parámetros disponibles, temperatura de entrada/salida, delta de temperatura, caudal cuando aplique, ruido, vibración, controles, alarmas y operación continua.",
+        "En sistemas con ductos se añadirá balance de aire, caudal por salida, presión estática y comprobación de retorno.",
+        "No se recibirá un sistema con goteos, fugas, vibraciones anormales, ruido molesto, protecciones disparadas sin causa resuelta, desempeño térmico insuficiente o pendientes que comprometan su operación.",
+        "La recepción podrá realizarse por sistemas independientes únicamente cuando cada uno sea funcional y la separación no oculte deficiencias de diseño común.",
+        "Las observaciones quedarán en acta con responsable y plazo. La recepción definitiva procederá después de verificar las correcciones.",
+        "Se entregarán manuales en español, garantías, certificados, catálogos, protocolos, fotografías, planos conforme a obra, parámetros de configuración y capacitación básica."
+      ]
+    },
+    {
+      "heading": "13. Garantía",
+      "requirements": [
+        "La garantía mínima será de 24 meses en equipos, partes, materiales, mano de obra e instalación, salvo que el procedimiento establezca una condición superior.",
+        "La garantía iniciará con la recepción definitiva del sistema y no con la entrega física del equipo.",
+        "Durante la garantía se realizará mantenimiento preventivo trimestral como mínimo, sin afectar la garantía del fabricante.",
+        "Las fallas atribuibles a fabricación, selección, instalación o materiales se corregirán sin costo para la CCSS.",
+        "Después de la tercera falla recurrente por la misma causa, o cuando no sea técnicamente reparable, se sustituirá el equipo por uno nuevo de iguales o mejores características, sujeto a criterio técnico.",
+        "El contratista documentará cada atención con diagnóstico, causa raíz, mediciones, repuestos, corrección y prueba final.",
+        "El tiempo fuera de servicio por garantía y cualquier ampliación de cobertura se registrarán por activo."
+      ]
+    },
+    {
+      "heading": "14. Mantenimiento preventivo",
+      "requirements": [
+        "La frecuencia mínima durante garantía será trimestral. En contratos independientes se definirá por criticidad, ambiente, horas de uso y fabricante, sin ser menos exigente que el intervalo contractual aprobado.",
+        "Se atenderán por separado la unidad interior y la unidad exterior de cada sistema, manteniendo vínculo común en el historial del conjunto.",
+        "La rutina incluirá limpieza o cambio de filtros, serpentines, bandejas, drenajes, ventiladores, carcasas, controles y tableros, con productos compatibles.",
+        "Se revisarán corrosión, pintura, aislamiento, tuberías, soportes, fijaciones, vibraciones, ruidos, fugas y estado general.",
+        "Se medirán y registrarán tensión, corriente, desbalance de fases cuando aplique, temperaturas de retorno y suministro, delta de temperatura, presiones y parámetros de refrigerante cuando sean diagnósticamente necesarios.",
+        "Se verificarán termostatos, controles remotos, sensores, alarmas, bombas de condensado, protecciones, desconectadores y cableado accesible.",
+        "La carga de refrigerante no se ajustará sin diagnóstico. Antes de añadir refrigerante se localizará y corregirá cualquier fuga y se registrará la masa añadida.",
+        "El mantenimiento incluirá consumibles normales y componentes de bajo costo definidos en el contrato, sin cargos separados.",
+        "Después del servicio se realizarán pruebas de operación y se limpiará el área."
+      ]
+    },
+    {
+      "heading": "15. Mantenimiento correctivo y repuestos",
+      "requirements": [
+        "La atención correctiva incluirá diagnóstico, seguridad del equipo, reparación, repuestos autorizados, puesta en marcha y reporte.",
+        "Los tiempos de respuesta y solución se definirán por criticidad y ubicación. Cuando no pueda repararse de inmediato, el equipo quedará seguro, armado en lo posible, con circuitos de refrigerante sellados contra humedad y pérdida.",
+        "Los repuestos serán nuevos, compatibles, trazables y de calidad igual o superior a la original; toda sustitución que altere desempeño requerirá aprobación.",
+        "Los componentes retirados se entregarán a la Administración o a un gestor autorizado según su condición y propiedad.",
+        "La reparación tendrá garantía escrita sobre mano de obra y repuestos por el plazo definido en el contrato.",
+        "No se autorizará sustituir un diagnóstico por recargas periódicas de refrigerante.",
+        "El reporte deberá indicar causa de falla, mediciones antes/después, trabajo realizado, repuestos, refrigerante, tiempo fuera de servicio y recomendación."
+      ]
+    },
+    {
+      "heading": "16. Personal, seguridad, informes y control",
+      "requirements": [
+        "La empresa acreditará experiencia pertinente y personal técnico competente para refrigeración, electricidad, controles y trabajos asociados.",
+        "Cuando el alcance incluya diseño, modificaciones eléctricas, estructuras o sistemas con ductos, participará el profesional incorporado al CFIA que corresponda.",
+        "El personal que manipule refrigerantes deberá demostrar formación en recuperación, vacío, carga, detección de fugas y seguridad del refrigerante utilizado.",
+        "El contratista suministrará herramientas, instrumentos calibrados o verificados, recuperación, vacío, nitrógeno regulado, medición eléctrica y protección personal.",
+        "Se cumplirán las normas vigentes de salud ocupacional, trabajo en altura, bloqueo y etiquetado, señalización, protección de usuarios y control de accesos.",
+        "El personal estará uniformado e identificado. Las áreas permanecerán señalizadas, ordenadas y libres de obstáculos.",
+        "Cada reporte identificará sucursal, ubicación, activo, marca, modelos, series, técnico, fecha, rutina, mediciones, hallazgos, repuestos, refrigerante y estado final.",
+        "Los reportes deberán ser legibles, firmados por técnico y contraparte, y entregarse en formato digital estructurado para mantener el historial por activo.",
+        "La Administración podrá verificar personal, herramientas, mediciones, certificados, materiales y cumplimiento de rutinas en cualquier momento."
+      ]
+    }
+  ],
+  "maintenance_routine": [
+    "Registrar tensión y corriente de motores y compresor.",
+    "Limpiar o cambiar filtros según condición.",
+    "Limpiar y revisar tarjetas, contactores, relevadores, capacitores y componentes eléctricos/electrónicos con método compatible.",
+    "Limpiar carcasas y exteriores.",
+    "Limpiar ventiladores y elementos de impulsión; revisar aspas.",
+    "Revisar motores, bujes, soportes y fijaciones.",
+    "Comprobar termostato, control remoto, sensores y sistema de control.",
+    "Inspeccionar el estado físico, aislamiento interno y corrosión.",
+    "Limpiar bandeja, drenaje y bomba de condensado; probar evacuación.",
+    "Medir, cuando aplique, presión de succión y descarga, temperaturas de línea, saturación, sobrecalentamiento y subenfriamiento.",
+    "Medir temperatura de retorno y descarga, delta de temperatura y caudal de aire cuando aplique.",
+    "Medir tensión, corriente y desbalance entre fases cuando aplique.",
+    "Lavar serpentines con procedimiento y producto compatible.",
+    "Revisar compresor, soportes, válvulas de servicio y componentes frigoríficos accesibles.",
+    "Detectar fugas y corregirlas antes de añadir refrigerante.",
+    "Comprobar ruidos, vibraciones, alarmas y eventos acumulados.",
+    "Revisar aletas, tuberías de refrigeración, aislamiento, drenajes y soportes.",
+    "Verificar protecciones, desconectadores, canalizaciones y cableado accesible.",
+    "Ejecutar autodiagnóstico y pruebas de operación.",
+    "Registrar reportes de usuarios, hallazgos, acciones y estado final."
+  ],
+  "historical_summary": [
+    {
+      "period": "2015-2020",
+      "development": "Consolidación de requisitos de compra, instalación, certificaciones, protección física y aclaraciones regionales.",
+      "implication": "Existe alta repetición documental y versiones por región; se requiere deduplicar por número, firma y contenido."
+    },
+    {
+      "period": "2021-2022",
+      "development": "Mayor separación entre compra/instalación, mantenimiento y reparaciones; se fortalecen rutinas, reportes y administración por activos.",
+      "implication": "Conviene mantener bases técnicas distintas pero compatibles para compra e instalación y para mantenimiento."
+    },
+    {
+      "period": "2023",
+      "development": "Especificaciones extensas de mantenimiento y compra, con anexos, inventarios, rutinas, garantías y evaluación.",
+      "implication": "El mantenimiento de junio de 2023 es la mejor fuente histórica estructurada para rutinas y control."
+    },
+    {
+      "period": "2024",
+      "development": "Se forma una especificación nacional genérica de compra e instalación; el PDF firmado y no firmado de mayo tienen texto extraído idéntico.",
+      "implication": "La firma y fecha determinan autoridad aunque el contenido sea igual."
+    },
+    {
+      "period": "2025",
+      "development": "La versión de agosto mantiene aproximadamente 96% de similitud con mayo y añade control de calidad, mantenimiento separado por unidad y criterios observables de falla.",
+      "implication": "GF-EIM-IT-0031-2025 es la base principal para consolidación."
+    },
+    {
+      "period": "2026",
+      "development": "Los informes de Santa Cruz y Turrialba aportan lecciones sobre diseño de ductos, desempeño por tipo de equipo, drenajes, ajustes de ubicación, tensión y trabajo en techo.",
+      "implication": "La recepción debe medir desempeño por sistema y exigir cálculo, balance y seguridad, no solo instalación física."
+    }
+  ]
+}
