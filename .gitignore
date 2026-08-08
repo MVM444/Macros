@@ -35,5 +35,9 @@ Respaldos/ElectricCR_root_shim_*/
 Markov/markov_*.dot
 Markov/markov_macros-de-freecad.*
 
+# Generated FreeCAD/project artifacts that must not return to the macro root
+*.FCBak
+Puriscal_*.png
+
 # Node/other
 node_modules/
