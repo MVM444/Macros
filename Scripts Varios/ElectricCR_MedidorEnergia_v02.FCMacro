@@ -1,0 +1,1019 @@
+# -*- coding: utf-8 -*-
+# ElectricCR - MedidorEnergia
+# Version: 0.2.0
+# Fecha_hora: 2026-08-10 17:58 -06:00
+# FreeCAD_objetivo: 1.1.3
+#
+# OBJETIVO
+# Crear un medidor de energia simplificado, bonito y parametrico para ElectricCR.
+# El objeto incluye:
+# - Medidor 3D circular tipo socket.
+# - Cubierta transparente con frente abombado.
+# - Parte empotrada detras del plano de pared.
+# - Conexion superior de entrada y conexion inferior de salida.
+# - Nicho de referencia opcional.
+# - Simbolo 2D para planos.
+# - Propiedades ElectricCR y puntos de conexion.
+#
+# REGLA DE COORDENADAS
+# - Origen local (0,0,0): centro del medidor sobre la cara exterior de la pared.
+# - Plano de pared: Y = 0.
+# - Exterior visible: Y > 0.
+# - Parte empotrada: Y < 0.
+# - X: horizontal.
+# - Z: vertical.
+# - Altura inicial del origen: Z = 1800 mm.
+#
+# IMPORTANTE PARA FUTURAS MODIFICACIONES
+# - Mantener toda la geometria en coordenadas locales alrededor de Z = 0.
+# - No incorporar 1800 mm dentro de los solidos.
+# - La altura se aplica solamente mediante Placement.
+# - Mantener nombres internos, propiedades y comentarios en ASCII.
+# - Mostrar mensajes de depuracion en la consola.
+# - Los puertos deben conservar posicion y direccion para futura conexion
+#   automatica con tuberias o elementos del Workbench ElectricCR.
+
+import math
+import FreeCAD as App
+import Part
+
+try:
+    import FreeCADGui as Gui
+    GUI_UP = True
+except Exception:
+    GUI_UP = False
+
+
+PREFIX = "[ElectricCR][MedidorEnergia] "
+
+
+def log(msg):
+    App.Console.PrintMessage(PREFIX + str(msg) + "\n")
+
+
+def warn(msg):
+    App.Console.PrintWarning(PREFIX + str(msg) + "\n")
+
+
+def err(msg):
+    App.Console.PrintError(PREFIX + str(msg) + "\n")
+
+
+def clamp(value, minimum, maximum=None):
+    value = float(value)
+    if value < minimum:
+        value = minimum
+    if maximum is not None and value > maximum:
+        value = maximum
+    return value
+
+
+def add_prop(obj, ptype, name, group, desc, default=None):
+    is_new = name not in obj.PropertiesList
+    if is_new:
+        obj.addProperty(ptype, name, group, desc)
+    if is_new and default is not None:
+        try:
+            setattr(obj, name, default)
+        except Exception:
+            pass
+
+
+def add_enum(obj, name, group, desc, values, default):
+    is_new = name not in obj.PropertiesList
+    if is_new:
+        obj.addProperty("App::PropertyEnumeration", name, group, desc)
+        setattr(obj, name, list(values))
+        try:
+            setattr(obj, name, default)
+        except Exception:
+            pass
+
+
+def box_xz(width, depth_y, height, x, y, z):
+    return Part.makeBox(
+        float(width),
+        float(depth_y),
+        float(height),
+        App.Vector(float(x), float(y), float(z))
+    )
+
+
+def make_ring(radius_outer, radius_inner, depth, y0):
+    axis = App.Vector(0, 1, 0)
+    outer = Part.makeCylinder(
+        float(radius_outer),
+        float(depth),
+        App.Vector(0, float(y0), 0),
+        axis
+    )
+    inner = Part.makeCylinder(
+        float(radius_inner),
+        float(depth) + 0.4,
+        App.Vector(0, float(y0) - 0.2, 0),
+        axis
+    )
+    return outer.cut(inner)
+
+
+def make_hollow_tube(outer_d, wall, length, base, axis):
+    outer_r = max(2.0, float(outer_d) * 0.5)
+    inner_r = max(0.5, outer_r - max(0.5, float(wall)))
+    axis_n = App.Vector(axis)
+    axis_n.normalize()
+
+    outer = Part.makeCylinder(
+        outer_r,
+        float(length),
+        App.Vector(base),
+        axis_n
+    )
+
+    inner_base = App.Vector(
+        base.x - axis_n.x * 0.2,
+        base.y - axis_n.y * 0.2,
+        base.z - axis_n.z * 0.2
+    )
+    inner = Part.makeCylinder(
+        inner_r,
+        float(length) + 0.4,
+        inner_base,
+        axis_n
+    )
+
+    return outer.cut(inner)
+
+
+def make_domed_solid(radius, y0, y_front, cap_height):
+    """Create an axisymmetric solid with straight sides and spherical front."""
+    radius = float(radius)
+    y0 = float(y0)
+    y_front = float(y_front)
+    cap_height = clamp(cap_height, 1.0, max(1.0, y_front - y0 - 1.0))
+
+    dome_start = y_front - cap_height
+    side_len = max(0.5, dome_start - y0 + 0.15)
+    axis = App.Vector(0, 1, 0)
+
+    side = Part.makeCylinder(
+        radius,
+        side_len,
+        App.Vector(0, y0, 0),
+        axis
+    )
+
+    # Sphere radius for a spherical cap with base radius and cap height.
+    sphere_r = (radius * radius + cap_height * cap_height) / (2.0 * cap_height)
+    sphere_center_y = y_front - sphere_r
+
+    sphere = Part.makeSphere(
+        sphere_r,
+        App.Vector(0, sphere_center_y, 0)
+    )
+
+    margin = radius + 2.0
+    clip = Part.makeBox(
+        2.0 * margin,
+        cap_height + 0.5,
+        2.0 * margin,
+        App.Vector(-margin, dome_start - 0.15, -margin)
+    )
+
+    cap = sphere.common(clip)
+    return side.fuse(cap)
+
+
+def make_domed_cover_shell(radius, y0, y_front, cap_height, thickness):
+    """Create a transparent shell by subtracting a smaller domed solid."""
+    thickness = clamp(thickness, 1.0, 5.0)
+
+    outer = make_domed_solid(
+        radius,
+        y0,
+        y_front,
+        cap_height
+    )
+
+    inner_radius = max(5.0, radius - thickness)
+    inner_y0 = y0 + thickness
+    inner_front = y_front - thickness
+    inner_cap = max(2.0, cap_height - thickness)
+
+    inner = make_domed_solid(
+        inner_radius,
+        inner_y0,
+        inner_front,
+        inner_cap
+    )
+
+    return outer.cut(inner)
+
+
+SEGMENTS = {
+    "0": "ab cdef".replace(" ", ""),
+    "1": "bc",
+    "2": "abdeg",
+    "3": "abcdg",
+    "4": "bcfg",
+    "5": "acdfg",
+    "6": "acdefg",
+    "7": "abc",
+    "8": "abcdefg",
+    "9": "abcdfg",
+    "-": "g",
+    " ": "",
+}
+
+
+def seven_segment_digit(char, x, y, z, width, height, depth):
+    """Return the solid segments for one seven-segment character."""
+    active = SEGMENTS.get(str(char), SEGMENTS[" "])
+
+    t = max(0.7, width * 0.13)
+    horizontal_len = max(1.0, width - 2.0 * t)
+    vertical_len = max(1.0, height * 0.5 - 1.5 * t)
+    mid_z = z + height * 0.5
+
+    shapes = {
+        "a": box_xz(horizontal_len, depth, t, x + t, y, z + height - t),
+        "g": box_xz(horizontal_len, depth, t, x + t, y, mid_z - 0.5 * t),
+        "d": box_xz(horizontal_len, depth, t, x + t, y, z),
+        "f": box_xz(t, depth, vertical_len, x, y, mid_z + 0.25 * t),
+        "b": box_xz(t, depth, vertical_len, x + width - t, y, mid_z + 0.25 * t),
+        "e": box_xz(t, depth, vertical_len, x, y, z + t),
+        "c": box_xz(t, depth, vertical_len, x + width - t, y, z + t),
+    }
+
+    return [shapes[key] for key in active if key in shapes]
+
+
+def make_symbol_2d(diameter, y_plane=0.6):
+    """Create a simple circle + M symbol on the XZ wall plane."""
+    diameter = float(diameter)
+    radius = diameter * 0.5
+    y_plane = float(y_plane)
+
+    edges = []
+
+    circle = Part.makeCircle(
+        radius,
+        App.Vector(0, y_plane, 0),
+        App.Vector(0, 1, 0)
+    )
+    edges.append(circle)
+
+    mw = diameter * 0.46
+    mh = diameter * 0.42
+
+    pts = [
+        App.Vector(-mw * 0.50, y_plane, -mh * 0.50),
+        App.Vector(-mw * 0.50, y_plane, mh * 0.50),
+        App.Vector(0, y_plane, -mh * 0.02),
+        App.Vector(mw * 0.50, y_plane, mh * 0.50),
+        App.Vector(mw * 0.50, y_plane, -mh * 0.50),
+    ]
+
+    for i in range(len(pts) - 1):
+        edges.append(Part.makeLine(pts[i], pts[i + 1]))
+
+    # Short connection marks help identify top entry and bottom exit.
+    edges.append(
+        Part.makeLine(
+            App.Vector(0, y_plane, radius),
+            App.Vector(0, y_plane, radius + diameter * 0.18)
+        )
+    )
+    edges.append(
+        Part.makeLine(
+            App.Vector(0, y_plane, -radius),
+            App.Vector(0, y_plane, -radius - diameter * 0.18)
+        )
+    )
+
+    return Part.makeCompound(edges)
+
+
+def set_compound_colors(feature, pieces, default_color=(0.75, 0.75, 0.75)):
+    if not GUI_UP:
+        return
+
+    colors = []
+    for shape, color in pieces:
+        try:
+            count = len(shape.Faces)
+        except Exception:
+            count = 0
+        colors.extend([color] * count)
+
+    try:
+        if colors:
+            feature.ViewObject.DiffuseColor = colors
+        else:
+            feature.ViewObject.ShapeColor = default_color
+    except Exception:
+        feature.ViewObject.ShapeColor = default_color
+
+
+class ElectricCRMeter:
+
+    def __init__(self, obj):
+        self._busy = False
+        obj.Proxy = self
+        self.setup_properties(obj)
+
+    def setup_properties(self, obj):
+        geo = "ElectricCR - Geometria"
+        install = "ElectricCR - Instalacion"
+        electrical = "ElectricCR - Electrico"
+        ident = "ElectricCR - Identificacion"
+        rep = "ElectricCR - Representacion"
+        ports = "ElectricCR - Puertos"
+        internal = "ElectricCR - Interno"
+
+        add_prop(obj, "App::PropertyLength", "AlturaMontaje", geo,
+                 "Altura del origen local sobre piso terminado.", 1800.0)
+        add_prop(obj, "App::PropertyLength", "DiametroCuerpo", geo,
+                 "Diametro principal del cuerpo del medidor.", 160.0)
+        add_prop(obj, "App::PropertyLength", "DiametroMaximo", geo,
+                 "Diametro maximo del aro exterior.", 177.0)
+        add_prop(obj, "App::PropertyLength", "ProyeccionExterior", geo,
+                 "Distancia maxima visible desde Y=0 hacia el exterior.", 69.0)
+        add_prop(obj, "App::PropertyLength", "DiametroSimbolo2D", geo,
+                 "Diametro del simbolo 2D.", 120.0)
+
+        add_prop(obj, "App::PropertyLength", "AnchoBaseEmpotrada", install,
+                 "Ancho de la base empotrada simplificada.", 190.0)
+        add_prop(obj, "App::PropertyLength", "AltoBaseEmpotrada", install,
+                 "Alto de la base empotrada simplificada.", 210.0)
+        add_prop(obj, "App::PropertyLength", "ProfundidadBaseEmpotrada", install,
+                 "Profundidad de la base detras del plano Y=0.", 70.0)
+
+        add_prop(obj, "App::PropertyLength", "AnchoNicho", install,
+                 "Ancho del nicho de referencia.", 250.0)
+        add_prop(obj, "App::PropertyLength", "AltoNicho", install,
+                 "Alto del nicho de referencia.", 250.0)
+        add_prop(obj, "App::PropertyLength", "ProfundidadNicho", install,
+                 "Profundidad del nicho de referencia.", 150.0)
+
+        add_prop(obj, "App::PropertyLength", "DiametroEntrada", install,
+                 "Diametro exterior de la conexion superior.", 32.0)
+        add_prop(obj, "App::PropertyLength", "DiametroSalida", install,
+                 "Diametro exterior de la conexion inferior.", 32.0)
+        add_prop(obj, "App::PropertyLength", "EspesorTuberia", install,
+                 "Espesor grafico de pared de la tuberia.", 1.8)
+        add_prop(obj, "App::PropertyLength", "LongitudConexion", install,
+                 "Longitud de los tramos de conexion incluidos en el objeto.", 160.0)
+        add_prop(obj, "App::PropertyLength", "RetiroConexion", install,
+                 "Distancia de los ejes de tuberia detras del plano de pared.", 45.0)
+
+        add_prop(obj, "App::PropertyString", "CategoriaElectricCR", ident,
+                 "Categoria del objeto ElectricCR.", "Medicion")
+        add_prop(obj, "App::PropertyString", "TipoElectricCR", ident,
+                 "Tipo del objeto ElectricCR.", "MedidorEnergia")
+        add_prop(obj, "App::PropertyString", "Fabricante", ident,
+                 "Fabricante de referencia.", "Generico")
+        add_prop(obj, "App::PropertyString", "Modelo", ident,
+                 "Modelo o familia de referencia.", "Socket ANSI")
+        add_prop(obj, "App::PropertyString", "NumeroMedidor", ident,
+                 "Numero o identificador del medidor.", "")
+        add_prop(obj, "App::PropertyString", "LecturaDisplay", ident,
+                 "Lectura grafica de cinco caracteres.", "01234")
+
+        add_prop(obj, "App::PropertyString", "Voltaje", electrical,
+                 "Voltaje nominal de referencia.", "120/240 V")
+        add_prop(obj, "App::PropertyString", "CorrienteClase", electrical,
+                 "Clase de corriente de referencia.", "200 A")
+        add_prop(obj, "App::PropertyString", "Frecuencia", electrical,
+                 "Frecuencia nominal.", "60 Hz")
+        add_enum(obj, "Sistema", electrical, "Sistema electrico.",
+                 ["Monofasico", "Trifasico"], "Monofasico")
+
+        add_enum(obj, "Representacion", rep, "Modo de representacion.",
+                 ["3D", "2D", "3D+2D"], "3D")
+        add_prop(obj, "App::PropertyBool", "MostrarCubierta", rep,
+                 "Mostrar la cubierta transparente.", True)
+        add_prop(obj, "App::PropertyBool", "MostrarParteEmpotrada", rep,
+                 "Mostrar la base empotrada cuando no esta oculta por una pared.", True)
+        add_prop(obj, "App::PropertyBool", "MostrarConexiones", rep,
+                 "Mostrar las conexiones superior e inferior.", True)
+        add_prop(obj, "App::PropertyBool", "MostrarNicho", rep,
+                 "Mostrar el volumen de referencia del nicho.", False)
+        add_prop(obj, "App::PropertyBool", "Debug", rep,
+                 "Mostrar mensajes de depuracion.", True)
+
+        add_prop(obj, "App::PropertyVector", "PuertoEntradaLocal", ports,
+                 "Punto local para conectar tuberia de entrada.", App.Vector())
+        add_prop(obj, "App::PropertyVector", "DireccionEntradaLocal", ports,
+                 "Direccion local de la tuberia de entrada.", App.Vector(0, 0, 1))
+        add_prop(obj, "App::PropertyVector", "PuertoSalidaLocal", ports,
+                 "Punto local para conectar tuberia de salida.", App.Vector())
+        add_prop(obj, "App::PropertyVector", "DireccionSalidaLocal", ports,
+                 "Direccion local de la tuberia de salida.", App.Vector(0, 0, -1))
+
+        for prop in [
+            "PuertoEntradaLocal",
+            "DireccionEntradaLocal",
+            "PuertoSalidaLocal",
+            "DireccionSalidaLocal",
+        ]:
+            try:
+                obj.setEditorMode(prop, 1)
+            except Exception:
+                pass
+
+        add_prop(obj, "App::PropertyLink", "ModeloLink", internal,
+                 "Objeto interno del modelo 3D.")
+        add_prop(obj, "App::PropertyLink", "CubiertaLink", internal,
+                 "Objeto interno de cubierta.")
+        add_prop(obj, "App::PropertyLink", "EmpotradoLink", internal,
+                 "Objeto interno empotrado.")
+        add_prop(obj, "App::PropertyLink", "ConexionesLink", internal,
+                 "Objeto interno de conexiones.")
+        add_prop(obj, "App::PropertyLink", "NichoLink", internal,
+                 "Objeto interno de nicho.")
+        add_prop(obj, "App::PropertyLink", "SimboloLink", internal,
+                 "Objeto interno del simbolo 2D.")
+
+        for prop in [
+            "ModeloLink", "CubiertaLink", "EmpotradoLink",
+            "ConexionesLink", "NichoLink", "SimboloLink"
+        ]:
+            try:
+                obj.setEditorMode(prop, 2)
+            except Exception:
+                pass
+
+    def onDocumentRestored(self, obj):
+        self._busy = False
+        self.setup_properties(obj)
+        log("Objeto restaurado.")
+
+    def _children_ready(self, obj):
+        names = [
+            "ModeloLink", "CubiertaLink", "EmpotradoLink",
+            "ConexionesLink", "NichoLink", "SimboloLink"
+        ]
+        for name in names:
+            if name not in obj.PropertiesList:
+                return False
+            if getattr(obj, name) is None:
+                return False
+        return True
+
+    def _apply_child_placement(self, obj):
+        if not self._children_ready(obj):
+            return
+        placement = obj.Placement
+        for child in [
+            obj.ModeloLink,
+            obj.CubiertaLink,
+            obj.EmpotradoLink,
+            obj.ConexionesLink,
+            obj.NichoLink,
+            obj.SimboloLink,
+        ]:
+            if child is not None:
+                child.Placement = placement
+
+    def _sync_height_to_placement(self, obj):
+        if self._busy:
+            return
+        self._busy = True
+        try:
+            pl = obj.Placement
+            base = pl.Base
+            pl.Base = App.Vector(base.x, base.y, obj.AlturaMontaje.Value)
+            obj.Placement = pl
+        finally:
+            self._busy = False
+
+    def _sync_placement_to_height(self, obj):
+        if self._busy:
+            return
+        self._busy = True
+        try:
+            z_value = float(obj.Placement.Base.z)
+            if abs(obj.AlturaMontaje.Value - z_value) > 0.001:
+                obj.AlturaMontaje = z_value
+        finally:
+            self._busy = False
+
+    def onChanged(self, obj, prop):
+        try:
+            if prop == "AlturaMontaje":
+                self._sync_height_to_placement(obj)
+                self._apply_child_placement(obj)
+
+            elif prop == "Placement":
+                self._sync_placement_to_height(obj)
+                self._apply_child_placement(obj)
+
+            elif prop in [
+                "Representacion",
+                "MostrarCubierta",
+                "MostrarParteEmpotrada",
+                "MostrarConexiones",
+                "MostrarNicho",
+            ]:
+                self.update_visibility(obj)
+
+        except Exception as exc:
+            warn("onChanged: " + str(exc))
+
+    def execute(self, obj):
+        try:
+            if not self._children_ready(obj):
+                return
+            self.build(obj)
+        except Exception as exc:
+            err("Error en rebuild: " + str(exc))
+
+    def update_visibility(self, obj):
+        if not GUI_UP or not self._children_ready(obj):
+            return
+
+        mode = str(obj.Representacion)
+        show_3d = mode in ["3D", "3D+2D"]
+        show_2d = mode in ["2D", "3D+2D"]
+
+        obj.ModeloLink.ViewObject.Visibility = show_3d
+        obj.CubiertaLink.ViewObject.Visibility = show_3d and bool(obj.MostrarCubierta)
+        obj.EmpotradoLink.ViewObject.Visibility = show_3d and bool(obj.MostrarParteEmpotrada)
+        obj.ConexionesLink.ViewObject.Visibility = show_3d and bool(obj.MostrarConexiones)
+        obj.NichoLink.ViewObject.Visibility = show_3d and bool(obj.MostrarNicho)
+        obj.SimboloLink.ViewObject.Visibility = show_2d
+
+    def build(self, obj):
+        db = clamp(obj.DiametroCuerpo.Value, 100.0)
+        dm = clamp(obj.DiametroMaximo.Value, db + 4.0)
+        proy = clamp(obj.ProyeccionExterior.Value, 35.0, 140.0)
+        ds = clamp(obj.DiametroSimbolo2D.Value, 50.0)
+
+        base_w = clamp(obj.AnchoBaseEmpotrada.Value, dm + 4.0)
+        base_h = clamp(obj.AltoBaseEmpotrada.Value, dm + 4.0)
+        base_d = clamp(obj.ProfundidadBaseEmpotrada.Value, 30.0)
+
+        nicho_w = clamp(obj.AnchoNicho.Value, base_w + 10.0)
+        nicho_h = clamp(obj.AltoNicho.Value, base_h + 10.0)
+        nicho_d = clamp(obj.ProfundidadNicho.Value, base_d + 10.0)
+
+        d_in = clamp(obj.DiametroEntrada.Value, 12.0)
+        d_out = clamp(obj.DiametroSalida.Value, 12.0)
+        pipe_wall = clamp(obj.EspesorTuberia.Value, 0.7, 6.0)
+        pipe_len = clamp(obj.LongitudConexion.Value, 40.0)
+        pipe_recess = clamp(obj.RetiroConexion.Value, 10.0, max(10.0, nicho_d - 10.0))
+
+        rb = db * 0.5
+        rm = dm * 0.5
+        axis_y = App.Vector(0, 1, 0)
+
+        if obj.Debug:
+            log(
+                "Rebuild D={:.1f} Dmax={:.1f} Proy={:.1f} Base={:.0f}x{:.0f}x{:.0f} Altura={:.1f}".format(
+                    db, dm, proy, base_w, base_h, base_d,
+                    obj.Placement.Base.z
+                )
+            )
+            log("Plano de pared local: Y=0; exterior +Y; empotrado -Y")
+
+        # ------------------------------------------------------------
+        # 3D EXTERIOR MODEL
+        # ------------------------------------------------------------
+        pieces = []
+
+        def add_piece(shape, color):
+            pieces.append((shape, color))
+
+        body_depth = min(9.0, proy * 0.16)
+        body = Part.makeCylinder(
+            rb,
+            body_depth,
+            App.Vector(0, 0, 0),
+            axis_y
+        )
+        add_piece(body, (0.68, 0.70, 0.71))
+
+        outer_ring_depth = min(8.0, proy * 0.14)
+        outer_ring = make_ring(
+            rm,
+            max(rb * 0.92, rm - 9.0),
+            outer_ring_depth,
+            0.0
+        )
+        add_piece(outer_ring, (0.82, 0.84, 0.85))
+
+        middle_ring_y = max(4.0, outer_ring_depth - 1.0)
+        middle_ring = make_ring(
+            rm - 5.0,
+            rm - 10.0,
+            4.0,
+            middle_ring_y
+        )
+        add_piece(middle_ring, (0.72, 0.75, 0.76))
+
+        inner_bezel_y = middle_ring_y + 2.0
+        inner_bezel = make_ring(
+            rb * 0.94,
+            rb * 0.89,
+            4.0,
+            inner_bezel_y
+        )
+        add_piece(inner_bezel, (0.62, 0.65, 0.66))
+
+        face_y = min(12.0, max(9.0, proy * 0.18))
+        face = Part.makeCylinder(
+            rb * 0.88,
+            1.8,
+            App.Vector(0, face_y, 0),
+            axis_y
+        )
+        add_piece(face, (0.86, 0.87, 0.84))
+
+        # LCD frame and screen. Position and character size are intentionally
+        # restrained so the display does not dominate the front face.
+        display_w = db * 0.41
+        display_h = db * 0.145
+        display_z = db * 0.13
+        display_x = -display_w * 0.5
+        display_frame_y = face_y + 1.9
+
+        frame = box_xz(
+            display_w + 7.0,
+            2.0,
+            display_h + 6.0,
+            display_x - 3.5,
+            display_frame_y,
+            display_z - 3.0
+        )
+        add_piece(frame, (0.22, 0.24, 0.24))
+
+        lcd = box_xz(
+            display_w,
+            1.6,
+            display_h,
+            display_x,
+            display_frame_y + 1.9,
+            display_z
+        )
+        add_piece(lcd, (0.42, 0.53, 0.46))
+
+        reading = str(obj.LecturaDisplay)
+        reading = (reading + "00000")[:5]
+
+        digit_gap = display_w * 0.025
+        digit_w = (display_w - digit_gap * 6.0) / 5.0
+        digit_h = min(10.5, display_h * 0.62)
+        digit_z = display_z + (display_h - digit_h) * 0.5
+        digit_x0 = display_x + digit_gap
+
+        for index, char in enumerate(reading):
+            dx = digit_x0 + index * (digit_w + digit_gap)
+            digit_parts = seven_segment_digit(
+                char,
+                dx,
+                display_frame_y + 3.65,
+                digit_z,
+                digit_w,
+                digit_h,
+                0.75
+            )
+            for part in digit_parts:
+                add_piece(part, (0.06, 0.08, 0.07))
+
+        # Optical port.
+        optical_r = max(4.5, db * 0.032)
+        optical_x = -db * 0.30
+        optical_z = -db * 0.06
+
+        optical_ring = Part.makeCylinder(
+            optical_r + 2.0,
+            2.2,
+            App.Vector(optical_x, face_y + 2.0, optical_z),
+            axis_y
+        )
+        add_piece(optical_ring, (0.58, 0.60, 0.60))
+
+        optical = Part.makeCylinder(
+            optical_r,
+            2.8,
+            App.Vector(optical_x, face_y + 3.5, optical_z),
+            axis_y
+        )
+        add_piece(optical, (0.12, 0.13, 0.13))
+
+        # Lower identification plate and a simplified barcode.
+        plate_w = db * 0.48
+        plate_h = db * 0.17
+        plate_x = -plate_w * 0.5
+        plate_z = -db * 0.34
+
+        plate = box_xz(
+            plate_w,
+            1.6,
+            plate_h,
+            plate_x,
+            face_y + 2.0,
+            plate_z
+        )
+        add_piece(plate, (0.90, 0.90, 0.87))
+
+        barcode_y = face_y + 3.8
+        barcode_z = plate_z + plate_h * 0.34
+        barcode_h = plate_h * 0.30
+        barcode_total_w = plate_w * 0.68
+        barcode_start = -barcode_total_w * 0.5
+        bar_count = 13
+        unit = barcode_total_w / (bar_count * 2.1)
+
+        cursor = barcode_start
+        for i in range(bar_count):
+            width = unit * (0.65 if i % 3 else 1.25)
+            bar = box_xz(
+                width,
+                0.7,
+                barcode_h,
+                cursor,
+                barcode_y,
+                barcode_z
+            )
+            add_piece(bar, (0.12, 0.12, 0.12))
+            cursor += width + unit * 0.85
+
+        # Four small ring fasteners.
+        screw_radius_path = rm - 8.0
+        for angle_deg in [45, 135, 225, 315]:
+            angle = math.radians(angle_deg)
+            sx = screw_radius_path * math.sin(angle)
+            sz = screw_radius_path * math.cos(angle)
+            screw = Part.makeCylinder(
+                2.4,
+                2.2,
+                App.Vector(sx, outer_ring_depth - 0.2, sz),
+                axis_y
+            )
+            add_piece(screw, (0.34, 0.35, 0.35))
+
+        # Bottom latch and seal detail.
+        latch_w = db * 0.18
+        latch_h = db * 0.075
+        latch = box_xz(
+            latch_w,
+            10.0,
+            latch_h,
+            -latch_w * 0.5,
+            0.5,
+            -rm - latch_h * 0.35
+        )
+        add_piece(latch, (0.38, 0.40, 0.40))
+
+        seal = Part.makeCylinder(
+            max(2.5, db * 0.018),
+            4.0,
+            App.Vector(latch_w * 0.18, 10.0, -rm - latch_h * 0.10),
+            axis_y
+        )
+        add_piece(seal, (0.88, 0.67, 0.15))
+
+        obj.ModeloLink.Shape = Part.makeCompound([shape for shape, color in pieces])
+        set_compound_colors(obj.ModeloLink, pieces)
+
+        if GUI_UP:
+            obj.ModeloLink.ViewObject.LineColor = (0.22, 0.22, 0.22)
+            obj.ModeloLink.ViewObject.DisplayMode = "Flat Lines"
+
+        # ------------------------------------------------------------
+        # TRANSPARENT DOMED COVER
+        # ------------------------------------------------------------
+        cover_radius = rm - 3.0
+        cover_y0 = max(6.5, outer_ring_depth - 1.0)
+        cap_height = clamp(proy * 0.24, 10.0, 18.0)
+
+        cover_shell = make_domed_cover_shell(
+            cover_radius,
+            cover_y0,
+            proy,
+            cap_height,
+            2.0
+        )
+        obj.CubiertaLink.Shape = cover_shell
+
+        if GUI_UP:
+            obj.CubiertaLink.ViewObject.ShapeColor = (0.76, 0.87, 0.92)
+            obj.CubiertaLink.ViewObject.LineColor = (0.58, 0.68, 0.73)
+            obj.CubiertaLink.ViewObject.Transparency = 78
+            obj.CubiertaLink.ViewObject.DisplayMode = "Flat Lines"
+
+        # ------------------------------------------------------------
+        # RECESSED SOCKET / BACK BOX
+        # Everything here stays at Y <= 0.
+        # ------------------------------------------------------------
+        back_box = Part.makeBox(
+            base_w,
+            base_d,
+            base_h,
+            App.Vector(-base_w * 0.5, -base_d, -base_h * 0.5)
+        )
+
+        # Shallow circular socket collar ending exactly at wall plane Y=0.
+        collar_depth = min(18.0, base_d * 0.32)
+        collar = Part.makeCylinder(
+            rb * 0.94,
+            collar_depth,
+            App.Vector(0, -collar_depth, 0),
+            axis_y
+        )
+
+        empotrado = Part.makeCompound([back_box, collar])
+        obj.EmpotradoLink.Shape = empotrado
+
+        if GUI_UP:
+            obj.EmpotradoLink.ViewObject.ShapeColor = (0.46, 0.48, 0.49)
+            obj.EmpotradoLink.ViewObject.LineColor = (0.20, 0.20, 0.20)
+            obj.EmpotradoLink.ViewObject.DisplayMode = "Flat Lines"
+
+        # ------------------------------------------------------------
+        # CONDUIT CONNECTIONS
+        # Top = input. Bottom = output.
+        # Tube axes stay behind the wall at negative Y.
+        # ------------------------------------------------------------
+        tube_y = -pipe_recess
+        top_z0 = base_h * 0.5
+        bottom_z0 = -base_h * 0.5
+
+        top_axis = App.Vector(0, 0, 1)
+        bottom_axis = App.Vector(0, 0, -1)
+
+        top_base = App.Vector(0, tube_y, top_z0)
+        bottom_base = App.Vector(0, tube_y, bottom_z0)
+
+        top_tube = make_hollow_tube(
+            d_in,
+            pipe_wall,
+            pipe_len,
+            top_base,
+            top_axis
+        )
+        bottom_tube = make_hollow_tube(
+            d_out,
+            pipe_wall,
+            pipe_len,
+            bottom_base,
+            bottom_axis
+        )
+
+        connector_len = 13.0
+        top_connector = make_hollow_tube(
+            d_in + 7.0,
+            max(2.0, pipe_wall + 0.8),
+            connector_len,
+            top_base,
+            top_axis
+        )
+        bottom_connector = make_hollow_tube(
+            d_out + 7.0,
+            max(2.0, pipe_wall + 0.8),
+            connector_len,
+            bottom_base,
+            bottom_axis
+        )
+
+        obj.ConexionesLink.Shape = Part.makeCompound([
+            top_tube,
+            bottom_tube,
+            top_connector,
+            bottom_connector,
+        ])
+
+        if GUI_UP:
+            obj.ConexionesLink.ViewObject.ShapeColor = (0.50, 0.52, 0.53)
+            obj.ConexionesLink.ViewObject.LineColor = (0.18, 0.18, 0.18)
+            obj.ConexionesLink.ViewObject.DisplayMode = "Flat Lines"
+
+        obj.PuertoEntradaLocal = App.Vector(
+            top_base.x + top_axis.x * pipe_len,
+            top_base.y + top_axis.y * pipe_len,
+            top_base.z + top_axis.z * pipe_len
+        )
+        obj.DireccionEntradaLocal = top_axis
+        obj.PuertoSalidaLocal = App.Vector(
+            bottom_base.x + bottom_axis.x * pipe_len,
+            bottom_base.y + bottom_axis.y * pipe_len,
+            bottom_base.z + bottom_axis.z * pipe_len
+        )
+        obj.DireccionSalidaLocal = bottom_axis
+
+        # ------------------------------------------------------------
+        # NICHE REFERENCE VOLUME
+        # ICE reference defaults: 250 x 250 x 150 mm.
+        # Its front face coincides exactly with wall plane Y=0.
+        # ------------------------------------------------------------
+        nicho = Part.makeBox(
+            nicho_w,
+            nicho_d,
+            nicho_h,
+            App.Vector(-nicho_w * 0.5, -nicho_d, -nicho_h * 0.5)
+        )
+        obj.NichoLink.Shape = nicho
+
+        if GUI_UP:
+            obj.NichoLink.ViewObject.ShapeColor = (0.66, 0.77, 0.86)
+            obj.NichoLink.ViewObject.LineColor = (0.25, 0.45, 0.62)
+            obj.NichoLink.ViewObject.Transparency = 88
+            obj.NichoLink.ViewObject.DisplayMode = "Flat Lines"
+
+        # ------------------------------------------------------------
+        # 2D SYMBOL ON WALL PLANE
+        # ------------------------------------------------------------
+        obj.SimboloLink.Shape = make_symbol_2d(ds, 0.6)
+
+        if GUI_UP:
+            obj.SimboloLink.ViewObject.LineColor = (0.10, 0.10, 0.10)
+            obj.SimboloLink.ViewObject.LineWidth = 3.0
+            obj.SimboloLink.ViewObject.DisplayMode = "Wireframe"
+
+        # All child shapes remain local. Placement moves the complete object.
+        self._apply_child_placement(obj)
+        self.update_visibility(obj)
+
+        if obj.Debug:
+            log("PuertoEntradaLocal = {}".format(obj.PuertoEntradaLocal))
+            log("PuertoSalidaLocal = {}".format(obj.PuertoSalidaLocal))
+            log("Rebuild terminado.")
+
+
+def create_meter():
+    doc = App.ActiveDocument
+
+    if doc is None:
+        doc = App.newDocument("ElectricCR")
+        log("Documento ElectricCR creado.")
+
+    root = doc.getObject("ElectricCR")
+    if root is None or root.TypeId != "App::DocumentObjectGroup":
+        root = doc.addObject("App::DocumentObjectGroup", "ElectricCR")
+        root.Label = "ElectricCR"
+
+    group = doc.addObject("App::DocumentObjectGroup", "MedidorEnergia")
+    group.Label = "Medidor Energia"
+    root.addObject(group)
+
+    ctrl = doc.addObject("Part::FeaturePython", "MedidorEnergiaControl")
+    ctrl.Label = "Medidor Energia"
+    ElectricCRMeter(ctrl)
+
+    model = doc.addObject("Part::Feature", "MedidorEnergiaModelo")
+    model.Label = "Modelo 3D"
+
+    cover = doc.addObject("Part::Feature", "MedidorEnergiaCubierta")
+    cover.Label = "Cubierta Transparente"
+
+    recessed = doc.addObject("Part::Feature", "MedidorEnergiaEmpotrado")
+    recessed.Label = "Parte Empotrada"
+
+    connections = doc.addObject("Part::Feature", "MedidorEnergiaConexiones")
+    connections.Label = "Conexiones"
+
+    niche = doc.addObject("Part::Feature", "MedidorEnergiaNicho")
+    niche.Label = "Nicho Referencia"
+
+    symbol = doc.addObject("Part::Feature", "MedidorEnergiaSimbolo")
+    symbol.Label = "Simbolo 2D"
+
+    for child in [ctrl, model, cover, recessed, connections, niche, symbol]:
+        group.addObject(child)
+
+    ctrl.ModeloLink = model
+    ctrl.CubiertaLink = cover
+    ctrl.EmpotradoLink = recessed
+    ctrl.ConexionesLink = connections
+    ctrl.NichoLink = niche
+    ctrl.SimboloLink = symbol
+
+    # Controller has no visible geometry.
+    ctrl.Shape = Part.Shape()
+
+    # Initial installation height. Geometry itself stays centered at local Z=0.
+    ctrl.Placement = App.Placement(
+        App.Vector(0, 0, ctrl.AlturaMontaje.Value),
+        App.Rotation()
+    )
+
+    doc.recompute()
+
+    if GUI_UP:
+        try:
+            Gui.activeDocument().activeView().viewAxonometric()
+            Gui.activeDocument().activeView().fitAll()
+            Gui.Selection.clearSelection()
+            Gui.Selection.addSelection(ctrl)
+        except Exception as exc:
+            warn("Vista GUI: " + str(exc))
+
+    log("Medidor creado.")
+    log("Origen local del medidor = centro sobre plano exterior de pared.")
+    log("Plano pared Y=0 | exterior +Y | empotrado -Y | altura inicial 1800 mm.")
+
+    return ctrl
+
+
+MEDIDOR_ELECTRIC_CR = create_meter()

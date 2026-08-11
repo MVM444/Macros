@@ -58,3 +58,7 @@ Ver `TAREA_ACTUAL.md` y `REVISION_RAIZ_2026-08-08.md`.
 ## Nota sobre caches
 
 Los directorios `__pycache__` son generados automaticamente por Python/FreeCAD. Si se borran o archivan, normalmente se regeneran. No deben usarse como fuente de verdad para recuperar codigo.
+
+## Segunda etapa 2026-08-08
+
+La segunda etapa movio macros BIM/Puriscal, importadores, scripts editoriales y modelos de prueba fuera de la raiz. Ver `RESULTADO_SEGUNDA_ETAPA_2026-08-08.md`.

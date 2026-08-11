@@ -11,8 +11,21 @@ import os
 
 
 MACRO_DIR = os.path.normpath(os.path.abspath(os.path.dirname(__file__)))
+
+
+def find_macros_root(start_dir):
+    current = os.path.normpath(os.path.abspath(start_dir))
+    while True:
+        if os.path.isdir(os.path.join(current, "Macros-de-Freecad")):
+            return current
+        parent = os.path.dirname(current)
+        if parent == current:
+            raise RuntimeError("No se encontro la raiz de Macros con Macros-de-Freecad.")
+        current = parent
+
+
 ENGINE = os.path.join(
-    MACRO_DIR,
+    find_macros_root(MACRO_DIR),
     "Macros-de-Freecad",
     "Areas",
     "PoligonosRecintosDesdeArchWalls.FCMacro",
@@ -24,4 +37,3 @@ if not os.path.isfile(ENGINE):
 namespace = {"__name__": "__main__", "__file__": ENGINE}
 with open(ENGINE, "rb") as stream:
     exec(compile(stream.read(), ENGINE, "exec"), namespace)
-

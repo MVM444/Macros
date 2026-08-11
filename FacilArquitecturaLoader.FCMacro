@@ -3,7 +3,7 @@
 # FacilArquitecturaLoader Macro
 # Description: Reload and activate FacilArquitecturaWB from the Macros-de-Freecad repo.
 # Notes: Uses hot-reload flow for development in FreeCAD 1.1.1.
-# Version: 2026-07-23.2
+# Version: 2026-08-09.2
 
 import importlib
 import os
@@ -19,17 +19,25 @@ MODULE_PREFIXES = ("FacilArquitecturaWB", "Mod.FacilArquitecturaWB")
 MODULE_CANDIDATES = ("FacilArquitecturaWB.InitGui", "Mod.FacilArquitecturaWB.InitGui")
 COMMAND_CANDIDATES = (
     "FA_ImportCADReference",
+    "FA_CreateBIMStructure",
+    "FA_RebuildBIMModel",
     "FA_CreateProject",
     "FA_CreateMasterSketches",
     "FA_CenterlinesFromSelection",
     "FA_WindowCenterlinesFromSelection",
     "FA_DoorCenterlinesFromSelection",
+    "FA_CreateDoorsBIM",
+    "FA_CreateDoorsFromSketch",
+    "FA_CreateWindowsBIM",
+    "FA_CreateWindowsFromSketch",
     "FA_CloseWallSketch",
     "FA_CollectRoomLabels",
     "FA_CreateSampleGeometry",
     "FA_CreateAxesColumnsBIM",
+    "FA_CreateColumnsFromSketch",
     "FA_CreateBuildingGrid",
     "FA_CreateWallsBIM",
+    "FA_CreateWallsFromSketch",
     "FA_CreateSiteFloorBIM",
     "FA_CreateModularCeiling",
     "FA_CreateServicePlatformFront",

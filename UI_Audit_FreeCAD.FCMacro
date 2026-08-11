@@ -1,0 +1,252 @@
+# -*- coding: utf-8 -*-
+"""Read-only runtime audit of FreeCAD Qt panels.
+
+Usage from the Python console:
+    UI_AUDIT_LABEL = "A0"
+    exec(open(App.getUserMacroDir() + "/UI_Audit_FreeCAD.FCMacro", encoding="utf-8").read())
+
+Optional:
+    UI_AUDIT_PROCESS_EVENTS = True
+
+The macro does not show, hide, resize, reparent, create, close or delete any
+widget. processEvents is disabled unless explicitly requested.
+"""
+
+from collections import Counter, defaultdict
+
+import FreeCAD as App
+import FreeCADGui as Gui
+
+
+def _load_qt():
+    for binding in ("PySide6", "PySide2", "PySide"):
+        try:
+            if binding == "PySide":
+                from PySide import QtCore, QtGui
+                return binding, QtCore, QtGui, QtGui
+            module = __import__(binding, fromlist=["QtCore", "QtGui", "QtWidgets"])
+            return binding, module.QtCore, module.QtGui, module.QtWidgets
+        except Exception:
+            continue
+    raise RuntimeError("No compatible PySide binding found")
+
+
+BINDING, QtCore, QtGui, QtWidgets = _load_qt()
+
+
+def _load_shiboken():
+    for name in ("shiboken6", "shiboken2"):
+        try:
+            return __import__(name)
+        except Exception:
+            continue
+    return None
+
+
+SHIBOKEN = _load_shiboken()
+
+
+def _text(value):
+    try:
+        return str(value)
+    except Exception:
+        return "<unprintable>"
+
+
+def _call(obj, method, default=None):
+    try:
+        return getattr(obj, method)()
+    except Exception:
+        return default
+
+
+def _object_name(obj):
+    return _text(_call(obj, "objectName", ""))
+
+
+def _class_name(obj):
+    if obj is None:
+        return "None"
+    try:
+        return type(obj).__module__ + "." + type(obj).__name__
+    except Exception:
+        return "<unknown>"
+
+
+def _identity(obj):
+    if obj is None:
+        return "None"
+    parts = ["py=0x{:x}".format(id(obj)), "repr={}".format(_text(repr(obj)))]
+    if SHIBOKEN is not None:
+        try:
+            parts.append("valid={}".format(bool(SHIBOKEN.isValid(obj))))
+        except Exception:
+            parts.append("valid=unknown")
+        try:
+            ptrs = SHIBOKEN.getCppPointer(obj)
+            if ptrs:
+                parts.append("cpp=0x{:x}".format(int(ptrs[0])))
+        except Exception:
+            parts.append("cpp=unknown")
+    return " ".join(parts)
+
+
+def _size(value):
+    try:
+        return "{}x{}".format(int(value.width()), int(value.height()))
+    except Exception:
+        return "unknown"
+
+
+def _geometry(value):
+    try:
+        return "x={} y={} w={} h={}".format(
+            int(value.x()), int(value.y()), int(value.width()), int(value.height())
+        )
+    except Exception:
+        return "unknown"
+
+
+def _parent_desc(obj):
+    parent = _call(obj, "parent", None)
+    if parent is None:
+        return "None"
+    return "{} name={} {}".format(_class_name(parent), _object_name(parent), _identity(parent))
+
+
+def _area_name(mw, dock):
+    try:
+        area = mw.dockWidgetArea(dock)
+    except Exception:
+        return "unknown"
+    try:
+        return _text(area.name)
+    except Exception:
+        return _text(area)
+
+
+def _print(prefix, message):
+    App.Console.PrintMessage("{} {}\n".format(prefix, message))
+
+
+def _widget_record(obj, mw=None):
+    record = {
+        "name": _object_name(obj),
+        "title": _text(_call(obj, "windowTitle", "")),
+        "type": _class_name(obj),
+        "parent": _parent_desc(obj),
+        "visible": bool(_call(obj, "isVisible", False)),
+        "enabled": bool(_call(obj, "isEnabled", False)),
+        "size": _size(_call(obj, "size", None)),
+        "minimum": _size(_call(obj, "minimumSize", None)),
+        "maximum": _size(_call(obj, "maximumSize", None)),
+        "geometry": _geometry(_call(obj, "geometry", None)),
+        "identity": _identity(obj),
+    }
+    if isinstance(obj, QtWidgets.QDockWidget):
+        inner = _call(obj, "widget", None)
+        record.update({
+            "floating": bool(_call(obj, "isFloating", False)),
+            "area": _area_name(mw, obj) if mw is not None else "unknown",
+            "inner_type": _class_name(inner),
+            "inner_name": _object_name(inner) if inner is not None else "",
+            "inner_identity": _identity(inner),
+        })
+    return record
+
+
+def _emit_record(prefix, record):
+    order = (
+        "name", "title", "type", "parent", "visible", "enabled", "floating",
+        "area", "size", "minimum", "maximum", "geometry", "inner_type",
+        "inner_name", "inner_identity", "identity",
+    )
+    _print(prefix, " | ".join("{}={}".format(k, record[k]) for k in order if k in record))
+
+
+def _looks_relevant(widget):
+    text = (_object_name(widget) + " " + _text(_call(widget, "windowTitle", ""))).lower()
+    keys = ("combo", "task", "model", "report", "python console", "python_console")
+    return any(key in text for key in keys)
+
+
+def _tasks_inventory(mw):
+    relevant = []
+    try:
+        widgets = list(mw.findChildren(QtWidgets.QWidget) or [])
+    except Exception:
+        widgets = []
+    for widget in widgets:
+        if _looks_relevant(widget):
+            relevant.append(widget)
+    return relevant
+
+
+def snapshot(label="MANUAL", process_events=False):
+    """Print a read-only snapshot and return compact count data."""
+    if process_events:
+        QtWidgets.QApplication.processEvents()
+
+    mw = Gui.getMainWindow()
+    if mw is None:
+        raise RuntimeError("FreeCAD main window is unavailable")
+
+    _print("[UI-AUDIT][SNAPSHOT]", "BEGIN label={} binding={} processEvents={}".format(
+        label, BINDING, bool(process_events)
+    ))
+    _emit_record("[UI-AUDIT][MAINWINDOW]", _widget_record(mw))
+
+    central = _call(mw, "centralWidget", None)
+    if central is not None:
+        _emit_record("[UI-AUDIT][CENTRAL]", _widget_record(central))
+    else:
+        _print("[UI-AUDIT][WARNING]", "centralWidget=None")
+
+    docks = list(mw.findChildren(QtWidgets.QDockWidget) or [])
+    names = [_object_name(dock) for dock in docks]
+    grouped = Counter(names)
+    invisible = sum(1 for dock in docks if not bool(_call(dock, "isVisible", False)))
+
+    _print("[UI-AUDIT][COUNT]", "QDockWidget total={} visible={} invisible={}".format(
+        len(docks), len(docks) - invisible, invisible
+    ))
+    for name in sorted(grouped):
+        _print("[UI-AUDIT][COUNT]", "objectName={} count={}".format(name or "<empty>", grouped[name]))
+        if grouped[name] > 1:
+            _print("[UI-AUDIT][DUPLICATE]", "objectName={} count={}".format(name or "<empty>", grouped[name]))
+            _print("[UI-AUDIT][WARNING]", "duplicate QDockWidget objectName={}".format(name or "<empty>"))
+
+    for dock in docks:
+        _emit_record("[UI-AUDIT][DOCK]", _widget_record(dock, mw))
+
+    relevant = _tasks_inventory(mw)
+    _print("[UI-AUDIT][COUNT]", "relevant Combo/Tasks/Model/Report/Python widgets={}".format(len(relevant)))
+    for widget in relevant:
+        _emit_record("[UI-AUDIT][SPECIAL]", _widget_record(widget, mw))
+
+    try:
+        active = Gui.Control.activeDialog()
+    except Exception as exc:
+        active = "<error:{}>".format(exc)
+    _print("[UI-AUDIT][TASKPANEL]", "activeDialog={} type={} identity={}".format(
+        bool(active) if not isinstance(active, str) else active,
+        _class_name(active) if not isinstance(active, str) else "unknown",
+        _identity(active) if not isinstance(active, str) else "unknown",
+    ))
+
+    _print("[UI-AUDIT][SNAPSHOT]", "END label={}".format(label))
+    return {
+        "label": label,
+        "dock_total": len(docks),
+        "dock_visible": len(docks) - invisible,
+        "dock_invisible": invisible,
+        "duplicates": {name: count for name, count in grouped.items() if count > 1},
+        "relevant_widgets": len(relevant),
+        "active_dialog": bool(active) if not isinstance(active, str) else active,
+    }
+
+
+UI_AUDIT_LAST_RESULT = snapshot(
+    label=_text(globals().get("UI_AUDIT_LABEL", "MANUAL")),
+    process_events=bool(globals().get("UI_AUDIT_PROCESS_EVENTS", False)),
+)

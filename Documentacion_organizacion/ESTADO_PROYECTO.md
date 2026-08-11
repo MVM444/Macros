@@ -4,7 +4,7 @@ Fecha: 2026-08-08
 
 ## Estado
 
-Primera pasada segura completada.
+Segunda pasada conservadora aplicada.
 
 ## Confirmado
 
@@ -15,17 +15,22 @@ Primera pasada segura completada.
 - Se retiraron cuatro bibliotecas DXF duplicadas despues de comprobar que existen copias identicas en `Scripts Varios/DXF`.
 - Se agregaron reglas de `.gitignore` para evitar que `Puriscal_*.png` y `*.FCBak` vuelvan a incorporarse accidentalmente.
 
-## Pendiente - segunda etapa
+## Segunda etapa aplicada
 
-Revisar y reubicar, solo despues de analizar dependencias:
+Se movieron fuera de la raiz:
 
-- macros reutilizables de FacilArquitectura/BIM;
-- macros especificas de Puriscal;
-- modelos y recursos de `Silla_Madera`;
-- modelo `Puriscal Depurado.FCStd`;
-- scripts editoriales;
-- importadores IFC/CAD;
-- otras utilidades que todavia permanezcan directamente en la raiz.
+- macros reutilizables de FacilArquitectura/BIM a `Scripts Varios/FacilArquitectura_BIM`;
+- macros y documentacion especifica de Puriscal a `Scripts Varios/FacilArquitectura_BIM/Puriscal`;
+- `Puriscal Depurado.FCStd` a `Respaldos/Proyectos_prueba/Puriscal`;
+- `Silla_Madera.FCStd` y `Silla_Madera.step` a `Respaldos/Proyectos_prueba/Silla_Madera`;
+- scripts editoriales a `Scripts Varios/Revision_editorial`;
+- importadores y ayudantes CAD/DXF a `Scripts Varios/Importaciones_especificas` y `Scripts Varios/DXF`.
+
+Ver `RESULTADO_SEGUNDA_ETAPA_2026-08-08.md`.
+
+## Pendiente
+
+Revisar si conviene convertir algunas macros movidas en comandos nativos de `FacilArquitecturaWB` o integrarlas formalmente en `Macros-de-Freecad`. No eliminar en bloque.
 
 ## Instruccion para Codex
 

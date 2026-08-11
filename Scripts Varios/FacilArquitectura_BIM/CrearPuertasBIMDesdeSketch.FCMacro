@@ -12,8 +12,19 @@ import runpy
 import FreeCAD
 
 
+def find_macros_root(start_dir):
+    current = os.path.normpath(os.path.abspath(start_dir))
+    while True:
+        if os.path.isdir(os.path.join(current, "Macros-de-Freecad")):
+            return current
+        parent = os.path.dirname(current)
+        if parent == current:
+            raise RuntimeError("No se encontro la raiz de Macros con Macros-de-Freecad.")
+        current = parent
+
+
 HELPER = os.path.join(
-    os.path.dirname(__file__),
+    find_macros_root(os.path.dirname(__file__)),
     "Macros-de-Freecad",
     "GameEngineExportWB",
     "macros",

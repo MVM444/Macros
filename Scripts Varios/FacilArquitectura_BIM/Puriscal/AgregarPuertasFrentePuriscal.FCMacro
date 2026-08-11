@@ -19,7 +19,7 @@ import FreeCAD as App
 import FreeCADGui as Gui
 
 
-SOURCE_MACRO = Path(__file__).with_name("InsertarPuertasBIMDesdeRecintos.FCMacro")
+SOURCE_MACRO = Path(__file__).resolve().parent.parent / "InsertarPuertasBIMDesdeRecintos.FCMacro"
 SINGLE_INDEX = 17
 DOUBLE_INDICES = (0, 18)
 

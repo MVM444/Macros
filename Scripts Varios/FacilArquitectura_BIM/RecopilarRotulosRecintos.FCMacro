@@ -11,7 +11,20 @@ import FreeCAD as App
 
 
 MACRO_DIR = os.path.normpath(os.path.abspath(os.path.dirname(__file__)))
-REPO_ROOT = os.path.join(MACRO_DIR, "Macros-de-Freecad")
+
+
+def find_macros_root(start_dir):
+    current = os.path.normpath(os.path.abspath(start_dir))
+    while True:
+        if os.path.isdir(os.path.join(current, "Macros-de-Freecad")):
+            return current
+        parent = os.path.dirname(current)
+        if parent == current:
+            raise RuntimeError("No se encontro la raiz de Macros con Macros-de-Freecad.")
+        current = parent
+
+
+REPO_ROOT = os.path.join(find_macros_root(MACRO_DIR), "Macros-de-Freecad")
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
 
