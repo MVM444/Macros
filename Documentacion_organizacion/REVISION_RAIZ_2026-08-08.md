@@ -12,20 +12,17 @@ Al comparar el estado posterior a la limpieza de junio con `main` del 2026-08-08
 
 La raiz no debe utilizarse como carpeta de trabajo temporal.
 
-Deben mantenerse en raiz los loaders y herramientas globales, incluyendo expresamente:
+Despues de la decision del 2026-08-12, deben mantenerse en raiz solamente los
+controladores globales necesarios, incluyendo expresamente:
 
-- `ElectricCRLoader.FCMacro`
-- `FacilArquitecturaLoader.FCMacro`
-- `GameEngineExportLoader.FCMacro`
-- `MEPWorkbenchCRLoader.FCMacro`
 - `RegistrarLoadersGlobales.FCMacro`
-- `Alias.FCMacro`
-- `AbrirDirectorioDocumento.FCMacro`
-- `AbrirDirectorioElectricCR.FCMacro`
-- `VentanadeMacros.FCMacro`
 - `MacrosPersonalizadas.FCMacro`
+- `VentanadeMacros.FCMacro`
 
-Sus iconos directos pueden permanecer junto a ellos.
+Los cuatro loaders y sus iconos viven en `Loaders/`. `Alias.FCMacro` vive en
+`Scripts Varios/Spreadsheet`; los accesos de directorio reemplazados se
+conservan bajo `Respaldos/`. `VentanadeMacros.FCMacro` es un punto de entrada
+global confirmado y no debe volver a clasificarse como interfaz legacy.
 
 ## Puriscal
 
@@ -38,6 +35,15 @@ Se distinguieron dos grupos principales:
 
 La limpieza debe conservar esta diferencia.
 
+## Ollama y AutoCorreccion (2026-08-12)
+
+El asistente Ollama existente se recupero del historial Git desde la antigua
+ruta de raiz y se reubico, con su SVG exclusivo, en la carpeta `Programacion`
+con tilde, sin cambios de interfaz o comportamiento.
+`AutoCorreccion_Local.FCMacro`, tras confirmar que solo genera diagnostico
+JSON/conteo y no usa Ollama, se archivo intacta en
+`Respaldos/Diagnostico_legacy`.
+
 ## Seguridad
 
 - No eliminar macros reutilizables sin revision.
@@ -48,3 +54,13 @@ La limpieza debe conservar esta diferencia.
 ## Flujo GPT-Codex
 
 Codex debe leer `AGENTS.md` y `Documentacion_organizacion/TAREA_ACTUAL.md` antes de continuar esta reorganizacion.
+
+## Decision posterior: diagnostico general (2026-08-12)
+
+Las herramientas generales de reportes, seleccion, propiedades, auditoria Qt,
+coordenadas, directorios y captura del arbol se consolidan en `Programación`.
+La barra es global e independiente de ElectricCR. El capturador de arbol fue
+retirado de `Macros-de-Freecad/Configuracion del proyecto` por decision expresa
+del usuario y sustituido por `Programación/CapturarArbolYPrompt.FCMacro`.
+Las demas versiones antiguas no se movieron ni eliminaron y quedan pendientes
+de validacion.

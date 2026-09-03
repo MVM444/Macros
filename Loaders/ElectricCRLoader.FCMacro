@@ -17,6 +17,19 @@ _MACRO_TOOLBAR_NAME = "Macros"
 _TOOLBAR_CONTROLLER_ATTR = "_electriccr_loader_toolbar_persistence_controller"
 
 
+def _loader_dir():
+    return os.path.normpath(os.path.abspath(os.path.dirname(__file__)))
+
+
+def _macro_root():
+    here = _loader_dir()
+    return os.path.dirname(here) if os.path.basename(here).lower() == "loaders" else here
+
+
+def _script_reference():
+    return "Loaders/" + _MACRO_COMMAND_SCRIPT if _loader_dir() != _macro_root() else _MACRO_COMMAND_SCRIPT
+
+
 def _log_info(message):
     App.Console.PrintMessage(_LOG_PREFIX + str(message) + "\n")
 
@@ -39,9 +52,9 @@ def _macro_path_entries():
                 full = os.path.normpath(os.path.abspath(part))
                 if full not in entries:
                     entries.append(full)
-    default = os.path.dirname(__file__)
-    if default not in entries:
-        entries.insert(0, default)
+    for default in (_macro_root(), _loader_dir()):
+        if default not in entries:
+            entries.insert(0, default)
     try:
         user_dir = App.getUserAppDataDir()
         if user_dir:
@@ -156,13 +169,13 @@ def _find_or_create_macro_command():
             script = command_group.GetString("Script", "")
         except Exception:
             script = ""
-        if os.path.normcase(script) == os.path.normcase(_MACRO_COMMAND_SCRIPT):
+        if os.path.normcase(os.path.basename(script)) == os.path.normcase(_MACRO_COMMAND_SCRIPT):
             existing_name = str(command_name)
             break
 
     command_name = existing_name or _next_std_macro_name(macros_group)
     command_group = macros_group.GetGroup(command_name)
-    command_group.SetString("Script", _MACRO_COMMAND_SCRIPT)
+    command_group.SetString("Script", _script_reference())
     command_group.SetString("Menu", _MACRO_COMMAND_MENU)
     command_group.SetString("Tooltip", _MACRO_COMMAND_TOOLTIP)
     command_group.SetString("WhatsThis", "")

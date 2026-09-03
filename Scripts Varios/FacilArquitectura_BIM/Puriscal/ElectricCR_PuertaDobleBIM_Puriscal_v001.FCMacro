@@ -1,0 +1,235 @@
+# -*- coding: utf-8 -*-
+# MenuText: ElectricCR Puerta doble BIM Puriscal v001
+# ToolTip: Crea una puerta doble BIM de revision en un documento separado.
+
+"""Create the isolated v001 double BIM door for Puriscal.
+
+The macro deliberately creates a new document, has no wall host and does not
+save or modify the previously active architectural document. The base profile
+contains all closed wires used by Arch.makeWindow and remains hidden.
+"""
+
+from __future__ import annotations
+
+import Arch
+import FreeCAD as App
+import Part
+
+
+LOG_PREFIX = "[ElectricCR][PuertaDobleBIM] "
+DOC_BASE_NAME = "ElectricCR_PuertaDobleBIM_Puriscal_v001"
+
+WIDTH = 2000.0
+HEIGHT = 2100.0
+OUTER_FRAME = 50.0
+LEAF_GAP = 10.0
+LEAF_FRAME = 50.0
+RAIL_THICKNESS = 40.0
+LOWER_PROTECTION_TOP = 460.0
+SECOND_RAIL_LEVEL = 1000.0
+GLASS_THICKNESS = 6.0
+
+
+def log(message):
+    App.Console.PrintMessage(LOG_PREFIX + str(message) + "\n")
+
+
+def add_property(obj, prop_type, name, group, description, value):
+    if not hasattr(obj, name):
+        obj.addProperty(prop_type, name, group, description)
+    setattr(obj, name, value)
+
+
+def unique_document_name(base_name):
+    documents = App.listDocuments()
+    if base_name not in documents:
+        return base_name
+    index = 2
+    while "%s_%03d" % (base_name, index) in documents:
+        index += 1
+    return "%s_%03d" % (base_name, index)
+
+
+def rectangle_wire(x0, z0, x1, z1):
+    points = (
+        App.Vector(float(x0), 0.0, float(z0)),
+        App.Vector(float(x1), 0.0, float(z0)),
+        App.Vector(float(x1), 0.0, float(z1)),
+        App.Vector(float(x0), 0.0, float(z1)),
+        App.Vector(float(x0), 0.0, float(z0)),
+    )
+    return Part.makePolygon(points)
+
+
+def component(name, component_type, wires, depth, offset):
+    return [name, component_type, wires, str(float(depth)), str(float(offset))]
+
+
+def build_profile_shape():
+    half_width = WIDTH * 0.5
+    half_gap = LEAF_GAP * 0.5
+    leaf_bottom = OUTER_FRAME
+    leaf_top = HEIGHT - OUTER_FRAME
+    left_outer_x0 = -half_width + OUTER_FRAME
+    left_outer_x1 = -half_gap
+    right_outer_x0 = half_gap
+    right_outer_x1 = half_width - OUTER_FRAME
+
+    left_inner_x0 = left_outer_x0 + LEAF_FRAME
+    left_inner_x1 = left_outer_x1 - LEAF_FRAME
+    right_inner_x0 = right_outer_x0 + LEAF_FRAME
+    right_inner_x1 = right_outer_x1 - LEAF_FRAME
+    inner_bottom = leaf_bottom + LEAF_FRAME
+    inner_top = leaf_top - LEAF_FRAME
+
+    rail1_z0 = LOWER_PROTECTION_TOP - RAIL_THICKNESS * 0.5
+    rail1_z1 = LOWER_PROTECTION_TOP + RAIL_THICKNESS * 0.5
+    rail2_z0 = SECOND_RAIL_LEVEL - RAIL_THICKNESS * 0.5
+    rail2_z1 = SECOND_RAIL_LEVEL + RAIL_THICKNESS * 0.5
+
+    wires = [
+        # Wire0-Wire1: fixed exterior frame.
+        rectangle_wire(-half_width, 0.0, half_width, HEIGHT),
+        rectangle_wire(-half_width + OUTER_FRAME, OUTER_FRAME, half_width - OUTER_FRAME, HEIGHT - OUTER_FRAME),
+        # Wire2-Wire3: left leaf. Edge12 is the left vertical hinge.
+        rectangle_wire(left_outer_x0, leaf_bottom, left_outer_x1, leaf_top),
+        rectangle_wire(left_inner_x0, inner_bottom, left_inner_x1, inner_top),
+        # Wire4-Wire5: right leaf. Edge18 is the right vertical hinge.
+        rectangle_wire(right_outer_x0, leaf_bottom, right_outer_x1, leaf_top),
+        rectangle_wire(right_inner_x0, inner_bottom, right_inner_x1, inner_top),
+        # Wire6-Wire10: left infill and rails.
+        rectangle_wire(left_inner_x0, inner_bottom, left_inner_x1, rail1_z0),
+        rectangle_wire(left_inner_x0, rail1_z0, left_inner_x1, rail1_z1),
+        rectangle_wire(left_inner_x0, rail1_z1, left_inner_x1, rail2_z0),
+        rectangle_wire(left_inner_x0, rail2_z0, left_inner_x1, rail2_z1),
+        rectangle_wire(left_inner_x0, rail2_z1, left_inner_x1, inner_top),
+        # Wire11-Wire15: right infill and rails.
+        rectangle_wire(right_inner_x0, inner_bottom, right_inner_x1, rail1_z0),
+        rectangle_wire(right_inner_x0, rail1_z0, right_inner_x1, rail1_z1),
+        rectangle_wire(right_inner_x0, rail1_z1, right_inner_x1, rail2_z0),
+        rectangle_wire(right_inner_x0, rail2_z0, right_inner_x1, rail2_z1),
+        rectangle_wire(right_inner_x0, rail2_z1, right_inner_x1, inner_top),
+    ]
+    return Part.makeCompound(wires)
+
+
+def build_window_parts():
+    parts = []
+    parts += component("MarcoExterior", "Frame", "Wire0,Wire1", 100.0, -50.0)
+
+    # Components listed after each hinged frame inherit that leaf rotation in
+    # ArchWindow. The second hinge starts the opposite leaf rotation group.
+    parts += component("MarcoHojaIzquierda", "Frame", "Wire2,Wire3,Edge12,Mode1", 50.0, -25.0)
+    parts += component("PanelInferiorIzquierdo", "Solid panel", "Wire6", 20.0, -10.0)
+    parts += component("Travesano460Izquierdo", "Frame", "Wire7", 50.0, -25.0)
+    parts += component("VidrioIntermedioIzquierdo", "Glass panel", "Wire8", GLASS_THICKNESS, -GLASS_THICKNESS * 0.5)
+    parts += component("Travesano1000Izquierdo", "Frame", "Wire9", 50.0, -25.0)
+    parts += component("VidrioSuperiorIzquierdo", "Glass panel", "Wire10", GLASS_THICKNESS, -GLASS_THICKNESS * 0.5)
+
+    parts += component("MarcoHojaDerecha", "Frame", "Wire4,Wire5,Edge18,Mode2", 50.0, -25.0)
+    parts += component("PanelInferiorDerecho", "Solid panel", "Wire11", 20.0, -10.0)
+    parts += component("Travesano460Derecho", "Frame", "Wire12", 50.0, -25.0)
+    parts += component("VidrioIntermedioDerecho", "Glass panel", "Wire13", GLASS_THICKNESS, -GLASS_THICKNESS * 0.5)
+    parts += component("Travesano1000Derecho", "Frame", "Wire14", 50.0, -25.0)
+    parts += component("VidrioSuperiorDerecho", "Glass panel", "Wire15", GLASS_THICKNESS, -GLASS_THICKNESS * 0.5)
+    return parts
+
+
+def create_material_definition():
+    aluminum = Arch.makeMaterial("Aluminio gris satinado", (0.62, 0.64, 0.66))
+    protection = Arch.makeMaterial("Panel inferior gris", (0.38, 0.40, 0.42))
+    glass = Arch.makeMaterial("Vidrio laminado 6 mm", (0.42, 0.72, 0.90), 70)
+    materials = Arch.makeMultiMaterial("Materiales puerta doble Puriscal v001")
+    materials.Names = ["Frame", "Solid panel", "Glass panel"]
+    materials.Materials = [aluminum, protection, glass]
+    materials.Thicknesses = [50.0, 20.0, GLASS_THICKNESS]
+    materials.Description = "Aluminio gris satinado, panel inferior y vidrio laminado"
+    return materials
+
+
+def create_door():
+    document_name = unique_document_name(DOC_BASE_NAME)
+    doc = App.newDocument(document_name)
+    doc.Label = "Revision puerta doble BIM Puriscal v001"
+    log("Documento creado: %s" % document_name)
+
+    group = doc.addObject("App::DocumentObjectGroup", "PuertaDobleBIM_Puriscal_v001")
+    group.Label = "Puerta doble BIM Puriscal v001"
+
+    profile = doc.addObject("Part::Feature", "PerfilBase_PuertaDoble")
+    profile.Label = "Perfil base (oculto)"
+    profile.Shape = build_profile_shape()
+    add_property(profile, "App::PropertyString", "RepresentationRole", "PuertaDobleBIM", "Rol de representacion", "Profile")
+    add_property(profile, "App::PropertyString", "FA_GeneratedBy", "PuertaDobleBIM", "Generador", "ElectricCR_PuertaDobleBIM_Puriscal_v001")
+    group.addObject(profile)
+    doc.recompute()
+
+    parts = build_window_parts()
+    door = Arch.makeWindow(
+        baseobj=profile,
+        width=WIDTH,
+        height=HEIGHT,
+        parts=parts,
+        name="PuertaDobleBIM_Puriscal",
+    )
+    if door is None:
+        raise RuntimeError("Arch.makeWindow no pudo crear la puerta BIM.")
+    door.Label = "Puerta doble BIM Puriscal - Europa"
+    door.IfcType = "Door"
+    door.Width = WIDTH
+    door.Height = HEIGHT
+    # The profile is a Part::Feature drawn directly on XZ. Arch Window cannot
+    # infer that plane from Placement as it does for a rotated Sketch, so the
+    # extrusion normal is explicit.
+    door.Normal = App.Vector(0.0, -1.0, 0.0)
+    door.Opening = 0
+    door.SymbolPlan = True
+    door.SymbolElevation = True
+    door.Hosts = []
+    door.Material = create_material_definition()
+
+    metadata = (
+        ("App::PropertyString", "CRSchemaVersion", "Version del contrato", "1.0"),
+        ("App::PropertyString", "SpecId", "Identificador estable", "architecture.door.double_leaf.puriscal.europa.v001"),
+        ("App::PropertyString", "Discipline", "Disciplina", "Architecture"),
+        ("App::PropertyString", "ElementType", "Tipo logico", "Door"),
+        ("App::PropertyString", "Subtype", "Subtipo", "DoubleLeafGlazed"),
+        ("App::PropertyString", "SystemType", "Sistema", "Europa"),
+        ("App::PropertyString", "FrameMaterial", "Material del marco", "Aluminio"),
+        ("App::PropertyString", "FrameFinish", "Acabado", "Gris satinado"),
+        ("App::PropertyString", "GlassType", "Tipo de vidrio", "Vidrio laminado 6 mm"),
+        ("App::PropertyInteger", "LeafCount", "Cantidad de hojas", 2),
+        ("App::PropertyLength", "LowerProtectionTop", "Nivel superior de proteccion inferior", LOWER_PROTECTION_TOP),
+        ("App::PropertyLength", "SecondRailLevel", "Nivel del segundo travesano", SECOND_RAIL_LEVEL),
+        ("App::PropertyLength", "GlassThickness", "Espesor del vidrio", GLASS_THICKNESS),
+        ("App::PropertyString", "FA_GeneratedBy", "Generador", "ElectricCR_PuertaDobleBIM_Puriscal_v001"),
+    )
+    for prop_type, name, description, value in metadata:
+        add_property(door, prop_type, name, "PuertaDobleBIM", description, value)
+    add_property(door, "App::PropertyLink", "Profile", "PuertaDobleBIM", "Perfil base", profile)
+    # A hidden link keeps traceability without adding a reverse graph
+    # dependency against door.Base.
+    add_property(profile, "App::PropertyLinkHidden", "Owner", "PuertaDobleBIM", "Propietario semantico", door)
+
+    group.addObject(door)
+    doc.recompute()
+    try:
+        door.ViewObject.LineColor = (0.18, 0.18, 0.18)
+        profile.ViewObject.Visibility = False
+        if App.GuiUp:
+            import ArchWindow
+
+            ArchWindow.recolorize(door)
+    except Exception:
+        pass
+
+    log("Creacion del objeto BIM completada: %s" % door.Name)
+    log("IfcType = %s" % door.IfcType)
+    log("Width = %.0f mm" % door.Width.Value)
+    log("Height = %.0f mm" % door.Height.Value)
+    log("WindowParts components = %d" % (len(door.WindowParts) // 5))
+    log("Puerta BIM creada para revision")
+    return doc, group, profile, door
+
+
+created_document, created_group, created_profile, created_door = create_door()

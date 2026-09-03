@@ -1,219 +1,38 @@
 # -*- coding: utf-8 -*-
+# MenuText: Copiar resumen de seleccion
+# ToolTip: Copia identidad, rutas, tipos y Links de la seleccion sin modificar objetos.
+# Version: 2.0.0 | Date: 2026-08-12 00:00 CST
+"""Create a compact, read-only summary of selected FreeCAD objects."""
 
-# Qt compatibility for FreeCAD 1.x (PySide6) and older builds.
-def _ensure_qt_compat():
-    import sys
-    import types
+from collections import Counter
 
-    QtCore = QtGui = QtWidgets = None
-    binding_name = None
-
-    for candidate in ("PySide6", "PySide2", "PySide"):
-        try:
-            if candidate == "PySide":
-                from PySide import QtCore as _QtCore, QtGui as _QtGui
-                _QtWidgets = _QtGui
-            else:
-                module = __import__(candidate, fromlist=["QtCore", "QtGui", "QtWidgets"])
-                _QtCore = module.QtCore
-                _QtGui = module.QtGui
-                _QtWidgets = module.QtWidgets
-            QtCore, QtGui, QtWidgets = _QtCore, _QtGui, _QtWidgets
-            binding_name = candidate
-            break
-        except Exception:
-            continue
-
-    if QtCore is None:
-        return
-
-    qtgui_compat = types.ModuleType("QtGui")
-    qtgui_compat.__dict__.update(getattr(QtGui, "__dict__", {}))
-    qtgui_compat.__dict__.update(getattr(QtWidgets, "__dict__", {}))
-
-    qtsvg_compat = None
-    for module_name in ("QtSvg", "QtSvgWidgets"):
-        try:
-            module = __import__(binding_name, fromlist=[module_name])
-            qt_module = getattr(module, module_name)
-        except Exception:
-            continue
-        if qtsvg_compat is None:
-            qtsvg_compat = types.ModuleType("QtSvg")
-        qtsvg_compat.__dict__.update(getattr(qt_module, "__dict__", {}))
-
-    qtuitools_compat = None
-    try:
-        module = __import__(binding_name, fromlist=["QtUiTools"])
-        qtuitools_compat = module.QtUiTools
-    except Exception:
-        pass
-
-    for package_name in ("PySide2", "PySide"):
-        package = sys.modules.get(package_name)
-        if package is None:
-            package = types.ModuleType(package_name)
-            sys.modules[package_name] = package
-        package.QtCore = QtCore
-        package.QtGui = qtgui_compat
-        package.QtWidgets = QtWidgets
-        sys.modules[package_name + ".QtCore"] = QtCore
-        sys.modules[package_name + ".QtGui"] = qtgui_compat
-        sys.modules[package_name + ".QtWidgets"] = QtWidgets
-        if qtsvg_compat is not None:
-            package.QtSvg = qtsvg_compat
-            sys.modules[package_name + ".QtSvg"] = qtsvg_compat
-        if qtuitools_compat is not None:
-            package.QtUiTools = qtuitools_compat
-            sys.modules[package_name + ".QtUiTools"] = qtuitools_compat
-
-
-_ensure_qt_compat()
-
-# Macro: Copiar_Nombres_Seleccion.FCMacro
-# Descripcion:
-#   Copia al portapapeles una lista sencilla de objetos seleccionados.
-#   Util para debug rapido, nombres de objetos, labels y ruta de grupos.
-
-import FreeCAD as App
 import FreeCADGui as Gui
 
-try:
-    from PySide2.QtWidgets import QApplication
-except Exception:
-    try:
-        from PySide.QtGui import QApplication  # type: ignore
-    except Exception:
-        QApplication = None
+from programacion_common import clipboard_set, info, link_data, path_text, text, warning
 
-
-TAG = "[COPIAR_NOMBRES]"
-
-# Opciones rapidas
-INCLUDE_NAME = True
-INCLUDE_LABEL = True
-INCLUDE_TYPEID = False
-INCLUDE_GROUP_PATH = True
-USE_TABS = True
-
-
-def log_info(msg):
-    App.Console.PrintMessage(f"{TAG}[INFO] {msg}\n")
-
-
-def log_warn(msg):
-    App.Console.PrintWarning(f"{TAG}[WARN] {msg}\n")
-
-
-def log_err(msg):
-    App.Console.PrintError(f"{TAG}[ERROR] {msg}\n")
-
-
-def safe_text(value):
-    try:
-        return str(value or "")
-    except Exception:
-        return ""
-
-
-def is_group(obj):
-    if obj is None:
-        return False
-    try:
-        if obj.isDerivedFrom("App::DocumentObjectGroup"):
-            return True
-    except Exception:
-        pass
-    try:
-        if obj.isDerivedFrom("App::Part"):
-            return True
-    except Exception:
-        pass
-    return hasattr(obj, "Group")
-
-
-def parent_group(obj):
-    if obj is None:
-        return None
-    if hasattr(obj, "getParentGroup"):
-        try:
-            grp = obj.getParentGroup()
-            if grp is not None:
-                return grp
-        except Exception:
-            pass
-    for parent in (getattr(obj, "InList", []) or []):
-        if is_group(parent):
-            return parent
-    return None
-
-
-def group_path(obj):
-    parts = []
-    seen = set()
-    cur = obj
-    while True:
-        grp = parent_group(cur)
-        if grp is None:
-            break
-        gid = safe_text(getattr(grp, "Name", "")).strip()
-        if not gid or gid in seen:
-            break
-        seen.add(gid)
-        parts.append(safe_text(getattr(grp, "Label", "")) or gid)
-        cur = grp
-    parts.reverse()
-    return "/".join(parts)
-
-
-def format_row(obj):
-    parts = []
-    if INCLUDE_NAME:
-        parts.append(safe_text(getattr(obj, "Name", "")))
-    if INCLUDE_LABEL:
-        parts.append(safe_text(getattr(obj, "Label", "")))
-    if INCLUDE_TYPEID:
-        parts.append(safe_text(getattr(obj, "TypeId", "")))
-    if INCLUDE_GROUP_PATH:
-        parts.append(group_path(obj))
-    sep = "\t" if USE_TABS else " | "
-    return sep.join(parts).rstrip()
-
-
-def copy_to_clipboard(text_value):
-    if QApplication is None:
-        return False
-    try:
-        clipboard = QApplication.clipboard()
-        clipboard.setText(text_value)
-        return True
-    except Exception:
-        return False
+TOOL = "SELECCION"
 
 
 def main():
-    selection = list(Gui.Selection.getSelection() or [])
-    if not selection:
-        log_err("Seleccione uno o mas objetos primero.")
+    objects = list(Gui.Selection.getSelection() or [])
+    if not objects:
+        warning(TOOL, "No hay objetos seleccionados.")
         return
-
-    rows = []
-    for obj in selection:
-        row = format_row(obj)
-        if row:
-            rows.append(row)
-            log_info(f"Objeto: {safe_text(getattr(obj, 'Name', ''))}")
-
-    if not rows:
-        log_warn("La seleccion no produjo texto para copiar.")
-        return
-
-    text_value = "\n".join(rows)
-    if copy_to_clipboard(text_value):
-        log_info(f"Copiado al portapapeles. Objetos={len(rows)}")
-    else:
-        log_warn("No se pudo copiar al portapapeles. Se imprime en consola.")
-    App.Console.PrintMessage(text_value + "\n")
+    counts = Counter(text(getattr(obj, "TypeId", "")) or "<sin TypeId>" for obj in objects)
+    lines = ["Resumen de seleccion", "Cantidad: {}".format(len(objects)), "", "Conteo por tipo:"]
+    lines.extend("- {}: {}".format(key, counts[key]) for key in sorted(counts))
+    lines.append("\nObjetos:")
+    for index, obj in enumerate(objects, 1):
+        links = link_data(obj)
+        lines.append("{}. Name={} | Label={} | TypeId={}".format(
+            index, text(getattr(obj, "Name", "")), text(getattr(obj, "Label", "")),
+            text(getattr(obj, "TypeId", ""))))
+        for path in path_text(obj):
+            lines.append("   Ruta: " + path)
+        if links["is_link"]:
+            lines.append("   Link: {} [{}]".format(links["linked_label"] or "?", links["linked_name"] or "?"))
+    clipboard_set("\n".join(lines))
+    info(TOOL, "Resumen copiado. Objetos={}; tipos={}.".format(len(objects), len(counts)))
 
 
 main()

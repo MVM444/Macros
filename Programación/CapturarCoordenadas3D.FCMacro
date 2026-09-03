@@ -1,0 +1,70 @@
+# -*- coding: utf-8 -*-
+# MenuText: Capturar coordenadas 3D
+# ToolTip: Captura un solo clic 3D, copia coordenadas y retira siempre el callback.
+# Version: 1.0.0 | Date: 2026-08-12 00:00 CST
+"""Install a one-shot, non-modifying 3D coordinate callback."""
+
+import FreeCAD as App
+import FreeCADGui as Gui
+from pivy import coin
+
+from programacion_common import clipboard_set, document_metadata, info, warning
+
+TOOL = "COORDENADAS"
+STATE = "_programacion_coordinate_capture"
+
+
+class Capture:
+    def __init__(self):
+        self.view = Gui.ActiveDocument.ActiveView
+        self.callback = None
+        self.callback = self.view.addEventCallbackPivy(coin.SoEvent.getClassTypeId(), self.on_event)
+        info(TOOL, "Activo: clic izquierdo captura; Escape cancela.")
+
+    def stop(self, reason):
+        callback, self.callback = self.callback, None
+        if callback is not None:
+            try:
+                self.view.removeEventCallbackPivy(coin.SoEvent.getClassTypeId(), callback)
+            except Exception as exc:
+                warning(TOOL, "No se pudo retirar callback: {}".format(exc))
+        setattr(Gui.getMainWindow(), STATE, None)
+        info(TOOL, "Callback retirado ({0}).".format(reason))
+
+    def on_event(self, event):
+        try:
+            if coin.SoKeyboardEvent.isKeyPressEvent(event, coin.SoKeyboardEvent.ESCAPE):
+                self.stop("cancelado")
+                return
+            if not coin.SoMouseButtonEvent.isButtonPressEvent(event, coin.SoMouseButtonEvent.BUTTON1):
+                return
+            pos = event.getPosition()
+            point = self.view.getPoint(pos[0], pos[1])
+            meta = document_metadata()
+            value = "Coordenadas 3D (mm)\nX={:.6f}\nY={:.6f}\nZ={:.6f}\nDocumento={} ({})\nArchivo={}".format(
+                point[0], point[1], point[2], meta["label"] or "sin documento", meta["name"] or "-",
+                meta["file"] or "no guardado")
+            clipboard_set(value)
+            info(TOOL, "Copiado X={:.6f}, Y={:.6f}, Z={:.6f} mm.".format(point[0], point[1], point[2]))
+            self.stop("capturado")
+        except Exception as exc:
+            warning(TOOL, "Captura fallida: {}".format(exc))
+            self.stop("error")
+
+
+def main():
+    window = Gui.getMainWindow()
+    old = getattr(window, STATE, None)
+    if old is not None:
+        try:
+            old.stop("reemplazado")
+        except Exception:
+            setattr(window, STATE, None)
+    if App.ActiveDocument is None or Gui.ActiveDocument is None:
+        warning(TOOL, "No hay documento/vista activa.")
+        return
+    capture = Capture()
+    setattr(window, STATE, capture)
+
+
+main()

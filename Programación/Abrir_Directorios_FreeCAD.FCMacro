@@ -1,0 +1,102 @@
+# -*- coding: utf-8 -*-
+# MenuText: Abrir directorios recurrentes
+# ToolTip: Muestra destinos generales, proyectos, documento, reportes, configuracion y log.
+# Version: 1.0.0 | Date: 2026-08-12 00:00 CST
+"""Open a selected recurring directory without fixed personal paths."""
+
+import os
+import subprocess
+import sys
+
+import FreeCAD as App
+import FreeCADGui as Gui
+
+from programacion_common import info, qt_modules, warning
+
+TOOL = "DIRECTORIOS"
+
+
+def macro_roots():
+    values = []
+    try:
+        raw = App.ParamGet("User parameter:BaseApp/Preferences/Macro").GetString("MacroPath", "")
+    except Exception:
+        raw = ""
+    for value in raw.split(";" if os.name == "nt" else os.pathsep):
+        if value.strip():
+            values.append(os.path.abspath(value.strip()))
+    try:
+        values.append(os.path.abspath(App.getUserMacroDir()))
+    except Exception:
+        pass
+    values.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
+    return list(dict.fromkeys(value for value in values if value))
+
+
+def find_folder(name):
+    for root in macro_roots():
+        for rel in (name, os.path.join("Macros-de-Freecad", name)):
+            value = os.path.join(root, rel)
+            if os.path.isdir(value):
+                return value
+    return ""
+
+
+def log_file():
+    try:
+        value = App.getLogFileName()
+        if value:
+            return value
+    except Exception:
+        pass
+    appdata = os.environ.get("APPDATA", "")
+    return os.path.join(appdata, "FreeCAD", "FreeCAD.log") if appdata else ""
+
+
+def open_path(path):
+    if os.name == "nt":
+        os.startfile(path)  # type: ignore[attr-defined]
+    elif sys.platform == "darwin":
+        subprocess.Popen(["open", path])
+    else:
+        subprocess.Popen(["xdg-open", path])
+
+
+def main():
+    _core, _gui, widgets = qt_modules()
+    roots = macro_roots()
+    macro_root = roots[0] if roots else ""
+    current = App.ActiveDocument
+    current_file = getattr(current, "FileName", "") if current else ""
+    program = os.path.abspath(os.path.dirname(__file__))
+    report = os.path.join(program, "_reportes_arbol")
+    config = os.path.dirname(log_file()) if log_file() else ""
+    destinations = [
+        ("Macros de FreeCAD", macro_root), ("Programacion", program),
+        ("ElectricCR", find_folder("ElectricCR")), ("MEPWorkbenchCR", find_folder("MEPWorkbenchCR")),
+        ("FacilArquitecturaWB", find_folder("FacilArquitecturaWB")),
+        ("GameEngineExportWB", find_folder("GameEngineExportWB")),
+        ("Documento activo", os.path.dirname(current_file) if current_file else ""),
+        ("Reportes de arbol", report), ("Configuracion de FreeCAD", config),
+        ("Ubicacion de FreeCAD.log", os.path.dirname(log_file()) if log_file() else ""),
+        ("Seleccionar otra carpeta...", "<manual>"),
+    ]
+    labels = [label + ("" if path == "<manual>" or os.path.isdir(path) else " (no disponible)") for label, path in destinations]
+    label, ok = widgets.QInputDialog.getItem(Gui.getMainWindow(), "Abrir directorios recurrentes",
+                                              "Destino:", labels, 0, False)
+    if not ok:
+        return
+    index = labels.index(str(label))
+    path = destinations[index][1]
+    if path == "<manual>":
+        path = widgets.QFileDialog.getExistingDirectory(Gui.getMainWindow(), "Seleccionar carpeta", macro_root)
+    if destinations[index][0] == "Reportes de arbol" and path and not os.path.isdir(path):
+        os.makedirs(path, exist_ok=True)
+    if not path or not os.path.isdir(path):
+        warning(TOOL, "Destino inexistente: {}".format(path or destinations[index][0]))
+        return
+    open_path(path)
+    info(TOOL, "Directorio abierto: {}".format(path))
+
+
+main()

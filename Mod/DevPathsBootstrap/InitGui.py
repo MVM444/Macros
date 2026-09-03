@@ -65,3 +65,18 @@ if Gui is not None and os.path.isdir(_ICON_PATH):
         Gui.addIconPath(_ICON_PATH.replace(os.sep, "/"))
     except Exception:
         pass
+
+# Load the neutral global Programacion toolbar independently of all workbenches.
+_PROGRAMACION_DIR = os.path.join(_MACRO_ROOT, "Programación")
+_PROGRAMACION_LOADER = os.path.join(_PROGRAMACION_DIR, "programacion_toolbar.py")
+if Gui is not None and os.path.isfile(_PROGRAMACION_LOADER):
+    try:
+        if _PROGRAMACION_DIR not in sys.path:
+            sys.path.insert(0, _PROGRAMACION_DIR)
+        import programacion_toolbar
+        programacion_toolbar.install(_PROGRAMACION_DIR)
+    except Exception as _programacion_error:
+        if App is not None:
+            App.Console.PrintError(
+                "[PROGRAMACION][AUTOLOAD][ERROR] {}\n".format(_programacion_error)
+            )

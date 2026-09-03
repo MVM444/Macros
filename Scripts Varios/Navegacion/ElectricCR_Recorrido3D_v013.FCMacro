@@ -1,0 +1,375 @@
+# -*- coding: utf-8 -*-
+# ElectricCR - Recorrido3D diagnostic keyboard version
+# Version: 0.1.3
+# FreeCAD objetivo: 1.1.3 Windows
+
+import time
+
+import FreeCAD as App
+import FreeCADGui as Gui
+from PySide import QtCore, QtGui, QtWidgets
+
+
+WALK_SPEED_MM_S = 1500.0
+FAST_MULTIPLIER = 3.0
+TIMER_INTERVAL_MS = 33
+APP_SINGLETON_NAME = "_electriccr_recorrido3d_controller"
+
+
+def log(message):
+    App.Console.PrintMessage(
+        "[ElectricCR][Recorrido3D] " + str(message) + "\n"
+    )
+
+
+def warn(message):
+    App.Console.PrintWarning(
+        "[ElectricCR][Recorrido3D] " + str(message) + "\n"
+    )
+
+
+def qt_event(name):
+    try:
+        return getattr(QtCore.QEvent.Type, name)
+    except Exception:
+        return getattr(QtCore.QEvent, name)
+
+
+def qt_key(name):
+    try:
+        return getattr(QtCore.Qt.Key, name)
+    except Exception:
+        return getattr(QtCore.Qt, name)
+
+
+def qt_context(name):
+    try:
+        return getattr(QtCore.Qt.ShortcutContext, name)
+    except Exception:
+        return getattr(QtCore.Qt, name)
+
+
+EV_KEY_PRESS = qt_event("KeyPress")
+EV_KEY_RELEASE = qt_event("KeyRelease")
+EV_SHORTCUT_OVERRIDE = qt_event("ShortcutOverride")
+EV_HIDE = qt_event("Hide")
+EV_CLOSE = qt_event("Close")
+
+KEY_W = qt_key("Key_W")
+KEY_A = qt_key("Key_A")
+KEY_S = qt_key("Key_S")
+KEY_D = qt_key("Key_D")
+KEY_SHIFT = qt_key("Key_Shift")
+KEY_ESCAPE = qt_key("Key_Escape")
+
+KEY_NAMES = {
+    KEY_W: "W",
+    KEY_A: "A",
+    KEY_S: "S",
+    KEY_D: "D",
+    KEY_SHIFT: "Shift",
+}
+
+
+def clamp(value, minimum, maximum):
+    return max(minimum, min(maximum, value))
+
+
+def camera_position(camera):
+    value = camera.position.getValue().getValue()
+    return App.Vector(float(value[0]), float(value[1]), float(value[2]))
+
+
+def widget_description(widget):
+    if widget is None:
+        return "None"
+    parent = widget.parentWidget()
+    parent_class = str(parent.metaObject().className()) if parent else "None"
+    parent_name = str(parent.objectName()) if parent else ""
+    return (
+        "class={} objectName={} parentClass={} parentObjectName={} "
+        "size={}x{} visible={} focus={}"
+    ).format(
+        str(widget.metaObject().className()),
+        str(widget.objectName()),
+        parent_class,
+        parent_name,
+        int(widget.width()),
+        int(widget.height()),
+        bool(widget.isVisible()),
+        bool(widget.hasFocus()),
+    )
+
+
+def find_active_view_widgets():
+    main_window = Gui.getMainWindow()
+    mdi = main_window.findChild(QtWidgets.QMdiArea)
+    if mdi is None:
+        raise RuntimeError("No se encontro QMdiArea.")
+
+    sub_window = mdi.activeSubWindow()
+    search_roots = [sub_window] if sub_window is not None else []
+    if not search_roots:
+        search_roots = [
+            item for item in mdi.subWindowList() if item.isVisible()
+        ]
+
+    view_candidates = []
+    for root in search_roots:
+        for widget in root.findChildren(QtWidgets.QWidget):
+            if str(widget.metaObject().className()) == "Gui::View3DInventorViewer":
+                if widget.isVisible():
+                    view_candidates.append(widget)
+
+    focused = [item for item in view_candidates if item.hasFocus()]
+    if len(focused) == 1:
+        view_widget = focused[0]
+    elif len(view_candidates) == 1:
+        view_widget = view_candidates[0]
+    else:
+        raise RuntimeError("No se encontro Gui::View3DInventorViewer activo.")
+
+    gl_widget = None
+    for widget in view_widget.findChildren(QtWidgets.QWidget):
+        if str(widget.metaObject().className()) == "QOpenGLWidget":
+            if widget.isVisible() and widget.parentWidget() is view_widget:
+                gl_widget = widget
+                break
+
+    if gl_widget is None:
+        raise RuntimeError("No se encontro el QOpenGLWidget de la vista activa.")
+
+    return view_widget, gl_widget
+
+
+class Recorrido3DController(QtCore.QObject):
+
+    def __init__(self):
+        super().__init__()
+        self.running = False
+        self.stopping = False
+        self.keys = set()
+        self.main_window = None
+        self.view = None
+        self.camera = None
+        self.view_widget = None
+        self.gl_widget = None
+        self.escape_shortcut = None
+        self.app_filter_installed = False
+        self.gl_filter_installed = False
+        self.old_camera_type = None
+        self.last_time = None
+
+        self.timer = QtCore.QTimer(self)
+        self.timer.setInterval(TIMER_INTERVAL_MS)
+        self.timer.timeout.connect(self._tick)
+
+    def start(self):
+        log("Inicio")
+        try:
+            if App.ActiveDocument is None or Gui.activeDocument() is None:
+                raise RuntimeError("No hay un documento activo.")
+
+            self.main_window = Gui.getMainWindow()
+            self.view = Gui.activeDocument().activeView()
+            if self.view is None:
+                raise RuntimeError("No hay una vista 3D activa.")
+            self.camera = self.view.getCameraNode()
+            self.view_widget, self.gl_widget = find_active_view_widgets()
+
+            log("View widget = " + widget_description(self.view_widget))
+            log("GL widget = " + widget_description(self.gl_widget))
+
+            self.old_camera_type = self.view.getCameraType()
+            self.view.setCameraType("Perspective")
+            self.camera.position.setValue(0.0, 0.0, 0.0)
+            orientation = App.Rotation(App.Vector(1.0, 0.0, 0.0), 90.0)
+            self.camera.orientation.setValue(*orientation.Q)
+            log("Camara inicial = (0, 0, 0)")
+
+            self._install_filters()
+            self._install_escape_shortcut()
+            self.running = True
+            self.last_time = time.perf_counter()
+            self.timer.start()
+        except Exception:
+            self.stop("error de inicio")
+            raise
+
+    def stop(self, reason="usuario"):
+        if self.stopping:
+            return
+        self.stopping = True
+        log("stop begin")
+        try:
+            try:
+                self.timer.stop()
+                log("timer stopped")
+            except Exception:
+                pass
+            self.keys.clear()
+            try:
+                self._remove_filters()
+                log("filters removed")
+            except Exception as exc:
+                warn("Error removiendo filtros: " + str(exc))
+            try:
+                self._remove_escape_shortcut()
+                log("shortcut removed")
+            except Exception as exc:
+                warn("Error removiendo shortcut: " + str(exc))
+            try:
+                if self.view is not None and self.old_camera_type is not None:
+                    self.view.setCameraType(self.old_camera_type)
+            except Exception:
+                pass
+        finally:
+            self.running = False
+            app = QtWidgets.QApplication.instance()
+            if app is not None and getattr(app, APP_SINGLETON_NAME, None) is self:
+                setattr(app, APP_SINGLETON_NAME, None)
+            self.stopping = False
+            log("stop complete: " + str(reason))
+
+    def _install_filters(self):
+        app = QtWidgets.QApplication.instance()
+        if app is None:
+            raise RuntimeError("No existe QApplication.")
+        app.installEventFilter(self)
+        self.app_filter_installed = True
+        self.gl_widget.installEventFilter(self)
+        self.gl_filter_installed = True
+
+    def _remove_filters(self):
+        app = QtWidgets.QApplication.instance()
+        if self.app_filter_installed and app is not None:
+            app.removeEventFilter(self)
+        self.app_filter_installed = False
+        if self.gl_filter_installed and self.gl_widget is not None:
+            self.gl_widget.removeEventFilter(self)
+        self.gl_filter_installed = False
+
+    def _install_escape_shortcut(self):
+        self.escape_shortcut = QtGui.QShortcut(
+            QtGui.QKeySequence("Esc"), self.main_window
+        )
+        self.escape_shortcut.setContext(qt_context("ApplicationShortcut"))
+        self.escape_shortcut.activated.connect(self._escape)
+
+    def _remove_escape_shortcut(self):
+        if self.escape_shortcut is None:
+            return
+        shortcut = self.escape_shortcut
+        self.escape_shortcut = None
+        shortcut.setEnabled(False)
+        try:
+            shortcut.activated.disconnect(self._escape)
+        except Exception:
+            pass
+        shortcut.deleteLater()
+
+    def _escape(self):
+        log("ESC detectado")
+        self.stop("ESC")
+
+    def eventFilter(self, watched, event):
+        try:
+            event_type = event.type()
+            if event_type == EV_SHORTCUT_OVERRIDE:
+                key = event.key()
+                if key in KEY_NAMES:
+                    if not event.isAutoRepeat():
+                        log("ShortcutOverride " + KEY_NAMES[key])
+                    event.accept()
+                    return True
+
+            if event_type == EV_KEY_PRESS:
+                key = event.key()
+                if key == KEY_ESCAPE:
+                    if not event.isAutoRepeat():
+                        self._escape()
+                    return True
+                if key in KEY_NAMES:
+                    if not event.isAutoRepeat():
+                        log("KeyPress " + KEY_NAMES[key])
+                    self.keys.add(key)
+                    return True
+
+            if event_type == EV_KEY_RELEASE:
+                key = event.key()
+                if key in KEY_NAMES:
+                    if not event.isAutoRepeat():
+                        log("KeyRelease " + KEY_NAMES[key])
+                    self.keys.discard(key)
+                    return True
+
+            if watched is self.gl_widget and event_type in (EV_HIDE, EV_CLOSE):
+                QtCore.QTimer.singleShot(0, lambda: self.stop("vista cerrada"))
+        except Exception as exc:
+            warn("Error en eventFilter: " + str(exc))
+            self.stop("error en eventFilter")
+        return False
+
+    def _tick(self):
+        if not self.running:
+            return
+        try:
+            now = time.perf_counter()
+            dt = clamp(now - self.last_time, 0.0, 0.1)
+            self.last_time = now
+
+            movement_keys = self.keys.intersection(
+                (KEY_W, KEY_A, KEY_S, KEY_D)
+            )
+            if not movement_keys:
+                return
+
+            move = App.Vector(0.0, 0.0, 0.0)
+            if KEY_W in self.keys:
+                move.y += 1.0
+            if KEY_S in self.keys:
+                move.y -= 1.0
+            if KEY_D in self.keys:
+                move.x += 1.0
+            if KEY_A in self.keys:
+                move.x -= 1.0
+            if move.Length < 1.0e-9:
+                return
+
+            move.normalize()
+            speed = WALK_SPEED_MM_S
+            if KEY_SHIFT in self.keys:
+                speed *= FAST_MULTIPLIER
+            position = camera_position(self.camera)
+            position = position + move * speed * dt
+            position.z = 0.0
+            self.camera.position.setValue(position.x, position.y, position.z)
+        except Exception as exc:
+            warn("Error en timer: " + str(exc))
+            self.stop("error en timer")
+
+
+def start_recorrido3d():
+    app = QtWidgets.QApplication.instance()
+    if app is None:
+        raise RuntimeError("No existe QApplication.")
+    previous = getattr(app, APP_SINGLETON_NAME, None)
+    if previous is not None:
+        previous.stop("reinicio")
+    controller = Recorrido3DController()
+    setattr(app, APP_SINGLETON_NAME, controller)
+    try:
+        controller.start()
+    except Exception:
+        controller.stop("fallo de inicio")
+        raise
+    return controller
+
+
+try:
+    RECORRIDO3D = start_recorrido3d()
+except Exception as exc:
+    App.Console.PrintError(
+        "[ElectricCR][Recorrido3D] No se pudo iniciar: " + str(exc) + "\n"
+    )
+    raise

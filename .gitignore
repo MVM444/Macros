@@ -21,11 +21,17 @@ __pypackages__/
 
 # Local tools and caches
 .tools/
+.codex_tmp/
+.freecad-test/
+.tmp.driveupload/
+tmp/
+Macros-de-Freecad.worktrees/
 .env
 .macro_*.json
 auditoria_editorial_work/
 pyflow.lock
 Reportes/
+Programación/_reportes_arbol/
 Respaldos/Caches_temporales/
 Respaldos/Archivos_vacios_o_obsoletos/
 Respaldos/Proyectos_prueba/

@@ -35,3 +35,25 @@ Revisar si conviene convertir algunas macros movidas en comandos nativos de `Fac
 ## Instruccion para Codex
 
 No iniciar la segunda etapa por borrado masivo. Leer `AGENTS.md`, `TAREA_ACTUAL.md`, `REVISION_RAIZ_2026-08-08.md` y `RESULTADO_LIMPIEZA_2026-08-08.md`, reconstruir dependencias y proponer movimientos conservadores.
+
+## Complemento externo FreeCAD-HVAC (reverificado 2026-09-02)
+
+Estado: instalado y validado en FreeCAD 1.1.3.
+
+- Instalacion Git independiente en
+  `C:\Users\marco\AppData\Roaming\FreeCAD\v1-1\Mod\FreeCAD-HVAC`.
+- Repositorio oficial: `https://github.com/Francisco-Rosa/FreeCAD-HVAC.git`.
+- Rama `main`, commit `ae8e28464ef4616b7570d22b0464960113086ce5`.
+- Arbol fuente limpio y sin modificaciones locales.
+- Workbench, menu, barra y comandos cargados correctamente.
+- Smoke test aprobado: red, ruta Draft de 2000 mm, un segmento y dos terminales.
+- Documento temporal cerrado sin guardar.
+- Se mantiene totalmente separado de los Workbenches y macros propios.
+- La reverificacion del 2026-09-02 confirmo que el clon sigue limpio y que el
+  `main` remoto conserva el mismo commit; no fue necesario reclonar ni actualizar.
+- Nuevo smoke GUI aprobado: 16 comandos, menu/barra de 13 acciones, ruta Draft
+  de 2000 mm, un segmento circular y dos terminales.
+- No hubo errores de HVAC. Persisten avisos ajenos por el enlace roto de
+  FacilArquitecturaWB y, en la configuracion aislada de prueba, por MacroPath.
+
+Detalle y procedimiento de actualizacion: `RESULTADO_CODEX.md`.

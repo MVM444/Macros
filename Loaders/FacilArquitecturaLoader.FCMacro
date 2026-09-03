@@ -3,7 +3,7 @@
 # FacilArquitecturaLoader Macro
 # Description: Reload and activate FacilArquitecturaWB from the Macros-de-Freecad repo.
 # Notes: Uses hot-reload flow for development in FreeCAD 1.1.1.
-# Version: 2026-08-09.2
+# Version: 2026-08-12.1
 
 import importlib
 import os
@@ -30,6 +30,7 @@ COMMAND_CANDIDATES = (
     "FA_CreateDoorsFromSketch",
     "FA_CreateWindowsBIM",
     "FA_CreateWindowsFromSketch",
+    "FA_InsertDoubleDoorBIM",
     "FA_CloseWallSketch",
     "FA_CollectRoomLabels",
     "FA_CreateSampleGeometry",
@@ -50,6 +51,14 @@ MACRO_COMMAND_TOOLTIP = "Carga y recarga el workbench Facil Arquitectura"
 MACRO_COMMAND_ICON = "FacilArquitecturaLoader.svg"
 MACRO_TOOLBAR_NAME = "Macros"
 TOOLBAR_CONTROLLER_ATTR = "_fa_loader_toolbar_persistence_controller"
+WORKBENCH_TOOLBAR_NAMES = (
+    "Facil Arquitectura",
+    "FA Proyecto BIM",
+    "FA Estructura BIM",
+    "FA Aberturas BIM",
+    "FA Recintos y cielos",
+    "FA Plataforma",
+)
 
 
 def log_info(message):
@@ -79,8 +88,9 @@ def ensure_repo_on_path(repo_root):
 
 def candidate_repo_roots():
     here = os.path.dirname(__file__)
+    macro_root = os.path.dirname(here) if os.path.basename(here).lower() == "loaders" else here
     roots = []
-    for root in (os.path.join(here, "Macros-de-Freecad"), here):
+    for root in (os.path.join(macro_root, "Macros-de-Freecad"), macro_root):
         root = os.path.normpath(os.path.abspath(root))
         if os.path.isdir(root) and root not in roots:
             roots.append(root)
@@ -89,6 +99,11 @@ def candidate_repo_roots():
 
 def macro_dir():
     return os.path.normpath(os.path.abspath(os.path.dirname(__file__)))
+
+
+def macro_script_reference():
+    here = macro_dir()
+    return "Loaders/" + MACRO_COMMAND_SCRIPT if os.path.basename(here).lower() == "loaders" else MACRO_COMMAND_SCRIPT
 
 
 def icon_path():
@@ -126,13 +141,13 @@ def _find_or_create_macro_command():
             script = command_group.GetString("Script", "")
         except Exception:
             script = ""
-        if os.path.normcase(script) == os.path.normcase(MACRO_COMMAND_SCRIPT):
+        if os.path.normcase(os.path.basename(script)) == os.path.normcase(MACRO_COMMAND_SCRIPT):
             existing_name = str(command_name)
             break
 
     command_name = existing_name or _next_std_macro_name(macros_group)
     command_group = macros_group.GetGroup(command_name)
-    command_group.SetString("Script", MACRO_COMMAND_SCRIPT)
+    command_group.SetString("Script", macro_script_reference())
     command_group.SetString("Menu", MACRO_COMMAND_MENU)
     command_group.SetString("Tooltip", MACRO_COMMAND_TOOLTIP)
     command_group.SetString("WhatsThis", "")
@@ -511,21 +526,22 @@ def remove_runtime_workbench_ui():
         return
 
     removed_toolbars = 0
-    for toolbar in _find_qt_toolbars(main_window, "Facil Arquitectura"):
-        try:
-            toolbar.clear()
-        except Exception:
-            pass
-        try:
-            main_window.removeToolBar(toolbar)
-        except Exception:
-            pass
-        try:
-            toolbar.setParent(None)
-            toolbar.deleteLater()
-            removed_toolbars += 1
-        except Exception:
-            pass
+    for toolbar_name in WORKBENCH_TOOLBAR_NAMES:
+        for toolbar in _find_qt_toolbars(main_window, toolbar_name):
+            try:
+                toolbar.clear()
+            except Exception:
+                pass
+            try:
+                main_window.removeToolBar(toolbar)
+            except Exception:
+                pass
+            try:
+                toolbar.setParent(None)
+                toolbar.deleteLater()
+                removed_toolbars += 1
+            except Exception:
+                pass
 
     removed_menus = 0
     try:
@@ -579,7 +595,7 @@ def report_current_workbench_ui(module):
     command_names = list(getattr(module, "REGISTERED_COMMANDS", []) or [])
     command_set = set(str(name) for name in command_names)
     close_commands = [
-        name for name in command_names if str(name).startswith("FA_CloseWallSketch_")
+        name for name in command_names if str(name).startswith("FA_CloseWallSketch")
     ]
     if close_commands:
         log_info("Current close-wall command: " + close_commands[-1])
@@ -594,30 +610,31 @@ def report_current_workbench_ui(module):
     stale_actions = []
     current_actions = []
     if main_window is not None:
-        for toolbar in _find_qt_toolbars(main_window, "Facil Arquitectura"):
-            try:
-                actions = list(toolbar.actions())
-            except Exception:
-                actions = []
-            for action in actions:
+        for toolbar_name in WORKBENCH_TOOLBAR_NAMES:
+            for toolbar in _find_qt_toolbars(main_window, toolbar_name):
                 try:
-                    action_name = str(action.objectName() or "")
+                    actions = list(toolbar.actions())
                 except Exception:
-                    action_name = ""
-                if not action_name.startswith("FA_"):
-                    continue
-                if action_name in command_set:
-                    current_actions.append(action_name)
-                    continue
-                stale_actions.append(action_name)
-                try:
-                    toolbar.removeAction(action)
-                except Exception:
-                    pass
+                    actions = []
+                for action in actions:
+                    try:
+                        action_name = str(action.objectName() or "")
+                    except Exception:
+                        action_name = ""
+                    if not action_name.startswith("FA_"):
+                        continue
+                    if action_name in command_set:
+                        current_actions.append(action_name)
+                        continue
+                    stale_actions.append(action_name)
+                    try:
+                        toolbar.removeAction(action)
+                    except Exception:
+                        pass
     if stale_actions:
         log_info("Removed stale workbench actions: " + ", ".join(stale_actions))
     current_close_actions = [
-        name for name in current_actions if name.startswith("FA_CloseWallSketch_")
+        name for name in current_actions if name.startswith("FA_CloseWallSketch")
     ]
     if current_close_actions:
         log_info("Toolbar close-wall action: " + current_close_actions[-1])

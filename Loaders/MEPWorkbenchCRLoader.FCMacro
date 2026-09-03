@@ -30,9 +30,11 @@ def _macro_path_entries():
                 if full not in entries:
                     entries.append(full)
 
-    local = os.path.dirname(__file__)
-    if local not in entries:
-        entries.insert(0, local)
+    local = os.path.normpath(os.path.abspath(os.path.dirname(__file__)))
+    macro_root = os.path.dirname(local) if os.path.basename(local).lower() == "loaders" else local
+    for candidate in (macro_root, local):
+        if candidate not in entries:
+            entries.insert(0, candidate)
 
     try:
         user_dir = App.getUserAppDataDir()
@@ -105,7 +107,8 @@ __icon__ = __Icon__
 
 def install_loader_toolbar():
     here = os.path.normpath(os.path.abspath(os.path.dirname(__file__)))
-    helper_roots = (os.path.join(here, "Macros-de-Freecad"), os.path.dirname(here), here)
+    macro_root = os.path.dirname(here) if os.path.basename(here).lower() == "loaders" else here
+    helper_roots = (os.path.join(macro_root, "Macros-de-Freecad"), macro_root, here)
     for root in helper_roots:
         if os.path.exists(os.path.join(root, "loader_toolbar.py")) and root not in sys.path:
             sys.path.insert(0, root)

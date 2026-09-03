@@ -13,11 +13,12 @@ La raiz de `Macros` debe funcionar como punto de entrada de FreeCAD y no como bo
 
 En la raiz pueden permanecer:
 
-- loaders de workbench;
 - macros globales para administrar otras macros;
 - iconos usados directamente por esas macros de raiz;
 - archivos minimos de control del repositorio, incluyendo este `AGENTS.md`;
-- `AbrirDirectorioElectricCR.FCMacro`, por decision expresa del usuario.
+
+Los loaders de Workbench y sus iconos viven en `Loaders/`. Los accesos de
+directorios reemplazados viven en `Respaldos/Programacion_reemplazadas/`.
 
 Las macros especializadas, pruebas, ejemplos, modelos de prueba, capturas, respaldos, importaciones puntuales y herramientas auxiliares deben vivir en subdirectorios.
 
@@ -30,7 +31,8 @@ Antes de mover o eliminar un archivo:
 3. No eliminar una macro reutilizable solo por haber sido creada durante una prueba.
 4. No concluir que un archivo es obsoleto solamente por su nombre o antiguedad.
 5. Preferir movimientos conservadores y documentados.
-6. Mantener `AbrirDirectorioElectricCR.FCMacro` en la raiz.
+6. Mantener `RegistrarLoadersGlobales.FCMacro`, `MacrosPersonalizadas.FCMacro` y `VentanadeMacros.FCMacro` en la raiz.
+7. `VentanadeMacros.FCMacro` es un punto de entrada global confirmado; no clasificarla nuevamente como interfaz legacy ni moverla a `Respaldos`.
 
 ## Puriscal
 

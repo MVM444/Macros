@@ -10,9 +10,32 @@ import importlib
 import os
 import sys
 
+import FreeCAD as App
+
 
 def _candidate_paths():
-    here = os.path.abspath(os.path.dirname(__file__))
+    source = globals().get("__file__", "")
+    if not source:
+        module = sys.modules.get(__name__)
+        source = getattr(module, "__file__", "") if module is not None else ""
+    if source:
+        here = os.path.abspath(os.path.dirname(source))
+    else:
+        here = ""
+        try:
+            macro_path = App.ParamGet(
+                "User parameter:BaseApp/Preferences/Macro"
+            ).GetString("MacroPath", "")
+        except Exception:
+            macro_path = ""
+        separator = ";" if os.name == "nt" else os.pathsep
+        for base in [part.strip() for part in macro_path.split(separator) if part.strip()]:
+            candidate = os.path.join(os.path.abspath(base), "Mod", "DevPathsBootstrap")
+            if os.path.isdir(candidate):
+                here = candidate
+                break
+        if not here:
+            return []
     mod_root = os.path.abspath(os.path.dirname(here))
     macro_root = os.path.abspath(os.path.dirname(mod_root))
     repo_root = macro_root

@@ -9,26 +9,20 @@ Este directorio se organiza para que la raiz de `Macros` funcione como punto de 
 
 En la raiz de `Macros` deben quedar solo:
 
-- loaders de workbench;
 - macros generales que ayudan a administrar otras macros;
 - iconos SVG usados directamente por esas macros de raiz;
 - archivos minimos de configuracion/documentacion propios de la raiz;
-- `AbrirDirectorioElectricCR.FCMacro`, por decision expresa del usuario del 2026-08-08.
+
+Los loaders y sus iconos se agrupan en `Loaders/`. Los accesos de directorio
+reemplazados se conservan bajo `Respaldos/Programacion_reemplazadas/`.
 
 Las macros especializadas, pruebas, ejemplos, importaciones puntuales, modelos de prueba, capturas y utilidades deben vivir en subdirectorios.
 
 ## Archivos que deben quedarse en la raiz
 
-- `ElectricCRLoader.FCMacro`: carga y recarga el workbench ElectricCR.
-- `FacilArquitecturaLoader.FCMacro`: carga y recarga Facil Arquitectura.
-- `MEPWorkbenchCRLoader.FCMacro`: carga y recarga el workbench MEPWorkbenchCR.
-- `GameEngineExportLoader.FCMacro`: carga y recarga el workbench GameEngineExportWB.
 - `RegistrarLoadersGlobales.FCMacro`: registra los loaders activos en la barra global de macros.
-- `Alias.FCMacro`: herramienta general para asignar alias en hojas Spreadsheet.
-- `AbrirDirectorioDocumento.FCMacro`: abre la carpeta donde esta guardado el documento activo.
-- `AbrirDirectorioElectricCR.FCMacro`: acceso directo al directorio ElectricCR; se mantiene en raiz por decision del usuario.
-- `VentanadeMacros.FCMacro`: ventana general para buscar y ejecutar macros.
 - `MacrosPersonalizadas.FCMacro`: crea menus de macros personalizadas y recientes.
+- `VentanadeMacros.FCMacro`: buscador global de macros; su permanencia en raiz fue confirmada nuevamente por Marco el 2026-08-12.
 
 Los SVG de esas macros pueden quedar junto a los `.FCMacro` porque FreeCAD suele resolver mejor los iconos de barra cuando estan al lado de la macro.
 
@@ -41,6 +35,24 @@ Los SVG de esas macros pueden quedar junto a los `.FCMacro` porque FreeCAD suele
 - `Respaldos`: archivos archivados, copias antiguas, recursos duplicados y movimientos conservadores.
 - `Reportes`: salidas generadas por herramientas de diagnostico.
 - `Documentacion_organizacion`: documentacion de la estructura y de las limpiezas realizadas.
+- `Loaders`: cargadores globales de ElectricCR, FacilArquitecturaWB, MEPWorkbenchCR y GameEngineExportWB, con sus SVG.
+- `Scripts Varios/Spreadsheet`: herramientas funcionales de Spreadsheet, incluyendo `Alias.FCMacro`.
+- `Respaldos/Programacion_reemplazadas`: accesos directos sustituidos por la herramienta general de directorios.
+- `Programación`: herramientas generales read-only de diagnostico y desarrollo, con barra global propia y subcarpetas para reportes/auxiliares.
+
+## Barra global Programacion
+
+Desde 2026-08-12, `Mod/DevPathsBootstrap/InitGui.py` carga una barra global
+`Programacion`, independiente de ElectricCR y de los demas Workbenches. Su
+manifiesto registra solo las siete macros activas ubicadas directamente en
+`Programación`; no recorre subcarpetas ni convierte duplicados historicos en
+botones.
+
+### Asistente Ollama
+
+La macro historica `Ollama_Asistente_Local.FCMacro` y su icono viven en la
+carpeta real `Programacion` con tilde. Aparecen mediante `Macros Personalizadas`
+y como boton propio de la barra global `Programacion`.
 
 ## Workbenches separados
 

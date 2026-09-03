@@ -1,0 +1,1705 @@
+# -*- coding: utf-8 -*-
+"""
+===============================================================================
+Macro: Ollama_Asistente_Local.FCMacro
+Descripcion: Chat local para Ollama en FreeCAD con historial por documento.
+FechaHora: [EDITAR_AQUI_YYYY-MM-DD HH:MM:SS]
+Advertencia: Primera version base para evolucionar despues a un Workbench.
+===============================================================================
+"""
+
+import json
+import os
+import time
+import html
+import traceback
+
+import FreeCAD as App
+import FreeCADGui as Gui
+
+try:
+    from PySide2 import QtCore, QtWidgets, QtGui
+except Exception:
+    from PySide import QtCore, QtGui
+    QtWidgets = QtGui
+
+try:
+    import requests
+    REQUESTS_DISPONIBLE = True
+except Exception:
+    requests = None
+    REQUESTS_DISPONIBLE = False
+
+
+# ============================================================================
+# Configuracion editable
+# ============================================================================
+NOMBRE_MACRO = "Ollama Asistente Local"
+MODELO_OLLAMA = "deepseek-r1:8b"
+URL_OLLAMA_GENERATE = "http://127.0.0.1:11434/api/generate"
+URL_OLLAMA_TAGS = "http://127.0.0.1:11434/api/tags"
+PROVEEDOR_OLLAMA = "Ollama local"
+PROVEEDOR_NUBE = "Nube (OpenAI compatible)"
+PROVEEDOR_DEFAULT = PROVEEDOR_OLLAMA
+MODELO_NUBE_DEFAULT = "deepseek-chat"
+NUBE_API_BASE_DEFAULT = "https://api.deepseek.com"
+NUBE_RUTA_MODELOS = "/v1/models"
+NUBE_RUTA_CHAT = "/v1/chat/completions"
+NUBE_API_KEY_ENV = "DEEPSEEK_API_KEY"
+NUBE_API_KEY_ENV_ALT = "OPENAI_API_KEY"
+TIMEOUT_CONEXION_SEGUNDOS = 10
+TIMEOUT_LECTURA_SEGUNDOS = 600
+TIMEOUT_TAGS_SEGUNDOS = 8
+TITULO_VENTANA = "Ollama Chat Local - FreeCAD"
+MAX_MENSAJES_CONTEXTO = 12
+MAX_LINEAS_LOG_DEFAULT = 140
+NOMBRE_CARPETA_HISTORIAL = "ollama_chat_historial"
+NOMBRE_OBJETO_PANEL = "ollama_asistente_local_panel"
+NOMBRE_ICONO_LLAMA = "ollama_llama_icon.svg"
+
+
+# Variable global para evitar abrir multiples ventanas sin control.
+VENTANA_OLLAMA = None
+
+try:
+    SIGNAL = QtCore.Signal
+except Exception:
+    SIGNAL = QtCore.pyqtSignal
+
+
+# ============================================================================
+# Utilidades de consola
+# ============================================================================
+def log_info(mensaje):
+    App.Console.PrintMessage("[OLLAMA][INFO] {}\n".format(mensaje))
+
+
+def log_warn(mensaje):
+    App.Console.PrintWarning("[OLLAMA][WARN] {}\n".format(mensaje))
+
+
+def log_error(mensaje):
+    App.Console.PrintError("[OLLAMA][ERROR] {}\n".format(mensaje))
+
+
+def obtener_ruta_icono_llama():
+    try:
+        base_macro = os.path.dirname(os.path.abspath(__file__))
+    except Exception:
+        base_macro = obtener_directorio_base_fallback()
+    return os.path.join(base_macro, NOMBRE_ICONO_LLAMA)
+
+
+def crear_icono_llama():
+    ruta_icono = obtener_ruta_icono_llama()
+    if os.path.isfile(ruta_icono):
+        return QtGui.QIcon(ruta_icono)
+    log_warn("No se encontro icono de llama en: {}".format(ruta_icono))
+    return QtGui.QIcon()
+
+
+# ============================================================================
+# Utilidades de documento y rutas
+# ============================================================================
+def obtener_documento_activo():
+    try:
+        return App.ActiveDocument
+    except Exception:
+        return None
+
+
+def obtener_nombre_documento_activo():
+    documento = obtener_documento_activo()
+    if documento is None:
+        return ""
+    try:
+        return documento.Name
+    except Exception:
+        return ""
+
+
+def obtener_ruta_documento_activo():
+    documento = obtener_documento_activo()
+    if documento is None:
+        return ""
+    try:
+        return getattr(documento, "FileName", "") or ""
+    except Exception:
+        return ""
+
+
+def obtener_seleccion_actual():
+    try:
+        return Gui.Selection.getSelection()
+    except Exception:
+        return []
+
+
+def limpiar_nombre_archivo(texto):
+    permitido = "-_.() abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    limpio = []
+    for caracter in str(texto or ""):
+        limpio.append(caracter if caracter in permitido else "_")
+    resultado = "".join(limpio).strip()
+    return resultado or "sin_nombre"
+
+
+def obtener_directorio_base_fallback():
+    try:
+        base = App.getUserMacroDir()
+        if base and os.path.isdir(base):
+            return base
+    except Exception:
+        pass
+
+    try:
+        return os.path.dirname(os.path.abspath(__file__))
+    except Exception:
+        return os.getcwd()
+
+
+def obtener_ruta_historial_documento():
+    """
+    Si el documento tiene ruta en disco, el historial se guarda junto al archivo.
+    Si no tiene ruta, se usa una carpeta fallback dentro del macro dir.
+    """
+    ruta_doc = obtener_ruta_documento_activo()
+    if ruta_doc:
+        base, _ = os.path.splitext(ruta_doc)
+        return base + ".ollama_chat.json"
+
+    carpeta = os.path.join(obtener_directorio_base_fallback(), NOMBRE_CARPETA_HISTORIAL)
+    nombre_doc = limpiar_nombre_archivo(obtener_nombre_documento_activo() or "sin_documento")
+    return os.path.join(carpeta, "{}.ollama_chat.json".format(nombre_doc))
+
+
+def asegurar_directorio_para_archivo(ruta_archivo):
+    directorio = os.path.dirname(ruta_archivo)
+    if directorio and not os.path.isdir(directorio):
+        os.makedirs(directorio)
+
+
+# ============================================================================
+# Utilidades de historial
+# ============================================================================
+def crear_mensaje(role, content):
+    return {
+        "role": role,
+        "content": str(content or ""),
+        "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+    }
+
+
+def cargar_historial(ruta_archivo):
+    if not ruta_archivo or not os.path.isfile(ruta_archivo):
+        return []
+
+    try:
+        with open(ruta_archivo, "r", encoding="utf-8") as archivo:
+            datos = json.load(archivo)
+    except Exception as exc:
+        log_warn("No se pudo cargar historial: {}".format(exc))
+        return []
+
+    if isinstance(datos, dict):
+        mensajes = datos.get("messages", [])
+    elif isinstance(datos, list):
+        mensajes = datos
+    else:
+        mensajes = []
+
+    resultado = []
+    for item in mensajes:
+        if not isinstance(item, dict):
+            continue
+        role = item.get("role")
+        content = item.get("content")
+        if role in ("user", "assistant") and isinstance(content, str):
+            resultado.append({
+                "role": role,
+                "content": content,
+                "timestamp": str(item.get("timestamp", "")),
+            })
+    return resultado
+
+
+def guardar_historial(ruta_archivo, historial):
+    if not ruta_archivo:
+        raise ValueError("Ruta de historial vacia.")
+
+    asegurar_directorio_para_archivo(ruta_archivo)
+    datos = {
+        "version": 1,
+        "macro": NOMBRE_MACRO,
+        "model": MODELO_OLLAMA,
+        "document_name": obtener_nombre_documento_activo(),
+        "document_path": obtener_ruta_documento_activo(),
+        "updated_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+        "messages": historial,
+    }
+    with open(ruta_archivo, "w", encoding="utf-8") as archivo:
+        json.dump(datos, archivo, ensure_ascii=False, indent=2)
+
+
+# ============================================================================
+# Lectura de Report View y Python Console (via widgets Qt)
+# ============================================================================
+def texto_widget(widget):
+    if widget is None:
+        return ""
+    try:
+        if hasattr(widget, "toPlainText"):
+            return widget.toPlainText() or ""
+    except Exception:
+        pass
+    try:
+        if hasattr(widget, "text"):
+            return widget.text() or ""
+    except Exception:
+        pass
+    return ""
+
+
+def extraer_texto_de_dock(dock):
+    """
+    Intenta leer texto util de un QDockWidget.
+    Usa QPlainTextEdit / QTextEdit y toma el texto mas largo disponible.
+    """
+    if dock is None:
+        return ""
+
+    mejor_texto = ""
+
+    try:
+        candidatos_plain = dock.findChildren(QtWidgets.QPlainTextEdit)
+    except Exception:
+        candidatos_plain = []
+
+    try:
+        candidatos_rich = dock.findChildren(QtWidgets.QTextEdit)
+    except Exception:
+        candidatos_rich = []
+
+    for candidato in list(candidatos_plain) + list(candidatos_rich):
+        texto = texto_widget(candidato)
+        if len(texto) > len(mejor_texto):
+            mejor_texto = texto
+
+    return mejor_texto
+
+
+def buscar_dock_por_titulo(palabras_clave):
+    try:
+        docks = Gui.getMainWindow().findChildren(QtWidgets.QDockWidget)
+    except Exception:
+        return None
+
+    objetivos = [str(x).lower() for x in palabras_clave]
+    for dock in docks:
+        try:
+            titulo = str(dock.windowTitle() or "").lower()
+        except Exception:
+            titulo = ""
+        if any(clave in titulo for clave in objetivos):
+            return dock
+    return None
+
+
+def ultimas_lineas(texto, max_lineas):
+    lineas = (texto or "").splitlines()
+    if max_lineas <= 0:
+        return ""
+    if len(lineas) <= max_lineas:
+        return "\n".join(lineas)
+    return "\n".join(lineas[-max_lineas:])
+
+
+def leer_vista_informe(max_lineas):
+    dock = buscar_dock_por_titulo(["report view", "vista de informe", "report"])
+    if dock is None:
+        return ""
+    texto = extraer_texto_de_dock(dock)
+    return ultimas_lineas(texto, max_lineas)
+
+
+def leer_consola_python(max_lineas):
+    dock = buscar_dock_por_titulo(["python console", "consola python"])
+    if dock is None:
+        return ""
+    texto = extraer_texto_de_dock(dock)
+    return ultimas_lineas(texto, max_lineas)
+
+
+def obtener_contexto_arbol():
+    """
+    Mantiene una base simple para ampliar luego el contexto del arbol.
+    """
+    documento = obtener_documento_activo()
+    if documento is None:
+        return ""
+
+    lineas = []
+    try:
+        lineas.append("Documento: {}".format(getattr(documento, "Name", "")))
+        objetos_raiz = getattr(documento, "RootObjects", [])
+        if objetos_raiz:
+            lineas.append("RootObjects: {}".format(len(objetos_raiz)))
+            for objeto in objetos_raiz:
+                nombre = getattr(objeto, "Name", "")
+                etiqueta = getattr(objeto, "Label", nombre)
+                tipo = getattr(objeto, "TypeId", "")
+                lineas.append("- {} | {} | {}".format(etiqueta, nombre, tipo))
+        else:
+            objetos = getattr(documento, "Objects", [])
+            lineas.append("Objects: {}".format(len(objetos)))
+    except Exception as exc:
+        log_warn("No se pudo leer el arbol del documento: {}".format(exc))
+
+    return "\n".join(lineas)
+
+
+# ============================================================================
+# Prompt y Ollama
+# ============================================================================
+def construir_prompt_chat(historial, prompt_usuario, contexto_extra):
+    partes = []
+    partes.append("Eres un asistente tecnico local para FreeCAD en Windows.")
+    partes.append("Responde claro, practico y orientado a CAD y Python.")
+    partes.append("No ejecutes codigo ni acciones; solo devuelve texto.")
+
+    if historial:
+        partes.append("Historial de chat:")
+        for mensaje in historial[-MAX_MENSAJES_CONTEXTO:]:
+            role = mensaje.get("role")
+            contenido = str(mensaje.get("content", "")).strip()
+            if not contenido:
+                continue
+            if role == "user":
+                partes.append("Usuario:\n{}".format(contenido))
+            elif role == "assistant":
+                partes.append("Asistente:\n{}".format(contenido))
+
+    if contexto_extra:
+        partes.append("Contexto leido desde FreeCAD:")
+        partes.append(contexto_extra)
+
+    partes.append("Usuario:\n{}".format(prompt_usuario))
+    partes.append("Asistente:")
+    return "\n\n".join(partes)
+
+
+def mostrar_error(widget_salida, mensaje, detalle=None):
+    texto = "ERROR: {}".format(mensaje)
+    if detalle:
+        texto += "\n\nDetalle:\n{}".format(detalle)
+
+    log_error(mensaje)
+    if detalle:
+        log_error(detalle)
+
+    if widget_salida is None:
+        return
+
+    if hasattr(widget_salida, "setPlainText"):
+        widget_salida.setPlainText(texto)
+    elif hasattr(widget_salida, "setText"):
+        widget_salida.setText(texto)
+
+
+def procesar_respuesta(respuesta_http):
+    if respuesta_http is None:
+        raise ValueError("La respuesta HTTP es None.")
+
+    codigo_estado = getattr(respuesta_http, "status_code", None)
+    log_info("Codigo HTTP recibido: {}".format(codigo_estado))
+
+    try:
+        datos = respuesta_http.json()
+    except ValueError as exc:
+        raise ValueError("La respuesta no contiene JSON valido: {}".format(exc))
+
+    if not isinstance(datos, dict):
+        raise ValueError("El JSON recibido no es un objeto valido.")
+
+    if codigo_estado != 200:
+        detalle_error = datos.get("error") or json.dumps(datos, ensure_ascii=False, indent=2)
+        raise RuntimeError("Ollama devolvio HTTP {}: {}".format(codigo_estado, detalle_error))
+
+    texto_respuesta = datos.get("response")
+    if texto_respuesta is None:
+        raise ValueError("El campo 'response' no existe en la respuesta de Ollama.")
+
+    if not isinstance(texto_respuesta, str):
+        texto_respuesta = str(texto_respuesta)
+
+    return texto_respuesta.strip(), datos
+
+
+def construir_timeout_requests(timeout_conexion, timeout_lectura):
+    """
+    Retorna timeout compatible con requests:
+    - (conexion, lectura) cuando ambos > 0
+    - None cuando ambos <= 0 (sin limite)
+    - valor unico cuando solo uno > 0
+    """
+    t_con = float(timeout_conexion or 0)
+    t_lec = float(timeout_lectura or 0)
+
+    if t_con <= 0 and t_lec <= 0:
+        return None
+    if t_con <= 0 and t_lec > 0:
+        return t_lec
+    if t_con > 0 and t_lec <= 0:
+        return t_con
+    return (t_con, t_lec)
+
+
+def obtener_modelos_ollama():
+    """
+    Lee modelos disponibles desde /api/tags.
+    Retorna (modelos, mensaje_error_o_None).
+    """
+    fallback = [MODELO_OLLAMA]
+
+    if not REQUESTS_DISPONIBLE:
+        return fallback, "requests no disponible"
+
+    try:
+        timeout_tags = construir_timeout_requests(TIMEOUT_CONEXION_SEGUNDOS, TIMEOUT_TAGS_SEGUNDOS)
+        respuesta = requests.get(URL_OLLAMA_TAGS, timeout=timeout_tags)
+    except Exception as exc:
+        return fallback, "No se pudo consultar /api/tags: {}".format(exc)
+
+    if getattr(respuesta, "status_code", None) != 200:
+        return fallback, "HTTP {} al leer /api/tags".format(getattr(respuesta, "status_code", "?"))
+
+    try:
+        datos = respuesta.json()
+    except Exception as exc:
+        return fallback, "JSON invalido en /api/tags: {}".format(exc)
+
+    modelos = []
+    for item in datos.get("models", []):
+        if not isinstance(item, dict):
+            continue
+        nombre = str(item.get("name", "")).strip()
+        if nombre and nombre not in modelos:
+            modelos.append(nombre)
+
+    if not modelos:
+        modelos = list(fallback)
+
+    if MODELO_OLLAMA in modelos:
+        modelos.insert(0, modelos.pop(modelos.index(MODELO_OLLAMA)))
+
+    return modelos, None
+
+
+def normalizar_api_base_nube(api_base):
+    base = str(api_base or "").strip()
+    if not base:
+        base = NUBE_API_BASE_DEFAULT
+    return base.rstrip("/")
+
+
+def obtener_api_key_nube(api_key_ui):
+    api_key = str(api_key_ui or "").strip()
+    if api_key:
+        return api_key
+    api_key_env = str(os.environ.get(NUBE_API_KEY_ENV, "")).strip()
+    if api_key_env:
+        return api_key_env
+    return str(os.environ.get(NUBE_API_KEY_ENV_ALT, "")).strip()
+
+
+def obtener_modelos_nube_openai_compatible(api_base, api_key):
+    fallback = [MODELO_NUBE_DEFAULT]
+
+    if not REQUESTS_DISPONIBLE:
+        return fallback, "requests no disponible"
+
+    base = normalizar_api_base_nube(api_base)
+    token = obtener_api_key_nube(api_key)
+    if not token:
+        return fallback, "Falta API key de nube (campo UI o variable {}).".format(NUBE_API_KEY_ENV)
+
+    headers = {"Authorization": "Bearer {}".format(token)}
+    url_modelos = base + NUBE_RUTA_MODELOS
+
+    try:
+        timeout_tags = construir_timeout_requests(TIMEOUT_CONEXION_SEGUNDOS, TIMEOUT_TAGS_SEGUNDOS)
+        respuesta = requests.get(url_modelos, headers=headers, timeout=timeout_tags)
+    except Exception as exc:
+        return fallback, "No se pudo consultar modelos de nube: {}".format(exc)
+
+    if getattr(respuesta, "status_code", None) != 200:
+        return fallback, "HTTP {} al leer modelos de nube".format(getattr(respuesta, "status_code", "?"))
+
+    try:
+        datos = respuesta.json()
+    except Exception as exc:
+        return fallback, "JSON invalido en modelos de nube: {}".format(exc)
+
+    modelos = []
+    for item in datos.get("data", []):
+        if not isinstance(item, dict):
+            continue
+        nombre = str(item.get("id", "")).strip()
+        if nombre and nombre not in modelos:
+            modelos.append(nombre)
+
+    if not modelos:
+        modelos = list(fallback)
+
+    return modelos, None
+
+
+def obtener_modelos_disponibles(proveedor, api_base_nube="", api_key_nube=""):
+    if proveedor == PROVEEDOR_NUBE:
+        return obtener_modelos_nube_openai_compatible(api_base_nube, api_key_nube)
+    return obtener_modelos_ollama()
+
+
+def construir_mensajes_nube(historial, prompt_usuario, contexto_extra):
+    mensajes = [
+        {
+            "role": "system",
+            "content": "Eres un asistente tecnico para FreeCAD. Responde claro y no ejecutes acciones.",
+        }
+    ]
+
+    if contexto_extra:
+        mensajes.append({
+            "role": "system",
+            "content": "Contexto de FreeCAD:\n{}".format(contexto_extra),
+        })
+
+    for mensaje in (historial or [])[-MAX_MENSAJES_CONTEXTO:]:
+        role = mensaje.get("role")
+        contenido = str(mensaje.get("content", "")).strip()
+        if role in ("user", "assistant") and contenido:
+            mensajes.append({"role": role, "content": contenido})
+
+    mensajes.append({"role": "user", "content": str(prompt_usuario or "")})
+    return mensajes
+
+
+def procesar_respuesta_nube(respuesta_http):
+    if respuesta_http is None:
+        raise ValueError("La respuesta HTTP de nube es None.")
+
+    codigo_estado = getattr(respuesta_http, "status_code", None)
+    log_info("Codigo HTTP nube recibido: {}".format(codigo_estado))
+
+    try:
+        datos = respuesta_http.json()
+    except ValueError as exc:
+        raise ValueError("La respuesta de nube no contiene JSON valido: {}".format(exc))
+
+    if not isinstance(datos, dict):
+        raise ValueError("El JSON de nube recibido no es un objeto valido.")
+
+    if codigo_estado != 200:
+        detalle_error = ""
+        try:
+            detalle_error = str(datos.get("error", {}).get("message", "")).strip()
+        except Exception:
+            detalle_error = ""
+        if not detalle_error:
+            detalle_error = json.dumps(datos, ensure_ascii=False, indent=2)
+        raise RuntimeError("Nube devolvio HTTP {}: {}".format(codigo_estado, detalle_error))
+
+    choices = datos.get("choices")
+    if not isinstance(choices, list) or not choices:
+        raise ValueError("La respuesta de nube no incluye choices.")
+
+    mensaje = choices[0].get("message", {})
+    contenido = mensaje.get("content", "")
+    if isinstance(contenido, list):
+        partes = []
+        for bloque in contenido:
+            if isinstance(bloque, dict):
+                txt = str(bloque.get("text", "")).strip()
+                if txt:
+                    partes.append(txt)
+        contenido = "\n".join(partes)
+
+    contenido = str(contenido or "").strip()
+    if not contenido:
+        raise ValueError("La respuesta de nube llego vacia.")
+
+    return contenido, datos
+
+
+def consultar_nube_openai_compatible(
+    prompt,
+    historial=None,
+    contexto_extra="",
+    modelo=MODELO_NUBE_DEFAULT,
+    api_base_nube=NUBE_API_BASE_DEFAULT,
+    api_key_nube="",
+    timeout_conexion=TIMEOUT_CONEXION_SEGUNDOS,
+    timeout_lectura=TIMEOUT_LECTURA_SEGUNDOS,
+):
+    if not REQUESTS_DISPONIBLE:
+        raise ImportError(
+            "La libreria 'requests' no esta disponible en este entorno de FreeCAD.\n"
+            "Ajusta el bloque de import al inicio de la macro o instala requests "
+            "en el Python que usa FreeCAD."
+        )
+
+    token = obtener_api_key_nube(api_key_nube)
+    if not token:
+        raise ValueError(
+            "Falta API key de nube. Escribela en el panel o configura la variable {}.".format(
+                NUBE_API_KEY_ENV
+            )
+        )
+
+    base = normalizar_api_base_nube(api_base_nube)
+    url_chat = base + NUBE_RUTA_CHAT
+    timeout_requests = construir_timeout_requests(timeout_conexion, timeout_lectura)
+    mensajes = construir_mensajes_nube(historial or [], prompt, contexto_extra)
+
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer {}".format(token),
+    }
+    payload = {
+        "model": modelo,
+        "messages": mensajes,
+    }
+
+    log_info("Enviando consulta a nube")
+    log_info("URL nube: {}".format(url_chat))
+    log_info("Modelo nube: {}".format(modelo))
+    log_info("Mensajes enviados: {}".format(len(mensajes)))
+
+    try:
+        respuesta_http = requests.post(
+            url_chat,
+            json=payload,
+            headers=headers,
+            timeout=timeout_requests,
+        )
+    except requests.exceptions.ConnectTimeout as exc:
+        raise TimeoutError("Timeout de conexion con nube: {}".format(exc))
+    except requests.exceptions.ReadTimeout as exc:
+        raise TimeoutError(
+            "Timeout esperando respuesta de nube (lectura={}s): {}".format(
+                timeout_lectura, exc
+            )
+        )
+    except requests.exceptions.ConnectionError as exc:
+        raise ConnectionError("No se pudo conectar a nube en {}: {}".format(url_chat, exc))
+    except requests.exceptions.RequestException as exc:
+        raise RuntimeError("Fallo la solicitud HTTP a nube: {}".format(exc))
+
+    return procesar_respuesta_nube(respuesta_http)
+
+
+def consultar_ollama(
+    prompt,
+    historial=None,
+    contexto_extra="",
+    modelo=MODELO_OLLAMA,
+    timeout_conexion=TIMEOUT_CONEXION_SEGUNDOS,
+    timeout_lectura=TIMEOUT_LECTURA_SEGUNDOS,
+):
+    """
+    Envia el prompt a Ollama y retorna el texto procesado.
+
+    Si requests no esta disponible en FreeCAD, ajustar este bloque de import o
+    agregar la ruta de site-packages donde requests este instalado.
+    """
+    if not REQUESTS_DISPONIBLE:
+        raise ImportError(
+            "La libreria 'requests' no esta disponible en este entorno de FreeCAD.\n"
+            "Ajusta el bloque de import al inicio de la macro o instala requests "
+            "en el Python que usa FreeCAD."
+        )
+
+    historial = historial or []
+    prompt_completo = construir_prompt_chat(historial, prompt, contexto_extra)
+    timeout_requests = construir_timeout_requests(timeout_conexion, timeout_lectura)
+
+    payload = {
+        "model": modelo,
+        "prompt": prompt_completo,
+        "stream": False,
+    }
+
+    headers = {
+        "Content-Type": "application/json",
+    }
+
+    log_info("Enviando consulta a Ollama")
+    log_info("URL: {}".format(URL_OLLAMA_GENERATE))
+    log_info("Modelo: {}".format(modelo))
+    log_info("Longitud prompt usuario: {}".format(len(prompt)))
+    log_info("Longitud prompt completo: {}".format(len(prompt_completo)))
+    if timeout_requests is None:
+        log_info("Timeout HTTP: sin limite")
+    else:
+        log_info("Timeout HTTP: {}".format(timeout_requests))
+
+    try:
+        respuesta_http = requests.post(
+            URL_OLLAMA_GENERATE,
+            json=payload,
+            headers=headers,
+            timeout=timeout_requests,
+        )
+    except requests.exceptions.ConnectTimeout as exc:
+        raise TimeoutError("Timeout de conexion con Ollama: {}".format(exc))
+    except requests.exceptions.ReadTimeout as exc:
+        raise TimeoutError(
+            "Timeout esperando respuesta de Ollama (lectura={}s): {}".format(
+                timeout_lectura, exc
+            )
+        )
+    except requests.exceptions.ConnectionError as exc:
+        raise ConnectionError(
+            "No se pudo conectar con Ollama en {}: {}".format(URL_OLLAMA_GENERATE, exc)
+        )
+    except requests.exceptions.RequestException as exc:
+        raise RuntimeError("Fallo la solicitud HTTP a Ollama: {}".format(exc))
+
+    return procesar_respuesta(respuesta_http)
+
+
+def consultar_modelo_ia(
+    proveedor,
+    prompt,
+    historial=None,
+    contexto_extra="",
+    modelo=MODELO_OLLAMA,
+    api_base_nube=NUBE_API_BASE_DEFAULT,
+    api_key_nube="",
+    timeout_conexion=TIMEOUT_CONEXION_SEGUNDOS,
+    timeout_lectura=TIMEOUT_LECTURA_SEGUNDOS,
+):
+    if proveedor == PROVEEDOR_NUBE:
+        return consultar_nube_openai_compatible(
+            prompt=prompt,
+            historial=historial,
+            contexto_extra=contexto_extra,
+            modelo=modelo,
+            api_base_nube=api_base_nube,
+            api_key_nube=api_key_nube,
+            timeout_conexion=timeout_conexion,
+            timeout_lectura=timeout_lectura,
+        )
+    return consultar_ollama(
+        prompt=prompt,
+        historial=historial,
+        contexto_extra=contexto_extra,
+        modelo=modelo,
+        timeout_conexion=timeout_conexion,
+        timeout_lectura=timeout_lectura,
+    )
+
+
+class ConsultaOllamaWorker(QtCore.QObject):
+    """
+    Ejecuta la consulta HTTP en segundo plano para no bloquear la UI.
+    """
+    finalizado_ok = SIGNAL(str, object)
+    finalizado_error = SIGNAL(str, str)
+
+    def __init__(
+        self,
+        proveedor,
+        prompt,
+        historial,
+        contexto_extra,
+        modelo,
+        api_base_nube,
+        api_key_nube,
+        timeout_conexion,
+        timeout_lectura,
+    ):
+        super(ConsultaOllamaWorker, self).__init__()
+        self.proveedor = proveedor or PROVEEDOR_OLLAMA
+        self.prompt = prompt
+        self.historial = historial or []
+        self.contexto_extra = contexto_extra or ""
+        self.modelo = modelo or MODELO_OLLAMA
+        self.api_base_nube = api_base_nube or NUBE_API_BASE_DEFAULT
+        self.api_key_nube = api_key_nube or ""
+        self.timeout_conexion = timeout_conexion
+        self.timeout_lectura = timeout_lectura
+
+    def ejecutar(self):
+        try:
+            texto_respuesta, datos_crudos = consultar_modelo_ia(
+                proveedor=self.proveedor,
+                prompt=self.prompt,
+                historial=self.historial,
+                contexto_extra=self.contexto_extra,
+                modelo=self.modelo,
+                api_base_nube=self.api_base_nube,
+                api_key_nube=self.api_key_nube,
+                timeout_conexion=self.timeout_conexion,
+                timeout_lectura=self.timeout_lectura,
+            )
+            self.finalizado_ok.emit(texto_respuesta, datos_crudos)
+        except Exception as exc:
+            self.finalizado_error.emit(str(exc), traceback.format_exc())
+
+
+# ============================================================================
+# Render tipo chat
+# ============================================================================
+def colores_chat_desde_widget(widget):
+    """
+    Retorna colores del chat segun la paleta activa de FreeCAD.
+    """
+    tema = {
+        "body_bg": "#f3f4f6",
+        "body_text": "#111827",
+        "meta_text": "#6b7280",
+        "assistant_bg": "#ffffff",
+        "assistant_border": "#d1d5db",
+        "assistant_text": "#111827",
+        "user_bg": "#2563eb",
+        "user_border": "#1d4ed8",
+        "user_text": "#ffffff",
+    }
+    try:
+        color_base = widget.palette().base().color()
+        color_window = widget.palette().window().color()
+        oscuro = color_window.lightness() < 128
+        if oscuro:
+            tema.update({
+                "body_bg": color_window.name(),
+                "body_text": widget.palette().text().color().name(),
+                "meta_text": widget.palette().mid().color().name(),
+                "assistant_bg": color_base.name(),
+                "assistant_border": widget.palette().mid().color().name(),
+                "assistant_text": widget.palette().text().color().name(),
+                "user_bg": "#3b82f6",
+                "user_border": "#2563eb",
+                "user_text": "#ffffff",
+            })
+    except Exception:
+        pass
+    return tema
+
+
+def render_historial_html(historial, tema=None):
+    if tema is None:
+        tema = colores_chat_desde_widget(None)
+
+    partes = []
+    partes.append("<html><head>")
+    partes.append(
+        "<style>"
+        "body{background:" + tema["body_bg"] + ";color:" + tema["body_text"] + ";font-family:'Segoe UI';margin:0;padding:12px;}"
+        ".row{margin:10px 0;clear:both;}"
+        ".meta{font-size:11px;color:" + tema["meta_text"] + ";margin:0 0 3px 4px;}"
+        ".bubble{padding:10px 12px;border-radius:12px;max-width:85%;font-size:13px;line-height:1.4;"
+        "white-space:normal;word-wrap:break-word;}"
+        ".user_wrap{text-align:right;}"
+        ".assistant_wrap{text-align:left;}"
+        ".user{display:inline-block;background:" + tema["user_bg"] + ";color:" + tema["user_text"] + ";border:1px solid " + tema["user_border"] + ";}"
+        ".assistant{display:inline-block;background:" + tema["assistant_bg"] + ";color:" + tema["assistant_text"] + ";border:1px solid " + tema["assistant_border"] + ";}"
+        ".empty{color:" + tema["meta_text"] + ";font-size:13px;padding:18px 10px;}"
+        "</style>"
+    )
+    partes.append("</head><body>")
+
+    if not historial:
+        partes.append("<div class='empty'>Sin mensajes. Escribe tu primera consulta.</div>")
+    else:
+        for mensaje in historial:
+            role = mensaje.get("role", "")
+            contenido = str(mensaje.get("content", ""))
+            marca_tiempo = str(mensaje.get("timestamp", ""))
+            texto_html = html.escape(contenido).replace("\n", "<br>")
+
+            if role == "user":
+                partes.append("<div class='row user_wrap'>")
+                partes.append(
+                    "<div class='meta'>Tu - {}</div><div class='bubble user'>{}</div>".format(
+                        html.escape(marca_tiempo), texto_html
+                    )
+                )
+                partes.append("</div>")
+            else:
+                partes.append("<div class='row assistant_wrap'>")
+                partes.append(
+                    "<div class='meta'>Asistente - {}</div><div class='bubble assistant'>{}</div>".format(
+                        html.escape(marca_tiempo), texto_html
+                    )
+                )
+                partes.append("</div>")
+
+    partes.append("</body></html>")
+    return "".join(partes)
+
+
+def aplicar_estilo_panel(widget):
+    """
+    Aplica estilo moderno usando la paleta actual de FreeCAD.
+    """
+    try:
+        paleta = widget.palette()
+        q_window = paleta.window().color()
+        q_base = paleta.base().color()
+        q_alt = paleta.alternateBase().color()
+        q_mid = paleta.mid().color()
+
+        color_window = q_window.name()
+        color_base = q_base.name()
+        color_alt = q_alt.name()
+        color_borde = q_mid.name()
+
+        tema_oscuro = q_window.lightness() < 128
+        if tema_oscuro:
+            color_texto = "#e8edf5"
+            color_texto_sec = "#b8c1d0"
+            if q_base.lightness() > 150:
+                color_base = "#2a313d"
+            if q_alt.lightness() > 165:
+                color_alt = "#3a4353"
+            if q_mid.lightness() > 170:
+                color_borde = "#5f6b7f"
+        else:
+            color_texto = "#1f2937"
+            color_texto_sec = "#4b5563"
+            if q_base.lightness() < 210:
+                color_base = "#ffffff"
+            if q_alt.lightness() < 200:
+                color_alt = "#eceff4"
+            if q_mid.lightness() < 130:
+                color_borde = "#c7ced8"
+    except Exception:
+        color_window = "#2f343f"
+        color_base = "#252a33"
+        color_alt = "#394150"
+        color_texto = "#e6e8ec"
+        color_texto_sec = "#9aa3b2"
+        color_borde = "#505867"
+
+    widget.setStyleSheet(
+        """
+        #ollama_panel_root {{
+            background: {window};
+            color: {texto};
+        }}
+        #ollama_card {{
+            background: {base};
+            border: 1px solid {borde};
+            border-radius: 8px;
+        }}
+        QTabWidget::pane {{
+            border: 1px solid {borde};
+            border-radius: 8px;
+            background: {base};
+            margin-top: 6px;
+        }}
+        QTabBar::tab {{
+            background: {alt};
+            color: {texto};
+            border: 1px solid {borde};
+            border-bottom: none;
+            border-top-left-radius: 6px;
+            border-top-right-radius: 6px;
+            padding: 6px 12px;
+            margin-right: 4px;
+        }}
+        QTabBar::tab:selected {{
+            background: {base};
+            border-color: #3daee9;
+        }}
+        QLabel {{
+            color: {texto};
+        }}
+        QLabel#ollama_title {{
+            font-size: 15px;
+            font-weight: 600;
+        }}
+        QLabel#ollama_subtle {{
+            color: {texto_sec};
+        }}
+        QTextBrowser, QPlainTextEdit, QSpinBox, QComboBox, QLineEdit {{
+            background: {base};
+            color: {texto};
+            border: 1px solid {borde};
+            border-radius: 6px;
+            padding: 4px;
+        }}
+        QPushButton {{
+            background: {alt};
+            color: {texto};
+            border: 1px solid {borde};
+            border-radius: 6px;
+            padding: 5px 10px;
+        }}
+        QPushButton:hover {{
+            border-color: #3daee9;
+        }}
+        QPushButton:disabled {{
+            color: {texto_sec};
+            background: {window};
+        }}
+        QCheckBox {{
+            color: {texto};
+            spacing: 6px;
+        }}
+        QCheckBox::indicator {{
+            width: 14px;
+            height: 14px;
+            border: 1px solid {borde};
+            border-radius: 3px;
+            background: {base};
+        }}
+        QCheckBox::indicator:checked {{
+            border: 1px solid #3daee9;
+            background: #3daee9;
+        }}
+        QCheckBox::indicator:unchecked:hover {{
+            border: 1px solid #3daee9;
+        }}
+        QComboBox QAbstractItemView {{
+            background: {base};
+            color: {texto};
+            selection-background-color: #3daee9;
+            selection-color: #ffffff;
+            border: 1px solid {borde};
+        }}
+        QSplitter::handle {{
+            background: {borde};
+        }}
+        QSplitter::handle:vertical {{
+            height: 6px;
+        }}
+        """.format(
+            window=color_window,
+            base=color_base,
+            alt=color_alt,
+            texto=color_texto,
+            texto_sec=color_texto_sec,
+            borde=color_borde,
+        )
+    )
+
+
+def cerrar_ventana_existente():
+    try:
+        ventana_principal = Gui.getMainWindow()
+        ventana_previa = ventana_principal.findChild(QtWidgets.QDialog, NOMBRE_OBJETO_PANEL)
+        if ventana_previa is not None:
+            ventana_previa.close()
+            ventana_previa.deleteLater()
+            log_info("Se cerro una ventana previa de la macro.")
+    except Exception as exc:
+        log_warn("No se pudo cerrar ventana previa: {}".format(exc))
+
+
+def construir_interfaz():
+    ventana_principal = Gui.getMainWindow()
+    panel = QtWidgets.QDialog(ventana_principal)
+    panel.setObjectName(NOMBRE_OBJETO_PANEL)
+    panel.setWindowTitle(TITULO_VENTANA)
+    panel.setModal(False)
+    icono_llama = crear_icono_llama()
+    if not icono_llama.isNull():
+        panel.setWindowIcon(icono_llama)
+    panel.resize(900, 760)
+    panel.setMinimumWidth(620)
+    panel.setMinimumHeight(520)
+
+    layout_contenedor_ventana = QtWidgets.QVBoxLayout(panel)
+    layout_contenedor_ventana.setContentsMargins(8, 8, 8, 8)
+
+    panel_root = QtWidgets.QWidget(panel)
+    panel_root.setObjectName("ollama_panel_root")
+    layout_contenedor_ventana.addWidget(panel_root, 1)
+    aplicar_estilo_panel(panel_root)
+
+    estado = {
+        "historial": [],
+        "ruta_historial": "",
+        "proveedor_actual": PROVEEDOR_DEFAULT,
+        "modelo_actual": MODELO_NUBE_DEFAULT if PROVEEDOR_DEFAULT == PROVEEDOR_NUBE else MODELO_OLLAMA,
+        "api_base_nube": NUBE_API_BASE_DEFAULT,
+        "consulta_en_progreso": False,
+        "thread_consulta": None,
+        "worker_consulta": None,
+    }
+
+    layout_principal = QtWidgets.QVBoxLayout(panel_root)
+    layout_principal.setContentsMargins(10, 10, 10, 10)
+    layout_principal.setSpacing(8)
+
+    tabs_principal = QtWidgets.QTabWidget()
+    tabs_principal.setDocumentMode(True)
+    layout_principal.addWidget(tabs_principal, 1)
+
+    # ---------------------------------------------------------------------
+    # Pestana Chat
+    # ---------------------------------------------------------------------
+    tab_chat = QtWidgets.QWidget()
+    layout_tab_chat = QtWidgets.QVBoxLayout(tab_chat)
+    layout_tab_chat.setContentsMargins(10, 10, 10, 10)
+    layout_tab_chat.setSpacing(8)
+
+    splitter_chat = QtWidgets.QSplitter(QtCore.Qt.Vertical)
+    layout_tab_chat.addWidget(splitter_chat, 1)
+
+    tarjeta_chat = QtWidgets.QFrame()
+    tarjeta_chat.setObjectName("ollama_card")
+    layout_chat = QtWidgets.QVBoxLayout(tarjeta_chat)
+    layout_chat.setContentsMargins(8, 8, 8, 8)
+    layout_chat.setSpacing(6)
+    splitter_chat.addWidget(tarjeta_chat)
+
+    visor_chat = QtWidgets.QTextBrowser()
+    visor_chat.setOpenExternalLinks(False)
+    visor_chat.setReadOnly(True)
+    layout_chat.addWidget(visor_chat)
+
+    tarjeta_input = QtWidgets.QFrame()
+    tarjeta_input.setObjectName("ollama_card")
+    layout_input = QtWidgets.QVBoxLayout(tarjeta_input)
+    layout_input.setContentsMargins(8, 8, 8, 8)
+    layout_input.setSpacing(8)
+    splitter_chat.addWidget(tarjeta_input)
+    splitter_chat.setStretchFactor(0, 5)
+    splitter_chat.setStretchFactor(1, 3)
+
+    entrada_prompt = QtWidgets.QPlainTextEdit()
+    entrada_prompt.setMinimumHeight(120)
+    entrada_prompt.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+    if hasattr(entrada_prompt, "setPlaceholderText"):
+        entrada_prompt.setPlaceholderText("Enter envia. Shift+Enter agrega nueva linea.")
+    layout_input.addWidget(entrada_prompt, 1)
+
+    fila_botones_chat = QtWidgets.QHBoxLayout()
+    boton_enviar = QtWidgets.QPushButton("Enviar")
+    fila_botones_chat.addWidget(boton_enviar)
+    fila_botones_chat.addStretch(1)
+    layout_input.addLayout(fila_botones_chat)
+
+    etiqueta_estado = QtWidgets.QLabel("Listo.")
+    etiqueta_estado.setObjectName("ollama_subtle")
+    etiqueta_estado.setWordWrap(True)
+    layout_tab_chat.addWidget(etiqueta_estado)
+
+    tabs_principal.addTab(tab_chat, "Chat")
+
+    # ---------------------------------------------------------------------
+    # Pestana Datos y configuracion
+    # ---------------------------------------------------------------------
+    tab_config = QtWidgets.QWidget()
+    layout_tab_config = QtWidgets.QVBoxLayout(tab_config)
+    layout_tab_config.setContentsMargins(10, 10, 10, 10)
+    layout_tab_config.setSpacing(8)
+
+    scroll_config = QtWidgets.QScrollArea()
+    scroll_config.setWidgetResizable(True)
+    scroll_config.setFrameShape(QtWidgets.QFrame.NoFrame)
+    layout_tab_config.addWidget(scroll_config, 1)
+
+    contenedor_config = QtWidgets.QWidget()
+    scroll_config.setWidget(contenedor_config)
+    layout_config = QtWidgets.QVBoxLayout(contenedor_config)
+    layout_config.setContentsMargins(0, 0, 0, 0)
+    layout_config.setSpacing(8)
+
+    tarjeta_info = QtWidgets.QFrame()
+    tarjeta_info.setObjectName("ollama_card")
+    layout_info = QtWidgets.QVBoxLayout(tarjeta_info)
+    layout_info.setContentsMargins(10, 8, 10, 8)
+    layout_info.setSpacing(4)
+    layout_config.addWidget(tarjeta_info)
+
+    fila_titulo = QtWidgets.QHBoxLayout()
+    fila_titulo.setSpacing(8)
+    if not icono_llama.isNull():
+        etiqueta_icono = QtWidgets.QLabel("")
+        etiqueta_icono.setFixedSize(24, 24)
+        pixmap_icono = icono_llama.pixmap(24, 24)
+        etiqueta_icono.setPixmap(pixmap_icono)
+        fila_titulo.addWidget(etiqueta_icono)
+    etiqueta_titulo = QtWidgets.QLabel("Asistente Ollama Local")
+    etiqueta_titulo.setObjectName("ollama_title")
+    fila_titulo.addWidget(etiqueta_titulo)
+    fila_titulo.addStretch(1)
+    layout_info.addLayout(fila_titulo)
+
+    etiqueta_doc = QtWidgets.QLabel("")
+    etiqueta_doc.setObjectName("ollama_subtle")
+    etiqueta_doc.setWordWrap(True)
+    etiqueta_doc.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
+    if hasattr(etiqueta_doc, "setTextInteractionFlags"):
+        etiqueta_doc.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
+    layout_info.addWidget(etiqueta_doc)
+
+    etiqueta_historial = QtWidgets.QLabel("")
+    etiqueta_historial.setObjectName("ollama_subtle")
+    etiqueta_historial.setWordWrap(True)
+    etiqueta_historial.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
+    if hasattr(etiqueta_historial, "setTextInteractionFlags"):
+        etiqueta_historial.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
+    layout_info.addWidget(etiqueta_historial)
+
+    fila_proveedor = QtWidgets.QHBoxLayout()
+    fila_proveedor.setSpacing(6)
+    etiqueta_proveedor = QtWidgets.QLabel("Proveedor IA:")
+    etiqueta_proveedor.setObjectName("ollama_subtle")
+    combo_proveedor = QtWidgets.QComboBox()
+    combo_proveedor.addItem(PROVEEDOR_OLLAMA)
+    combo_proveedor.addItem(PROVEEDOR_NUBE)
+    if PROVEEDOR_DEFAULT == PROVEEDOR_NUBE:
+        combo_proveedor.setCurrentIndex(1)
+    else:
+        combo_proveedor.setCurrentIndex(0)
+    combo_proveedor.setMinimumWidth(220)
+    fila_proveedor.addWidget(etiqueta_proveedor)
+    fila_proveedor.addWidget(combo_proveedor, 1)
+    fila_proveedor.addStretch(1)
+    layout_info.addLayout(fila_proveedor)
+
+    fila_modelo = QtWidgets.QHBoxLayout()
+    fila_modelo.setSpacing(6)
+    etiqueta_modelo = QtWidgets.QLabel("Modelo IA:")
+    etiqueta_modelo.setObjectName("ollama_subtle")
+    combo_modelos = QtWidgets.QComboBox()
+    combo_modelos.setEditable(True)
+    combo_modelos.setInsertPolicy(QtWidgets.QComboBox.NoInsert)
+    combo_modelos.lineEdit().setPlaceholderText("Escribe o selecciona modelo, ejemplo: glm-4.7:cloud")
+    combo_modelos.setMinimumWidth(220)
+    boton_actualizar_modelos = QtWidgets.QPushButton("Actualizar modelos")
+    fila_modelo.addWidget(etiqueta_modelo)
+    fila_modelo.addWidget(combo_modelos, 1)
+    fila_modelo.addWidget(boton_actualizar_modelos)
+    layout_info.addLayout(fila_modelo)
+
+    fila_nube = QtWidgets.QHBoxLayout()
+    fila_nube.setSpacing(6)
+    etiqueta_api_base = QtWidgets.QLabel("API base nube:")
+    etiqueta_api_base.setObjectName("ollama_subtle")
+    entrada_api_base = QtWidgets.QLineEdit(NUBE_API_BASE_DEFAULT)
+    entrada_api_base.setPlaceholderText("https://api.openai.com")
+    entrada_api_base.setMinimumWidth(220)
+    etiqueta_api_key = QtWidgets.QLabel("API key:")
+    etiqueta_api_key.setObjectName("ollama_subtle")
+    entrada_api_key = QtWidgets.QLineEdit("")
+    entrada_api_key.setPlaceholderText("No requerido para localhost")
+    entrada_api_key.setEchoMode(QtWidgets.QLineEdit.Password)
+    fila_nube.addWidget(etiqueta_api_base)
+    fila_nube.addWidget(entrada_api_base, 1)
+    fila_nube.addWidget(etiqueta_api_key)
+    fila_nube.addWidget(entrada_api_key, 1)
+    layout_info.addLayout(fila_nube)
+
+    etiqueta_endpoint = QtWidgets.QLabel(
+        "Endpoint: {} | Cloud via localhost disponible con 'ollama signin' | Timeout lectura default: {}s".format(
+            URL_OLLAMA_GENERATE,
+            TIMEOUT_LECTURA_SEGUNDOS,
+        )
+    )
+    etiqueta_endpoint.setObjectName("ollama_subtle")
+    etiqueta_endpoint.setWordWrap(True)
+    etiqueta_endpoint.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
+    layout_info.addWidget(etiqueta_endpoint)
+
+    tarjeta_contexto = QtWidgets.QFrame()
+    tarjeta_contexto.setObjectName("ollama_card")
+    layout_contexto = QtWidgets.QVBoxLayout(tarjeta_contexto)
+    layout_contexto.setContentsMargins(8, 8, 8, 8)
+    layout_contexto.setSpacing(8)
+    layout_config.addWidget(tarjeta_contexto)
+
+    fila_contexto_flags = QtWidgets.QHBoxLayout()
+    chk_incluir_informe = QtWidgets.QCheckBox("Incluir Report View")
+    chk_incluir_informe.setChecked(True)
+    chk_incluir_consola = QtWidgets.QCheckBox("Incluir Python Console")
+    chk_incluir_consola.setChecked(True)
+    fila_contexto_flags.addWidget(chk_incluir_informe)
+    fila_contexto_flags.addWidget(chk_incluir_consola)
+    fila_contexto_flags.addStretch(1)
+    layout_contexto.addLayout(fila_contexto_flags)
+
+    fila_contexto_valores = QtWidgets.QHBoxLayout()
+    etiqueta_lineas = QtWidgets.QLabel("Lineas de contexto:")
+    etiqueta_lineas.setObjectName("ollama_subtle")
+    spin_lineas = QtWidgets.QSpinBox()
+    spin_lineas.setRange(20, 2000)
+    spin_lineas.setValue(MAX_LINEAS_LOG_DEFAULT)
+    spin_lineas.setFixedWidth(90)
+    etiqueta_timeout = QtWidgets.QLabel("Timeout lectura (s, 0=sin limite):")
+    etiqueta_timeout.setObjectName("ollama_subtle")
+    spin_timeout = QtWidgets.QSpinBox()
+    spin_timeout.setRange(0, 3600)
+    spin_timeout.setValue(TIMEOUT_LECTURA_SEGUNDOS)
+    spin_timeout.setFixedWidth(100)
+    fila_contexto_valores.addWidget(etiqueta_lineas)
+    fila_contexto_valores.addWidget(spin_lineas)
+    fila_contexto_valores.addSpacing(12)
+    fila_contexto_valores.addWidget(etiqueta_timeout)
+    fila_contexto_valores.addWidget(spin_timeout)
+    fila_contexto_valores.addStretch(1)
+    layout_contexto.addLayout(fila_contexto_valores)
+
+    fila_botones_config = QtWidgets.QHBoxLayout()
+    boton_nuevo = QtWidgets.QPushButton("Nuevo chat")
+    boton_recargar = QtWidgets.QPushButton("Recargar historial")
+    fila_botones_config.addWidget(boton_nuevo)
+    fila_botones_config.addWidget(boton_recargar)
+    fila_botones_config.addStretch(1)
+    layout_contexto.addLayout(fila_botones_config)
+
+    layout_config.addStretch(1)
+
+    tabs_principal.addTab(tab_config, "Datos y config")
+
+    def actualizar_estado_controles(en_progreso):
+        estado["consulta_en_progreso"] = bool(en_progreso)
+        boton_enviar.setEnabled(not en_progreso)
+        boton_nuevo.setEnabled(not en_progreso)
+        boton_recargar.setEnabled(not en_progreso)
+        boton_actualizar_modelos.setEnabled(not en_progreso)
+        combo_proveedor.setEnabled(not en_progreso)
+        combo_modelos.setEnabled(not en_progreso)
+        entrada_api_base.setEnabled(not en_progreso and estado.get("proveedor_actual") == PROVEEDOR_NUBE)
+        entrada_api_key.setEnabled(not en_progreso and estado.get("proveedor_actual") == PROVEEDOR_NUBE)
+
+    def actualizar_texto_endpoint():
+        proveedor = estado.get("proveedor_actual", PROVEEDOR_OLLAMA)
+        if proveedor == PROVEEDOR_NUBE:
+            base = normalizar_api_base_nube(entrada_api_base.text())
+            endpoint_activo = base + NUBE_RUTA_CHAT
+            api_key_ok = bool(obtener_api_key_nube(entrada_api_key.text()))
+            etiqueta_endpoint.setText(
+                "Proveedor: nube | Endpoint chat: {} | API key detectada: {} | Timeout lectura default: {}s".format(
+                    endpoint_activo,
+                    "si" if api_key_ok else "no",
+                    TIMEOUT_LECTURA_SEGUNDOS,
+                )
+            )
+            return
+
+        etiqueta_endpoint.setText(
+            "Proveedor: local | Endpoint: {} | Timeout lectura default: {}s".format(
+                URL_OLLAMA_GENERATE,
+                TIMEOUT_LECTURA_SEGUNDOS,
+            )
+        )
+
+    def actualizar_visibilidad_nube():
+        proveedor = combo_proveedor.currentText().strip() or PROVEEDOR_OLLAMA
+        estado["proveedor_actual"] = proveedor
+        mostrar_nube = (proveedor == PROVEEDOR_NUBE)
+        etiqueta_api_base.setVisible(mostrar_nube)
+        entrada_api_base.setVisible(mostrar_nube)
+        etiqueta_api_key.setVisible(mostrar_nube)
+        entrada_api_key.setVisible(mostrar_nube)
+        actualizar_estado_controles(estado["consulta_en_progreso"])
+        actualizar_texto_endpoint()
+
+    def actualizar_modelos_disponibles():
+        proveedor = combo_proveedor.currentText().strip() or PROVEEDOR_OLLAMA
+        estado["proveedor_actual"] = proveedor
+        estado["api_base_nube"] = normalizar_api_base_nube(entrada_api_base.text())
+        actualizar_visibilidad_nube()
+
+        if proveedor == PROVEEDOR_NUBE:
+            modelo_default = MODELO_NUBE_DEFAULT
+        else:
+            modelo_default = MODELO_OLLAMA
+
+        modelo_preferido = estado.get("modelo_actual") or modelo_default
+        modelos, error_modelos = obtener_modelos_disponibles(
+            proveedor=proveedor,
+            api_base_nube=estado["api_base_nube"],
+            api_key_nube=entrada_api_key.text(),
+        )
+
+        combo_modelos.blockSignals(True)
+        combo_modelos.clear()
+        for nombre_modelo in modelos:
+            combo_modelos.addItem(nombre_modelo)
+
+        # Permite usar un modelo escrito manualmente aunque no salga en /api/tags.
+        if modelo_preferido and combo_modelos.findText(modelo_preferido) < 0:
+            combo_modelos.insertItem(0, modelo_preferido)
+
+        indice = combo_modelos.findText(modelo_preferido)
+        if indice < 0:
+            indice = combo_modelos.findText(modelo_default)
+        if indice < 0 and combo_modelos.count() > 0:
+            indice = 0
+        if indice >= 0:
+            combo_modelos.setCurrentIndex(indice)
+        combo_modelos.blockSignals(False)
+
+        texto_actual = combo_modelos.currentText().strip()
+        estado["modelo_actual"] = texto_actual or modelo_default
+
+        if error_modelos:
+            log_warn(error_modelos)
+            etiqueta_estado.setText("No se pudo actualizar modelos. Activo: {}".format(estado["modelo_actual"]))
+        else:
+            etiqueta_estado.setText(
+                "Modelos cargados ({}) activo: {}".format(
+                    proveedor,
+                    estado["modelo_actual"],
+                )
+            )
+
+    def al_cambiar_modelo(_indice):
+        texto_actual = combo_modelos.currentText().strip()
+        if texto_actual:
+            estado["modelo_actual"] = texto_actual
+            etiqueta_estado.setText("Modelo activo: {}".format(estado["modelo_actual"]))
+
+    def al_cambiar_proveedor(_indice):
+        estado["proveedor_actual"] = combo_proveedor.currentText().strip() or PROVEEDOR_OLLAMA
+        if estado["proveedor_actual"] == PROVEEDOR_NUBE and not entrada_api_base.text().strip():
+            entrada_api_base.setText(NUBE_API_BASE_DEFAULT)
+        actualizar_visibilidad_nube()
+        actualizar_modelos_disponibles()
+
+    def refrescar_vista_chat():
+        tema_chat = colores_chat_desde_widget(panel_root)
+        visor_chat.setHtml(render_historial_html(estado["historial"], tema=tema_chat))
+        barra = visor_chat.verticalScrollBar()
+        if barra is not None:
+            barra.setValue(barra.maximum())
+
+    def guardar_historial_actual():
+        try:
+            guardar_historial(estado["ruta_historial"], estado["historial"])
+            log_info("Historial guardado en: {}".format(estado["ruta_historial"]))
+        except Exception as exc:
+            log_warn("No se pudo guardar historial: {}".format(exc))
+
+    def cargar_historial_actual():
+        estado["ruta_historial"] = obtener_ruta_historial_documento()
+        estado["historial"] = cargar_historial(estado["ruta_historial"])
+
+        nombre_doc = obtener_nombre_documento_activo() or "[sin documento]"
+        ruta_doc = obtener_ruta_documento_activo() or "[documento sin guardar]"
+        etiqueta_doc.setText("Documento activo: {} | {}".format(nombre_doc, ruta_doc))
+        etiqueta_historial.setText("Historial: {}".format(estado["ruta_historial"]))
+        etiqueta_estado.setText(
+            "Historial cargado: {} mensajes.".format(len(estado["historial"]))
+        )
+        refrescar_vista_chat()
+
+    def construir_contexto_extra():
+        partes = []
+        max_lineas = int(spin_lineas.value())
+
+        if chk_incluir_informe.isChecked():
+            texto_informe = leer_vista_informe(max_lineas)
+            if texto_informe:
+                partes.append("=== REPORT VIEW (ultimas lineas) ===\n{}".format(texto_informe))
+            else:
+                partes.append("=== REPORT VIEW ===\n[No disponible o vacio]")
+
+        if chk_incluir_consola.isChecked():
+            texto_consola = leer_consola_python(max_lineas)
+            if texto_consola:
+                partes.append("=== PYTHON CONSOLE (ultimas lineas) ===\n{}".format(texto_consola))
+            else:
+                partes.append("=== PYTHON CONSOLE ===\n[No disponible o vacio]")
+
+        return "\n\n".join(partes).strip()
+
+    def enviar_consulta():
+        if estado["consulta_en_progreso"]:
+            etiqueta_estado.setText("Ya hay una consulta en progreso.")
+            return
+
+        prompt_usuario = entrada_prompt.toPlainText().strip()
+        if not prompt_usuario:
+            etiqueta_estado.setText("Escribe un mensaje antes de enviar.")
+            return
+
+        estado["historial"].append(crear_mensaje("user", prompt_usuario))
+        entrada_prompt.clear()
+        refrescar_vista_chat()
+        guardar_historial_actual()
+
+        historial_sin_ultimo = estado["historial"][:-1]
+        contexto_extra = construir_contexto_extra()
+        proveedor_actual = combo_proveedor.currentText().strip() or PROVEEDOR_OLLAMA
+        modelo_actual = combo_modelos.currentText().strip() or estado.get("modelo_actual") or MODELO_OLLAMA
+        api_base_nube = normalizar_api_base_nube(entrada_api_base.text())
+        api_key_nube = entrada_api_key.text().strip()
+        estado["proveedor_actual"] = proveedor_actual
+        estado["modelo_actual"] = modelo_actual
+        estado["api_base_nube"] = api_base_nube
+        timeout_lectura_actual = int(spin_timeout.value())
+
+        def cerrar_consulta():
+            try:
+                QtWidgets.QApplication.restoreOverrideCursor()
+            except Exception:
+                pass
+            actualizar_estado_controles(False)
+            estado["thread_consulta"] = None
+            estado["worker_consulta"] = None
+
+        def al_exito(texto_respuesta, datos_crudos):
+            if not texto_respuesta:
+                texto_respuesta = "[Respuesta vacia]"
+            estado["historial"].append(crear_mensaje("assistant", texto_respuesta))
+            refrescar_vista_chat()
+            guardar_historial_actual()
+            etiqueta_estado.setText(
+                "Respuesta recibida ({} / {}).".format(
+                    estado.get("proveedor_actual", PROVEEDOR_OLLAMA),
+                    estado.get("modelo_actual", MODELO_OLLAMA),
+                )
+            )
+            try:
+                log_info("Campos recibidos: {}".format(", ".join(sorted(datos_crudos.keys()))))
+            except Exception:
+                pass
+
+        def al_error(mensaje, detalle):
+            texto_error = "La consulta fallo: {}".format(mensaje)
+            estado["historial"].append(crear_mensaje("assistant", texto_error))
+            refrescar_vista_chat()
+            guardar_historial_actual()
+            mostrar_error(None, mensaje, detalle)
+            etiqueta_estado.setText("Error en consulta.")
+
+        try:
+            actualizar_estado_controles(True)
+            if timeout_lectura_actual <= 0:
+                etiqueta_estado.setText(
+                    "Consultando {} / '{}' (sin timeout lectura)...".format(
+                        proveedor_actual,
+                        modelo_actual,
+                    )
+                )
+            else:
+                etiqueta_estado.setText(
+                    "Consultando {} / '{}' (timeout lectura={}s)...".format(
+                        proveedor_actual,
+                        modelo_actual,
+                        timeout_lectura_actual,
+                    )
+                )
+            QtWidgets.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+            QtWidgets.QApplication.processEvents()
+
+            hilo = QtCore.QThread()
+            worker = ConsultaOllamaWorker(
+                proveedor_actual,
+                prompt_usuario,
+                historial_sin_ultimo,
+                contexto_extra,
+                modelo_actual,
+                api_base_nube,
+                api_key_nube,
+                TIMEOUT_CONEXION_SEGUNDOS,
+                timeout_lectura_actual,
+            )
+            worker.moveToThread(hilo)
+
+            hilo.started.connect(worker.ejecutar)
+            worker.finalizado_ok.connect(al_exito)
+            worker.finalizado_error.connect(al_error)
+            worker.finalizado_ok.connect(hilo.quit)
+            worker.finalizado_error.connect(hilo.quit)
+            worker.finalizado_ok.connect(worker.deleteLater)
+            worker.finalizado_error.connect(worker.deleteLater)
+            hilo.finished.connect(hilo.deleteLater)
+            hilo.finished.connect(cerrar_consulta)
+
+            estado["thread_consulta"] = hilo
+            estado["worker_consulta"] = worker
+            hilo.start()
+        except Exception as exc:
+            detalle = traceback.format_exc()
+            texto_error = "No se pudo iniciar la consulta: {}".format(exc)
+            estado["historial"].append(crear_mensaje("assistant", texto_error))
+            refrescar_vista_chat()
+            guardar_historial_actual()
+            mostrar_error(None, str(exc), detalle)
+            etiqueta_estado.setText("Error al iniciar consulta.")
+            cerrar_consulta()
+
+    def nuevo_chat():
+        estado["historial"] = []
+        refrescar_vista_chat()
+        guardar_historial_actual()
+        etiqueta_estado.setText("Chat reiniciado y guardado.")
+
+    class EntradaFiltro(QtCore.QObject):
+        def eventFilter(self, objeto, evento):
+            try:
+                if evento.type() == QtCore.QEvent.KeyPress:
+                    if evento.key() in (QtCore.Qt.Key_Return, QtCore.Qt.Key_Enter):
+                        if evento.modifiers() & QtCore.Qt.ShiftModifier:
+                            return False
+                        enviar_consulta()
+                        return True
+            except Exception:
+                pass
+            return False
+
+    filtro = EntradaFiltro(panel_root)
+    entrada_prompt.installEventFilter(filtro)
+
+    boton_enviar.clicked.connect(enviar_consulta)
+    boton_nuevo.clicked.connect(nuevo_chat)
+    boton_recargar.clicked.connect(cargar_historial_actual)
+    boton_actualizar_modelos.clicked.connect(actualizar_modelos_disponibles)
+    combo_proveedor.currentIndexChanged.connect(al_cambiar_proveedor)
+    combo_modelos.currentIndexChanged.connect(al_cambiar_modelo)
+    if combo_modelos.lineEdit() is not None:
+        combo_modelos.lineEdit().editingFinished.connect(lambda: al_cambiar_modelo(-1))
+    entrada_api_base.editingFinished.connect(actualizar_texto_endpoint)
+    entrada_api_key.editingFinished.connect(actualizar_texto_endpoint)
+
+    actualizar_visibilidad_nube()
+    actualizar_modelos_disponibles()
+    cargar_historial_actual()
+    entrada_prompt.setFocus()
+    return panel
+
+
+def ejecutar_macro():
+    global VENTANA_OLLAMA
+
+    log_info("Iniciando macro: {}".format(NOMBRE_MACRO))
+    log_info("Documento activo: {}".format(obtener_nombre_documento_activo() or "[sin documento]"))
+    log_info("Seleccion actual: {} objeto(s)".format(len(obtener_seleccion_actual())))
+
+    try:
+        cerrar_ventana_existente()
+
+        if VENTANA_OLLAMA is not None:
+            try:
+                VENTANA_OLLAMA.close()
+            except Exception:
+                pass
+
+        ventana_principal = Gui.getMainWindow()
+        VENTANA_OLLAMA = construir_interfaz()
+        try:
+            VENTANA_OLLAMA.setWindowFlags(
+                VENTANA_OLLAMA.windowFlags() | QtCore.Qt.Window
+            )
+        except Exception:
+            pass
+        VENTANA_OLLAMA.show()
+        VENTANA_OLLAMA.raise_()
+        VENTANA_OLLAMA.activateWindow()
+        log_info("Ventana mostrada.")
+    except Exception as exc:
+        detalle = traceback.format_exc()
+        log_error("No se pudo abrir la interfaz: {}".format(exc))
+        log_error(detalle)
+
+
+ejecutar_macro()

@@ -1,0 +1,55 @@
+# -*- coding: utf-8 -*-
+# MenuText: Auditar interfaz de FreeCAD
+# ToolTip: Inventaria de forma read-only docks, paneles, tareas y widgets relevantes.
+# Version: 1.0.0 | Date: 2026-08-12 00:00 CST
+"""Produce and copy a read-only JSON audit of the current FreeCAD interface."""
+
+import json
+
+import FreeCADGui as Gui
+
+from programacion_common import clipboard_set, info, qt_modules, text
+
+TOOL = "UI_AUDIT"
+
+
+def geometry(widget):
+    try:
+        rect = widget.geometry()
+        return {"x": rect.x(), "y": rect.y(), "width": rect.width(), "height": rect.height()}
+    except Exception:
+        return None
+
+
+def record(widget):
+    return {"object_name": text(widget.objectName()), "title": text(widget.windowTitle()),
+            "class": type(widget).__name__, "visible": bool(widget.isVisible()),
+            "enabled": bool(widget.isEnabled()), "geometry": geometry(widget)}
+
+
+def main():
+    _core, _gui, widgets = qt_modules()
+    window = Gui.getMainWindow()
+    docks = list(window.findChildren(widgets.QDockWidget) or [])
+    names = {}
+    for dock in docks:
+        names.setdefault(text(dock.objectName()) or "<empty>", 0)
+        names[text(dock.objectName()) or "<empty>"] += 1
+    relevant = []
+    for widget in list(window.findChildren(widgets.QWidget) or []):
+        value = (text(widget.objectName()) + " " + text(widget.windowTitle())).lower()
+        if any(token in value for token in ("model", "modelo", "task", "tarea", "report", "reporte", "python")):
+            relevant.append(record(widget))
+    try:
+        active = bool(Gui.Control.activeDialog())
+    except Exception:
+        active = None
+    payload = {"docks": [record(dock) for dock in docks],
+               "duplicate_dock_names": {key: count for key, count in names.items() if count > 1},
+               "active_task_dialog": active, "relevant_widgets": relevant}
+    clipboard_set(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+    info(TOOL, "Auditoria copiada. Docks={}; duplicados={}; widgets relevantes={}.".format(
+        len(docks), len(payload["duplicate_dock_names"]), len(relevant)))
+
+
+main()

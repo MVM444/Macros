@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
-"""Register every active workbench loader in FreeCAD's global Macros toolbar."""
+# Icon: RegistrarLoadersGlobales.svg
+# MenuText: Registrar loaders globales
+# ToolTip: Detecta y registra los loaders de la carpeta Loaders en la barra global.
+# Version: 2.0.0 | Date: 2026-08-12
+"""Discover and register top-level Loaders/*.FCMacro in FreeCAD's global toolbar."""
 
 import importlib
 import os
+import re
 import sys
 
 import FreeCAD as App
@@ -10,18 +15,27 @@ import FreeCADGui as Gui
 
 
 LOG_PREFIX = "[LOADERS] "
+LOADER_SUFFIX = "Loader.FCMacro"
 
 
 def _info(message):
     App.Console.PrintMessage(LOG_PREFIX + str(message) + "\n")
 
 
+def _warning(message):
+    App.Console.PrintWarning(LOG_PREFIX + "[OMITIDO] " + str(message) + "\n")
+
+
 def _error(message):
-    App.Console.PrintError(LOG_PREFIX + str(message) + "\n")
+    App.Console.PrintError(LOG_PREFIX + "[ERROR] " + str(message) + "\n")
 
 
-def _load_toolbar_helper(macro_dir):
-    repo_dir = os.path.join(macro_dir, "Macros-de-Freecad")
+def _macro_root():
+    return os.path.normpath(os.path.abspath(os.path.dirname(__file__)))
+
+
+def _load_toolbar_helper(macro_root):
+    repo_dir = os.path.join(macro_root, "Macros-de-Freecad")
     helper_file = os.path.join(repo_dir, "loader_toolbar.py")
     if not os.path.isfile(helper_file):
         raise RuntimeError("No encontre el modulo compartido: " + helper_file)
@@ -32,62 +46,57 @@ def _load_toolbar_helper(macro_dir):
     return importlib.reload(loader_toolbar)
 
 
+def _visible_name(script_name):
+    base = script_name[:-len(".FCMacro")]
+    words = re.sub(r"(?<!^)(?=[A-Z])", " ", base).replace("_", " ")
+    return " ".join(words.split())
+
+
+def _discover_loaders(loader_dir):
+    if not os.path.isdir(loader_dir):
+        raise RuntimeError("No existe la carpeta Loaders: " + loader_dir)
+    discovered = []
+    for name in sorted(os.listdir(loader_dir), key=str.lower):
+        path = os.path.join(loader_dir, name)
+        if not os.path.isfile(path) or not name.lower().endswith(".fcmacro"):
+            continue
+        if not name.lower().endswith(LOADER_SUFFIX.lower()):
+            _warning("No parece loader y no se registra: " + name)
+            continue
+        icon = os.path.splitext(path)[0] + ".svg"
+        if not os.path.isfile(icon):
+            _warning("Falta SVG con el mismo nombre base: " + os.path.basename(icon))
+            continue
+        discovered.append((path, icon))
+    return discovered
+
+
 def main():
-    macro_dir = os.path.dirname(os.path.abspath(__file__))
-    helper = _load_toolbar_helper(macro_dir)
-    definitions = (
-        (
-            "ElectricCRLoader.FCMacro",
-            "ElectricCRLoader.svg",
-            "ElectricCR Loader",
-            "Carga y recarga el workbench ElectricCR",
-            "[ELECTRICCR-LOADER] ",
-        ),
-        (
-            "FacilArquitecturaLoader.FCMacro",
-            "FacilArquitecturaLoader.svg",
-            "Facil Arquitectura Loader",
-            "Carga y recarga el workbench Facil Arquitectura",
-            "[FACILARQ-LOADER] ",
-        ),
-        (
-            "GameEngineExportLoader.FCMacro",
-            "GameEngineExportLoader.svg",
-            "Game Engine Export Loader",
-            "Carga y recarga el workbench Game Engine Export",
-            "[GAMEEXPORT-LOADER] ",
-        ),
-        (
-            "MEPWorkbenchCRLoader.FCMacro",
-            "MEPWorkbenchCRLoader.svg",
-            "MEP Workbench CR Loader",
-            "Carga y recarga el workbench MEP Workbench CR",
-            "[MEP-LOADER] ",
-        ),
-    )
-
-    installed = 0
-    for script_name, icon_name, menu_text, tooltip, prefix in definitions:
-        macro_file = os.path.join(macro_dir, script_name)
-        icon_file = os.path.join(macro_dir, icon_name)
-        if not os.path.isfile(macro_file):
-            _error("Loader omitido; no existe: " + script_name)
-            continue
-        if not os.path.isfile(icon_file):
-            _error("Icono omitido; no existe: " + icon_name)
-            continue
-        helper.install_global_loader_toolbar(
-            App,
-            Gui,
-            macro_file,
-            icon_file,
-            menu_text,
-            tooltip,
-            prefix,
-        )
-        installed += 1
-
-    _info("Loaders registrados en la barra global Macros: {0}".format(installed))
+    macro_root = _macro_root()
+    loader_dir = os.path.join(macro_root, "Loaders")
+    helper = _load_toolbar_helper(macro_root)
+    discovered = _discover_loaders(loader_dir)
+    registered = []
+    for macro_file, icon_file in discovered:
+        script_name = os.path.basename(macro_file)
+        menu_text = _visible_name(script_name)
+        try:
+            handle = helper.install_global_loader_toolbar(
+                App,
+                Gui,
+                macro_file,
+                icon_file,
+                menu_text,
+                "Carga o recarga " + menu_text.replace(" Loader", ""),
+                "[{}] ".format(os.path.splitext(script_name)[0].upper()),
+            )
+            handle.refresh()
+            registered.append(script_name)
+            _info("Registrado: {} | icono={}".format(script_name, os.path.basename(icon_file)))
+        except Exception as exc:
+            _error("No se pudo registrar {}: {}".format(script_name, exc))
+    _info("Resumen: registrados={} omitidos={}.".format(len(registered), len(discovered) - len(registered)))
+    return registered
 
 
-main()
+REGISTERED_LOADERS = main()

@@ -1,0 +1,170 @@
+{
+  "test": "FreeCAD-HVAC GUI smoke test",
+  "freecad_version": [
+    "1",
+    "1",
+    "3",
+    "20260725 (Git shallow)",
+    "Unknown",
+    "2026/07/25 04:52:02",
+    "grafted,grafted",
+    "145529fe741292ff0b3977a01195bf0247425794"
+  ],
+  "user_data_dir": "C:\\Users\\marco\\AppData\\Roaming\\FreeCAD\\v1-1\\",
+  "documents_before": [],
+  "workbench_before": "PartDesignWorkbench",
+  "workbench_hvac_present_before_activation": true,
+  "workbench_hvac_activated": true,
+  "commands": [
+    "HVAC_ActivateDuctNetwork",
+    "HVAC_CreateDuctNetwork",
+    "HVAC_CreateLine",
+    "HVAC_CreateSketch",
+    "HVAC_CreateSpline",
+    "HVAC_CreateVirtualJunction",
+    "HVAC_DeleteDuctNetwork",
+    "HVAC_EditBaseObject",
+    "HVAC_EditDuctDirections",
+    "HVAC_EditNetworkTypeDefaults",
+    "HVAC_EditPlacement",
+    "HVAC_EditType",
+    "HVAC_ModifyDuctNetwork",
+    "HVAC_ReloadLibraries",
+    "HVAC_ResetTypesToDefaults",
+    "HVAC_ReverseGeometryDirection"
+  ],
+  "missing_expected_commands": [],
+  "hvac_toolbars": [
+    {
+      "title": "HVAC",
+      "object_name": "HVAC",
+      "visible": true,
+      "actions": [
+        "Create Network",
+        "Activate Network",
+        "Modify Network",
+        "Network Defaults",
+        "New Sketch",
+        "New Straight",
+        "New Curved",
+        "Create Junction",
+        "Modify Routing",
+        "Edit Directions",
+        "Edit Type",
+        "Edit Placement",
+        "Reset to Defaults"
+      ]
+    }
+  ],
+  "hvac_menus": [
+    {
+      "title": "HVAC",
+      "actions": [
+        "Create Network",
+        "Activate Network",
+        "Modify Network",
+        "Network Defaults",
+        "New Sketch",
+        "New Straight",
+        "New Curved",
+        "Create Junction",
+        "Modify Routing",
+        "Edit Directions",
+        "Edit Type",
+        "Edit Placement",
+        "Reset to Defaults"
+      ]
+    }
+  ],
+  "network_created": true,
+  "route_added": true,
+  "route_length_mm": 2000.0,
+  "segments_created": 1,
+  "junctions_created": 2,
+  "objects": [
+    {
+      "name": "DuctNetwork",
+      "label": "DuctNetwork",
+      "type_id": "App::DocumentObjectGroupPython",
+      "proxy_class": "DuctNetwork"
+    },
+    {
+      "name": "DuctNetwork_Base",
+      "label": "Base",
+      "type_id": "App::DocumentObjectGroupPython",
+      "proxy_class": "DuctManagedFolder"
+    },
+    {
+      "name": "DuctNetwork_Geometry",
+      "label": "Geometry",
+      "type_id": "App::DocumentObjectGroupPython",
+      "proxy_class": "DuctManagedFolder"
+    },
+    {
+      "name": "DuctNetwork_Topology",
+      "label": "Topology",
+      "type_id": "App::DocumentObjectGroupPython",
+      "proxy_class": "DuctManagedFolder"
+    },
+    {
+      "name": "Line",
+      "label": "Line",
+      "type_id": "Part::FeaturePython",
+      "proxy_class": "Wire"
+    },
+    {
+      "name": "DuctNetwork_Seg_Line_0",
+      "label": "Line [0]",
+      "type_id": "circular_straight",
+      "proxy_class": "DuctSegment"
+    },
+    {
+      "name": "DuctNetwork_Junc_1",
+      "label": "End.terminal [1]",
+      "type_id": "end_terminal_marker",
+      "proxy_class": "DuctJunction"
+    },
+    {
+      "name": "DuctNetwork_Junc_2",
+      "label": "End.terminal [2]",
+      "type_id": "end_terminal_marker",
+      "proxy_class": "DuctJunction"
+    }
+  ],
+  "document_saved": false,
+  "documents_after": [],
+  "status": "OK",
+  "error": null,
+  "traceback": null,
+  "workbench_names": [
+    "AssemblyWorkbench",
+    "BIMWorkbench",
+    "CAMWorkbench",
+    "CablesWorkbench",
+    "DraftWorkbench",
+    "DynamicDataWorkbench",
+    "FemWorkbench",
+    "FreeCADMCPAddonWorkbench",
+    "GameEngineExportWorkbench",
+    "GearWorkbench",
+    "HVAC",
+    "InspectionWorkbench",
+    "MaterialWorkbench",
+    "MeshWorkbench",
+    "NodesWorkbench",
+    "NoneWorkbench",
+    "OpenSCADWorkbench",
+    "PartDesignWorkbench",
+    "PartWorkbench",
+    "PointsWorkbench",
+    "ReverseEngineeringWorkbench",
+    "RobotWorkbench",
+    "SMWorkbench",
+    "SketcherWorkbench",
+    "SpreadsheetWorkbench",
+    "SurfaceWorkbench",
+    "TechDrawWorkbench",
+    "TestWorkbench"
+  ],
+  "workbench_after_activation": "HVAC"
+}

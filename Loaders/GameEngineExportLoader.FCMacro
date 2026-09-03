@@ -39,7 +39,8 @@ def log_error(message):
 
 def install_loader_toolbar():
     here = os.path.normpath(os.path.abspath(os.path.dirname(__file__)))
-    helper_roots = (os.path.join(here, "Macros-de-Freecad"), here)
+    macro_root = os.path.dirname(here) if os.path.basename(here).lower() == "loaders" else here
+    helper_roots = (os.path.join(macro_root, "Macros-de-Freecad"), macro_root, here)
     for root in helper_roots:
         if os.path.exists(os.path.join(root, "loader_toolbar.py")) and root not in sys.path:
             sys.path.insert(0, root)
@@ -79,8 +80,9 @@ def ensure_repo_on_path(repo_root):
 
 def candidate_repo_roots():
     here = os.path.dirname(__file__)
+    macro_root = os.path.dirname(here) if os.path.basename(here).lower() == "loaders" else here
     roots = []
-    for root in (os.path.join(here, "Macros-de-Freecad"), here):
+    for root in (os.path.join(macro_root, "Macros-de-Freecad"), macro_root):
         root = os.path.normpath(os.path.abspath(root))
         if os.path.isdir(root) and root not in roots:
             roots.append(root)

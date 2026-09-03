@@ -1,144 +1,120 @@
-# Qt compatibility for FreeCAD 1.x (PySide6) and older builds.
-def _ensure_qt_compat():
-    import sys
-    import types
+# -*- coding: utf-8 -*-
+# MenuText: Copiar ultimo minuto
+# ToolTip: Copia el ultimo minuto de la Vista de reportes, con respaldo FreeCAD.log.
+# Version: 2.0.0 | Date: 2026-08-12 00:00 CST
+"""Copy the latest report/log minute with diagnostic context; does not edit documents."""
 
-    QtCore = QtGui = QtWidgets = None
-    binding_name = None
-
-    for candidate in ("PySide6", "PySide2", "PySide"):
-        try:
-            if candidate == "PySide":
-                from PySide import QtCore as _QtCore, QtGui as _QtGui
-                _QtWidgets = _QtGui
-            else:
-                module = __import__(candidate, fromlist=["QtCore", "QtGui", "QtWidgets"])
-                _QtCore = module.QtCore
-                _QtGui = module.QtGui
-                _QtWidgets = module.QtWidgets
-            QtCore, QtGui, QtWidgets = _QtCore, _QtGui, _QtWidgets
-            binding_name = candidate
-            break
-        except Exception:
-            continue
-
-    if QtCore is None:
-        return
-
-    qtgui_compat = types.ModuleType("QtGui")
-    qtgui_compat.__dict__.update(getattr(QtGui, "__dict__", {}))
-    qtgui_compat.__dict__.update(getattr(QtWidgets, "__dict__", {}))
-
-    qtsvg_compat = None
-    for module_name in ("QtSvg", "QtSvgWidgets"):
-        try:
-            module = __import__(binding_name, fromlist=[module_name])
-            qt_module = getattr(module, module_name)
-        except Exception:
-            continue
-        if qtsvg_compat is None:
-            qtsvg_compat = types.ModuleType("QtSvg")
-        qtsvg_compat.__dict__.update(getattr(qt_module, "__dict__", {}))
-
-    qtuitools_compat = None
-    try:
-        module = __import__(binding_name, fromlist=["QtUiTools"])
-        qtuitools_compat = module.QtUiTools
-    except Exception:
-        pass
-
-    for package_name in ("PySide2", "PySide"):
-        package = sys.modules.get(package_name)
-        if package is None:
-            package = types.ModuleType(package_name)
-            sys.modules[package_name] = package
-        package.QtCore = QtCore
-        package.QtGui = qtgui_compat
-        package.QtWidgets = QtWidgets
-        sys.modules[package_name + ".QtCore"] = QtCore
-        sys.modules[package_name + ".QtGui"] = qtgui_compat
-        sys.modules[package_name + ".QtWidgets"] = QtWidgets
-        if qtsvg_compat is not None:
-            package.QtSvg = qtsvg_compat
-            sys.modules[package_name + ".QtSvg"] = qtsvg_compat
-        if qtuitools_compat is not None:
-            package.QtUiTools = qtuitools_compat
-            sys.modules[package_name + ".QtUiTools"] = qtuitools_compat
-
-
-_ensure_qt_compat()
-
-## CopyReportLast1Min.FCMacro
-## Macro para FreeCAD que copia al portapapeles
-## las líneas de la Report View correspondientes
-## al último minuto según la hora HH:MM:SS.
+import datetime
+import os
+import re
 
 import FreeCAD as App
 import FreeCADGui as Gui
-from PySide import QtGui
 
-def parse_time_hms(line):
-    """
-    Extrae HH:MM:SS del inicio de la línea y la convierte
-    en segundos desde 00:00:00 (0 ≤ s < 86400). Si no puede, devuelve None.
-    """
-    if len(line) < 8 or line[2] != ':' or line[5] != ':':
+from programacion_common import clipboard_set, document_metadata, freecad_version, info, warning
+
+TOOL = "ULTIMO_MINUTO"
+STAMP = re.compile(r"(?<!\d)([01]\d|2[0-3]):([0-5]\d):([0-5]\d)(?!\d)")
+
+
+def seconds(line):
+    match = STAMP.search(line[:80])
+    if not match:
         return None
-    try:
-        h = int(line[0:2]); m = int(line[3:5]); s = int(line[6:8])
-        return h*3600 + m*60 + s
-    except:
-        return None
+    return int(match.group(1)) * 3600 + int(match.group(2)) * 60 + int(match.group(3))
 
-def copy_report_last_1min():
-    # 1) Obtener widget Report View
-    mw = Gui.getMainWindow()
-    report = mw.findChild(QtGui.QTextEdit, "Report view")
-    if not report:
-        App.Console.PrintError("No se encontró la Report View (ajusta el objectName si es necesario)\n")
-        return
 
-    # 2) Leer todo el texto y partir en líneas
-    full_text = report.toPlainText()
-    if not full_text:
-        App.Console.PrintMessage("La Report View está vacía.\n")
-        return
-    lines = full_text.splitlines()
-
-    # 3) Buscar la última línea no vacía y extraer su hora
-    idx = len(lines) - 1
-    while idx >= 0 and not lines[idx].strip():
-        idx -= 1
-    if idx < 0:
-        App.Console.PrintMessage("No hay líneas en la Report View.\n")
-        return
-
-    last_line = lines[idx]
-    last_sec = parse_time_hms(last_line)
-    if last_sec is None:
-        App.Console.PrintMessage("La última línea no tiene prefijo HH:MM:SS; copiando solo esa.\n")
-        block = [last_line]
-    else:
-        # 4) Definir umbral: 1 minuto = 60 segundos
-        cutoff = last_sec - 60
-        block = []
-        # Recorrer de abajo hacia arriba
-        for i in range(idx, -1, -1):
-            sec = parse_time_hms(lines[i])
-            # Si línea con hora anterior al corte, paramos
-            if sec is not None and sec < cutoff:
+def last_minute(lines):
+    lines = list(lines or [])
+    end = len(lines) - 1
+    while end >= 0 and not lines[end].strip():
+        end -= 1
+    if end < 0:
+        return []
+    anchor_index = end
+    while anchor_index >= 0 and seconds(lines[anchor_index]) is None:
+        anchor_index -= 1
+    if anchor_index < 0:
+        return lines[max(0, end - 200):end + 1]
+    anchor = seconds(lines[anchor_index])
+    selected = []
+    for index in range(end, -1, -1):
+        stamp = seconds(lines[index])
+        if stamp is not None:
+            age = (anchor - stamp) % 86400
+            if age > 60 and age < 86340:
                 break
-            # Si no tiene hora o está en la ventana, la incluimos
-            block.append(lines[i])
-        block.reverse()
+        selected.append(lines[index])
+    selected.reverse()
+    return selected
 
-    # 5) Copiar al portapapeles
-    text_to_copy = "\n".join(block)
-    QtGui.QApplication.clipboard().setText(text_to_copy)
 
-    # 6) Mensaje de confirmación
-    App.Console.PrintMessage("[OK] Líneas del último minuto copiadas al portapapeles:\n")
-    App.Console.PrintMessage(text_to_copy + "\n")
+def report_text():
+    _core, _gui, widgets = __import__("programacion_common").qt_modules()
+    main = Gui.getMainWindow()
+    candidates = []
+    for widget_type in (widgets.QPlainTextEdit, widgets.QTextEdit):
+        for widget in list(main.findChildren(widget_type) or []):
+            name = (str(widget.objectName()) + " " + str(widget.windowTitle())).lower()
+            parent = widget.parent()
+            while parent is not None and len(name) < 1000:
+                try:
+                    name += " " + str(parent.objectName()) + " " + str(parent.windowTitle())
+                    parent = parent.parent()
+                except Exception:
+                    break
+            score = sum(token in name for token in ("report", "reporte", "reportview"))
+            if score:
+                candidates.append((score, widget))
+    candidates.sort(key=lambda item: item[0], reverse=True)
+    for _score, widget in candidates:
+        try:
+            value = widget.toPlainText()
+            if value:
+                return value, "Vista de reportes"
+        except Exception:
+            continue
+    return "", ""
 
-# Ejecutar al cargar la macro
-copy_report_last_1min()
+
+def log_path():
+    for getter in ("getLogFileName", "getLogFilename"):
+        try:
+            value = getattr(App, getter)()
+            if value and os.path.isfile(value):
+                return value
+        except Exception:
+            pass
+    appdata = os.environ.get("APPDATA", "")
+    value = os.path.join(appdata, "FreeCAD", "FreeCAD.log") if appdata else ""
+    return value if os.path.isfile(value) else ""
+
+
+def main():
+    raw, source = report_text()
+    if not raw:
+        path = log_path()
+        if path:
+            with open(path, "r", encoding="utf-8", errors="replace") as handle:
+                raw = handle.read()
+            source = "FreeCAD.log ({})".format(path)
+    if not raw:
+        warning(TOOL, "No se pudo leer la Vista de reportes ni FreeCAD.log.")
+        return
+    block = last_minute(raw.splitlines())
+    meta = document_metadata()
+    now = datetime.datetime.now().astimezone().isoformat(timespec="seconds")
+    header = [
+        "Contexto para GPT/Codex",
+        "Documento: {} ({})".format(meta["label"] or "sin documento", meta["name"] or "-") ,
+        "Archivo activo: {}".format(meta["file"] or "no guardado"),
+        "FreeCAD: {}".format(freecad_version()),
+        "Fecha y hora: {}".format(now),
+        "Fuente: {}".format(source),
+        "----- INICIO REGISTRO -----",
+    ]
+    clipboard_set("\n".join(header + block + ["----- FIN REGISTRO -----"]))
+    info(TOOL, "Copiado desde {}. Lineas={}.".format(source, len(block)))
+
+
+main()

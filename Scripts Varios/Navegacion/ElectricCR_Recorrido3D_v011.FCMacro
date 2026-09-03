@@ -1,0 +1,1083 @@
+# -*- coding: utf-8 -*-
+# ElectricCR - Recorrido3D
+# Version: 0.1.1
+# Fecha: 2026-08-12 13:05 -06:00
+#
+# Objetivo:
+# - Recorrido en primera persona dentro de la vista 3D de FreeCAD.
+# - Navegacion continua tipo FPS con WASD y raton.
+# - Modo Caminar con altura fija y modo Volar.
+# - Colision simple y opcional contra solidos del documento.
+# - Sin dependencia de DraftWorkingPlane ni Snapper.
+#
+# Controles:
+# - W/S: adelante/atras
+# - A/D: izquierda/derecha
+# - Shift: movimiento rapido
+# - F: alternar Caminar/Volar
+# - Q/E: bajar/subir en modo Volar
+# - C: activar/desactivar colision
+# - R: restaurar altura de ojos en modo Caminar
+# - Rueda del raton: cambiar velocidad
+# - Esc: salir del recorrido y devolver el control a FreeCAD
+#
+# Notas importantes:
+# - La macro captura el raton mientras esta activa.
+# - La geometria del documento no se modifica.
+# - La colision es experimental y se calcula con solidos visibles.
+# - La altura y velocidades se expresan en mm.
+# - Mantener este archivo en ASCII en nombres, mensajes y comentarios.
+#
+# FreeCAD objetivo: 1.1.3
+#
+# Referencias de API utilizadas:
+# - Gui.ActiveDocument.ActiveView.getCameraNode()
+# - ActiveView.setCameraType("Perspective")
+# - PySide / QtCore.QTimer
+# - QWidget eventFilter para teclado y raton
+#
+# ElectricCR:
+# Esta macro es un prototipo funcional. Si la navegacion resulta estable,
+# convertir la logica en un modulo del Workbench y registrar un comando propio.
+
+import math
+import time
+
+import FreeCAD as App
+import FreeCADGui as Gui
+
+from PySide import QtCore, QtGui, QtWidgets
+
+
+# ---------------------------------------------------------------------------
+# Configuracion
+# ---------------------------------------------------------------------------
+
+EYE_HEIGHT_MM = 1700.0
+FLOOR_Z_MM = 0.0
+
+WALK_SPEED_MM_S = 1500.0
+FAST_MULTIPLIER = 3.0
+FLY_VERTICAL_SPEED_MM_S = 1200.0
+
+MOUSE_SENSITIVITY_DEG_PX = 0.16
+PITCH_LIMIT_DEG = 88.0
+
+START_MODE = "WALK"
+COLLISION_DEFAULT = False
+
+BODY_RADIUS_MM = 220.0
+COLLISION_TOL_MM = 0.5
+
+START_NEAR_FOCAL_POINT = True
+START_BACK_DISTANCE_MM = 2500.0
+
+TIMER_INTERVAL_MS = 16
+
+DEBUG = True
+
+APP_SINGLETON_NAME = "_electriccr_recorrido3d_controller"
+
+
+# ---------------------------------------------------------------------------
+# Utilidades
+# ---------------------------------------------------------------------------
+
+def log(msg):
+    if DEBUG:
+        App.Console.PrintMessage("[ElectricCR][Recorrido3D] " + str(msg) + "\n")
+
+
+def warn(msg):
+    App.Console.PrintWarning("[ElectricCR][Recorrido3D] " + str(msg) + "\n")
+
+
+def err(msg):
+    App.Console.PrintError("[ElectricCR][Recorrido3D] " + str(msg) + "\n")
+
+
+def qt_event(name):
+    try:
+        return getattr(QtCore.QEvent.Type, name)
+    except Exception:
+        return getattr(QtCore.QEvent, name)
+
+
+def qt_key(name):
+    try:
+        return getattr(QtCore.Qt.Key, name)
+    except Exception:
+        return getattr(QtCore.Qt, name)
+
+
+def qt_cursor(name):
+    try:
+        return getattr(QtCore.Qt.CursorShape, name)
+    except Exception:
+        return getattr(QtCore.Qt, name)
+
+
+def qt_focus(name):
+    try:
+        return getattr(QtCore.Qt.FocusPolicy, name)
+    except Exception:
+        return getattr(QtCore.Qt, name)
+
+
+def qt_align(name):
+    try:
+        return getattr(QtCore.Qt.AlignmentFlag, name)
+    except Exception:
+        return getattr(QtCore.Qt, name)
+
+
+def qt_widget_attr(name):
+    try:
+        return getattr(QtCore.Qt.WidgetAttribute, name)
+    except Exception:
+        return getattr(QtCore.Qt, name)
+
+
+EV_KEY_PRESS = qt_event("KeyPress")
+EV_KEY_RELEASE = qt_event("KeyRelease")
+EV_MOUSE_MOVE = qt_event("MouseMove")
+EV_MOUSE_PRESS = qt_event("MouseButtonPress")
+EV_WHEEL = qt_event("Wheel")
+EV_RESIZE = qt_event("Resize")
+EV_FOCUS_OUT = qt_event("FocusOut")
+EV_HIDE = qt_event("Hide")
+EV_CLOSE = qt_event("Close")
+
+KEY_W = qt_key("Key_W")
+KEY_A = qt_key("Key_A")
+KEY_S = qt_key("Key_S")
+KEY_D = qt_key("Key_D")
+KEY_Q = qt_key("Key_Q")
+KEY_E = qt_key("Key_E")
+KEY_F = qt_key("Key_F")
+KEY_C = qt_key("Key_C")
+KEY_R = qt_key("Key_R")
+KEY_SHIFT = qt_key("Key_Shift")
+KEY_ESCAPE = qt_key("Key_Escape")
+
+
+def clamp(value, lo, hi):
+    return max(lo, min(hi, value))
+
+
+def normalized(vec):
+    length = vec.Length
+    if length < 1.0e-9:
+        return App.Vector(0.0, 0.0, 0.0)
+    return vec * (1.0 / length)
+
+
+def camera_vector(field):
+    value = field.getValue().getValue()
+    return App.Vector(float(value[0]), float(value[1]), float(value[2]))
+
+
+def camera_rotation(camera):
+    q = camera.orientation.getValue().getValue()
+    return App.Rotation(float(q[0]), float(q[1]), float(q[2]), float(q[3]))
+
+
+def find_active_gl_widget():
+    """Busca el QOpenGLWidget que pertenece a la vista MDI activa."""
+    mw = Gui.getMainWindow()
+    mdi = mw.findChild(QtWidgets.QMdiArea)
+
+    if mdi is not None and mdi.activeSubWindow() is not None:
+        root = mdi.activeSubWindow()
+    else:
+        root = mw
+
+    candidates = []
+
+    gl_class = getattr(QtWidgets, "QOpenGLWidget", None)
+    if gl_class is not None:
+        try:
+            candidates.extend(root.findChildren(gl_class))
+        except Exception:
+            pass
+
+    if not candidates:
+        try:
+            for widget in root.findChildren(QtWidgets.QWidget):
+                try:
+                    class_name = str(widget.metaObject().className())
+                except Exception:
+                    class_name = ""
+
+                inherits_gl = False
+                try:
+                    inherits_gl = bool(widget.inherits("QOpenGLWidget"))
+                except Exception:
+                    pass
+
+                if inherits_gl or "OpenGLWidget" in class_name:
+                    candidates.append(widget)
+        except Exception:
+            pass
+
+    visible = []
+    for widget in candidates:
+        try:
+            if widget.isVisible() and widget.width() > 10 and widget.height() > 10:
+                visible.append(widget)
+        except Exception:
+            pass
+
+    if not visible:
+        return None
+
+    return max(visible, key=lambda w: int(w.width()) * int(w.height()))
+
+
+# ---------------------------------------------------------------------------
+# Controlador principal
+# ---------------------------------------------------------------------------
+
+class Recorrido3DController(QtCore.QObject):
+
+    def __init__(self):
+        super().__init__()
+
+        self.running = False
+        self.stopping = False
+
+        self.doc = None
+        self.gui_doc = None
+        self.view = None
+        self.camera = None
+        self.gl_widget = None
+
+        self.timer = QtCore.QTimer(self)
+        self.timer.setInterval(TIMER_INTERVAL_MS)
+        self.timer.timeout.connect(self._tick)
+
+        self.keys = set()
+
+        self.mode = START_MODE
+        self.collision_enabled = bool(COLLISION_DEFAULT)
+        self.speed = float(WALK_SPEED_MM_S)
+
+        self.floor_z = float(FLOOR_Z_MM)
+        self.eye_height = float(EYE_HEIGHT_MM)
+
+        self.yaw_deg = 0.0
+        self.pitch_deg = 0.0
+
+        self.last_time = None
+        self.ignore_mouse_moves = 0
+
+        self.collision_solids = []
+        self.last_collision_name = None
+        self.last_collision_log_time = 0.0
+
+        self.hud = None
+        self.crosshair = None
+        self.hud_tick = 0
+
+        self.old_cursor = None
+        self.old_focus_policy = None
+        self.old_mouse_tracking = None
+        self.old_camera_type = None
+        self.old_popup_enabled = None
+
+    # -----------------------------------------------------------------------
+    # Inicio y cierre
+    # -----------------------------------------------------------------------
+
+    def start(self):
+        if self.running:
+            return
+
+        self.doc = App.ActiveDocument
+        self.gui_doc = Gui.activeDocument()
+
+        if self.doc is None or self.gui_doc is None:
+            raise RuntimeError("No hay un documento activo.")
+
+        self.view = self.gui_doc.activeView()
+        if self.view is None:
+            raise RuntimeError("No hay una vista 3D activa.")
+
+        self.camera = self.view.getCameraNode()
+        if self.camera is None:
+            raise RuntimeError("No se pudo obtener la camara de FreeCAD.")
+
+        self.gl_widget = find_active_gl_widget()
+        if self.gl_widget is None:
+            raise RuntimeError("No se encontro el QOpenGLWidget de la vista 3D activa.")
+
+        try:
+            self.old_camera_type = self.view.getCameraType()
+        except Exception:
+            self.old_camera_type = None
+
+        try:
+            self.old_popup_enabled = self.view.isPopupMenuEnabled()
+        except Exception:
+            self.old_popup_enabled = None
+
+        try:
+            self.view.setCameraType("Perspective")
+        except Exception as exc:
+            warn("No se pudo forzar perspectiva: " + str(exc))
+
+        try:
+            self.view.setPopupMenuEnabled(False)
+        except Exception:
+            pass
+
+        self._initialize_angles()
+        self._initialize_position()
+        self._apply_camera_orientation()
+
+        self._build_collision_cache()
+
+        self._install_input_capture()
+        self._create_hud()
+
+        self.last_time = time.perf_counter()
+        self.running = True
+        self.timer.start()
+
+        QtCore.QTimer.singleShot(50, self._center_mouse)
+
+        log("Recorrido3D iniciado.")
+        log("Modo inicial: " + self.mode)
+        log("Altura de ojos: {:.0f} mm".format(self.eye_height))
+        log("Nivel de piso: {:.0f} mm".format(self.floor_z))
+        log("Velocidad: {:.0f} mm/s".format(self.speed))
+        log("Colision: " + ("ON" if self.collision_enabled else "OFF"))
+        log("ESC para salir.")
+
+    def stop(self, reason="usuario"):
+        if self.stopping:
+            return
+
+        self.stopping = True
+
+        try:
+            self.timer.stop()
+        except Exception:
+            pass
+
+        self.keys.clear()
+
+        try:
+            self._remove_input_capture()
+        except Exception as exc:
+            warn("Error liberando entrada: " + str(exc))
+
+        try:
+            self._destroy_hud()
+        except Exception:
+            pass
+
+        if self.view is not None:
+            try:
+                if self.old_popup_enabled is not None:
+                    self.view.setPopupMenuEnabled(bool(self.old_popup_enabled))
+            except Exception:
+                pass
+
+            try:
+                if self.old_camera_type is not None:
+                    self.view.setCameraType(self.old_camera_type)
+            except Exception as exc:
+                warn("Error restaurando tipo de camara: " + str(exc))
+
+        self.running = False
+
+        try:
+            app = QtWidgets.QApplication.instance()
+            if getattr(app, APP_SINGLETON_NAME, None) is self:
+                setattr(app, APP_SINGLETON_NAME, None)
+        except Exception:
+            pass
+
+        log("Recorrido3D finalizado. Motivo: " + str(reason))
+        self.stopping = False
+
+    # -----------------------------------------------------------------------
+    # Camara
+    # -----------------------------------------------------------------------
+
+    def _initialize_angles(self):
+        rot = camera_rotation(self.camera)
+        forward = normalized(rot.multVec(App.Vector(0.0, 0.0, -1.0)))
+
+        self.pitch_deg = math.degrees(math.asin(clamp(forward.z, -1.0, 1.0)))
+        self.yaw_deg = math.degrees(math.atan2(-forward.x, forward.y))
+
+        if not math.isfinite(self.yaw_deg):
+            self.yaw_deg = 0.0
+        if not math.isfinite(self.pitch_deg):
+            self.pitch_deg = 0.0
+
+        self.pitch_deg = clamp(self.pitch_deg, -PITCH_LIMIT_DEG, PITCH_LIMIT_DEG)
+
+        log("Orientacion inicial yaw={:.2f} pitch={:.2f}".format(
+            self.yaw_deg, self.pitch_deg
+        ))
+
+    def _initialize_position(self):
+        pos = camera_vector(self.camera.position)
+        rot = camera_rotation(self.camera)
+        forward = normalized(rot.multVec(App.Vector(0.0, 0.0, -1.0)))
+
+        if START_NEAR_FOCAL_POINT:
+            try:
+                focal_distance = float(self.camera.focalDistance.getValue())
+            except Exception:
+                focal_distance = 0.0
+
+            if focal_distance > 1.0:
+                target = pos + forward * focal_distance
+                horizontal = normalized(App.Vector(forward.x, forward.y, 0.0))
+
+                if horizontal.Length > 0.5:
+                    pos.x = target.x - horizontal.x * START_BACK_DISTANCE_MM
+                    pos.y = target.y - horizontal.y * START_BACK_DISTANCE_MM
+
+        if self.mode == "WALK":
+            pos.z = self.floor_z + self.eye_height
+
+        self._set_camera_position(pos)
+
+        log("Posicion inicial X={:.1f} Y={:.1f} Z={:.1f}".format(
+            pos.x, pos.y, pos.z
+        ))
+
+    def _orientation_from_angles(self):
+        base = App.Rotation(App.Vector(1.0, 0.0, 0.0), 90.0)
+
+        yaw_rot = App.Rotation(App.Vector(0.0, 0.0, 1.0), self.yaw_deg)
+
+        right_axis = normalized(yaw_rot.multVec(App.Vector(1.0, 0.0, 0.0)))
+        pitch_rot = App.Rotation(right_axis, self.pitch_deg)
+
+        return pitch_rot.multiply(yaw_rot).multiply(base)
+
+    def _apply_camera_orientation(self):
+        rot = self._orientation_from_angles()
+        self.camera.orientation.setValue(*rot.Q)
+
+    def _set_camera_position(self, pos):
+        self.camera.position.setValue(float(pos.x), float(pos.y), float(pos.z))
+
+    def _camera_position(self):
+        return camera_vector(self.camera)
+
+    # -----------------------------------------------------------------------
+    # Entrada Qt
+    # -----------------------------------------------------------------------
+
+    def _install_input_capture(self):
+        widget = self.gl_widget
+
+        try:
+            self.old_cursor = QtGui.QCursor(widget.cursor())
+        except Exception:
+            self.old_cursor = None
+
+        try:
+            self.old_focus_policy = widget.focusPolicy()
+        except Exception:
+            self.old_focus_policy = None
+
+        try:
+            self.old_mouse_tracking = widget.hasMouseTracking()
+        except Exception:
+            self.old_mouse_tracking = None
+
+        widget.installEventFilter(self)
+
+        try:
+            widget.setMouseTracking(True)
+        except Exception:
+            pass
+
+        try:
+            widget.setFocusPolicy(qt_focus("StrongFocus"))
+            widget.setFocus()
+        except Exception:
+            pass
+
+        try:
+            widget.setCursor(qt_cursor("BlankCursor"))
+        except Exception:
+            pass
+
+        try:
+            widget.grabMouse()
+        except Exception as exc:
+            warn("grabMouse no disponible: " + str(exc))
+
+    def _remove_input_capture(self):
+        widget = self.gl_widget
+        if widget is None:
+            return
+
+        try:
+            widget.removeEventFilter(self)
+        except Exception:
+            pass
+
+        try:
+            widget.releaseMouse()
+        except Exception:
+            pass
+
+        try:
+            if self.old_cursor is not None:
+                widget.setCursor(self.old_cursor)
+            else:
+                widget.unsetCursor()
+        except Exception:
+            pass
+
+        try:
+            if self.old_focus_policy is not None:
+                widget.setFocusPolicy(self.old_focus_policy)
+        except Exception:
+            pass
+
+        try:
+            if self.old_mouse_tracking is not None:
+                widget.setMouseTracking(bool(self.old_mouse_tracking))
+        except Exception:
+            pass
+
+    def _event_position(self, event):
+        try:
+            return event.position().toPoint()
+        except Exception:
+            try:
+                return event.pos()
+            except Exception:
+                return QtCore.QPoint(0, 0)
+
+    def _center_mouse(self):
+        widget = self.gl_widget
+        if widget is None:
+            return
+
+        try:
+            center = widget.rect().center()
+            global_center = widget.mapToGlobal(center)
+            self.ignore_mouse_moves = max(self.ignore_mouse_moves, 1)
+            QtGui.QCursor.setPos(global_center)
+        except Exception as exc:
+            warn("No se pudo centrar el raton: " + str(exc))
+
+    def eventFilter(self, watched, event):
+        if watched is not self.gl_widget:
+            return False
+
+        try:
+            etype = event.type()
+
+            if etype == EV_KEY_PRESS:
+                key = event.key()
+
+                if key == KEY_ESCAPE:
+                    if not event.isAutoRepeat():
+                        QtCore.QTimer.singleShot(0, lambda: self.stop("ESC"))
+                    return True
+
+                if key == KEY_F:
+                    if not event.isAutoRepeat():
+                        self._toggle_mode()
+                    return True
+
+                if key == KEY_C:
+                    if not event.isAutoRepeat():
+                        self.collision_enabled = not self.collision_enabled
+                        if self.collision_enabled and not self.collision_solids:
+                            self._build_collision_cache()
+                        log("Colision: " + ("ON" if self.collision_enabled else "OFF"))
+                        self._update_hud(force=True)
+                    return True
+
+                if key == KEY_R:
+                    if not event.isAutoRepeat():
+                        self._reset_walk_height()
+                    return True
+
+                if key in (KEY_W, KEY_A, KEY_S, KEY_D, KEY_Q, KEY_E, KEY_SHIFT):
+                    self.keys.add(key)
+                    return True
+
+            elif etype == EV_KEY_RELEASE:
+                key = event.key()
+                if key in (KEY_W, KEY_A, KEY_S, KEY_D, KEY_Q, KEY_E, KEY_SHIFT):
+                    self.keys.discard(key)
+                    return True
+
+            elif etype == EV_MOUSE_MOVE:
+                if self.ignore_mouse_moves > 0:
+                    self.ignore_mouse_moves -= 1
+                    return True
+
+                pos = self._event_position(event)
+                center = self.gl_widget.rect().center()
+
+                dx = float(pos.x() - center.x())
+                dy = float(pos.y() - center.y())
+
+                if abs(dx) > 0.0 or abs(dy) > 0.0:
+                    self.yaw_deg -= dx * MOUSE_SENSITIVITY_DEG_PX
+                    self.pitch_deg -= dy * MOUSE_SENSITIVITY_DEG_PX
+
+                    self.pitch_deg = clamp(
+                        self.pitch_deg, -PITCH_LIMIT_DEG, PITCH_LIMIT_DEG
+                    )
+
+                    if self.yaw_deg > 180.0:
+                        self.yaw_deg -= 360.0
+                    elif self.yaw_deg < -180.0:
+                        self.yaw_deg += 360.0
+
+                    self._apply_camera_orientation()
+
+                self._center_mouse()
+                return True
+
+            elif etype == EV_MOUSE_PRESS:
+                try:
+                    self.gl_widget.setFocus()
+                except Exception:
+                    pass
+                self._center_mouse()
+                return True
+
+            elif etype == EV_WHEEL:
+                try:
+                    delta = float(event.angleDelta().y())
+                except Exception:
+                    delta = 0.0
+
+                if delta != 0.0:
+                    steps = delta / 120.0
+                    factor = math.pow(1.15, steps)
+                    self.speed = clamp(self.speed * factor, 250.0, 10000.0)
+                    log("Velocidad: {:.0f} mm/s".format(self.speed))
+                    self._update_hud(force=True)
+
+                return True
+
+            elif etype == EV_RESIZE:
+                QtCore.QTimer.singleShot(0, self._position_hud)
+                return False
+
+            elif etype == EV_FOCUS_OUT:
+                self.keys.clear()
+                return False
+
+            elif etype in (EV_HIDE, EV_CLOSE):
+                self.keys.clear()
+                QtCore.QTimer.singleShot(0, lambda: self.stop("vista cerrada"))
+                return False
+
+        except Exception as exc:
+            err("Error en eventFilter: " + str(exc))
+
+        return False
+
+    # -----------------------------------------------------------------------
+    # Movimiento
+    # -----------------------------------------------------------------------
+
+    def _tick(self):
+        if not self.running:
+            return
+
+        try:
+            now = time.perf_counter()
+            if self.last_time is None:
+                self.last_time = now
+                return
+
+            dt = clamp(now - self.last_time, 0.0, 0.050)
+            self.last_time = now
+
+            rot = self._orientation_from_angles()
+            forward = normalized(rot.multVec(App.Vector(0.0, 0.0, -1.0)))
+            right = normalized(rot.multVec(App.Vector(1.0, 0.0, 0.0)))
+
+            move = App.Vector(0.0, 0.0, 0.0)
+
+            if self.mode == "WALK":
+                forward = normalized(App.Vector(forward.x, forward.y, 0.0))
+                right = normalized(App.Vector(right.x, right.y, 0.0))
+
+            if KEY_W in self.keys:
+                move = move + forward
+            if KEY_S in self.keys:
+                move = move - forward
+            if KEY_D in self.keys:
+                move = move + right
+            if KEY_A in self.keys:
+                move = move - right
+
+            if self.mode == "FLY":
+                if KEY_E in self.keys:
+                    move = move + App.Vector(0.0, 0.0, 1.0)
+                if KEY_Q in self.keys:
+                    move = move - App.Vector(0.0, 0.0, 1.0)
+
+            if move.Length > 1.0e-9:
+                move = normalized(move)
+
+                speed = self.speed
+                if KEY_SHIFT in self.keys:
+                    speed *= FAST_MULTIPLIER
+
+                if self.mode == "FLY":
+                    horizontal_keys = any(
+                        key in self.keys for key in (KEY_W, KEY_A, KEY_S, KEY_D)
+                    )
+                    vertical_keys = any(
+                        key in self.keys for key in (KEY_Q, KEY_E)
+                    )
+                    if vertical_keys and not horizontal_keys:
+                        speed = FLY_VERTICAL_SPEED_MM_S
+                        if KEY_SHIFT in self.keys:
+                            speed *= FAST_MULTIPLIER
+
+                delta = move * (speed * dt)
+                self._move_camera(delta)
+
+            self._apply_camera_orientation()
+
+            self.hud_tick += 1
+            if self.hud_tick >= 10:
+                self.hud_tick = 0
+                self._update_hud()
+
+        except Exception as exc:
+            err("Error en actualizacion: " + str(exc))
+            self.stop("error")
+
+    def _move_camera(self, delta):
+        old_pos = self._camera_position()
+        new_pos = old_pos + delta
+
+        if self.mode == "WALK":
+            new_pos.z = self.floor_z + self.eye_height
+
+            if self.collision_enabled and self._is_blocked(new_pos):
+                try_x = App.Vector(new_pos.x, old_pos.y, new_pos.z)
+                try_y = App.Vector(old_pos.x, new_pos.y, new_pos.z)
+
+                x_ok = not self._is_blocked(try_x)
+                y_ok = not self._is_blocked(try_y)
+
+                dx = abs(new_pos.x - old_pos.x)
+                dy = abs(new_pos.y - old_pos.y)
+
+                if x_ok and y_ok:
+                    new_pos = try_x if dx >= dy else try_y
+                elif x_ok:
+                    new_pos = try_x
+                elif y_ok:
+                    new_pos = try_y
+                else:
+                    new_pos = old_pos
+
+        self._set_camera_position(new_pos)
+
+    def _toggle_mode(self):
+        if self.mode == "WALK":
+            self.mode = "FLY"
+        else:
+            self.mode = "WALK"
+            self._reset_walk_height()
+
+        log("Modo: " + self.mode)
+        self._update_hud(force=True)
+
+    def _reset_walk_height(self):
+        if self.mode != "WALK":
+            return
+
+        pos = self._camera_position()
+        pos.z = self.floor_z + self.eye_height
+        self._set_camera_position(pos)
+        log("Altura restaurada: Z={:.0f} mm".format(pos.z))
+
+    # -----------------------------------------------------------------------
+    # Colision simple
+    # -----------------------------------------------------------------------
+
+    def _build_collision_cache(self):
+        self.collision_solids = []
+
+        if self.doc is None:
+            return
+
+        count_objects = 0
+
+        for obj in self.doc.Objects:
+            if not hasattr(obj, "Shape"):
+                continue
+
+            try:
+                shape = obj.Shape
+                if shape is None or shape.isNull():
+                    continue
+            except Exception:
+                continue
+
+            try:
+                vp = self.gui_doc.getObject(obj.Name)
+                if vp is not None and not vp.Visibility:
+                    continue
+            except Exception:
+                pass
+
+            try:
+                solids = list(shape.Solids)
+            except Exception:
+                solids = []
+
+            if not solids:
+                continue
+
+            count_objects += 1
+
+            for solid in solids:
+                try:
+                    bb = solid.BoundBox
+                    self.collision_solids.append((
+                        obj.Name,
+                        solid,
+                        (
+                            float(bb.XMin), float(bb.XMax),
+                            float(bb.YMin), float(bb.YMax),
+                            float(bb.ZMin), float(bb.ZMax)
+                        )
+                    ))
+                except Exception:
+                    pass
+
+        log("Cache de colision: {} solidos en {} objetos.".format(
+            len(self.collision_solids), count_objects
+        ))
+
+    def _is_blocked(self, eye_pos):
+        if not self.collision_enabled or not self.collision_solids:
+            return False
+
+        r = BODY_RADIUS_MM
+        body_z1 = self.floor_z + 350.0
+        body_z2 = min(
+            self.floor_z + self.eye_height - 100.0,
+            self.floor_z + 1450.0
+        )
+
+        if body_z2 < body_z1:
+            body_z2 = body_z1
+
+        xy_offsets = (
+            (0.0, 0.0),
+            (r, 0.0),
+            (-r, 0.0),
+            (0.0, r),
+            (0.0, -r),
+        )
+
+        probes = []
+        for z in (body_z1, body_z2):
+            for dx, dy in xy_offsets:
+                probes.append(App.Vector(eye_pos.x + dx, eye_pos.y + dy, z))
+
+        x_min = eye_pos.x - r
+        x_max = eye_pos.x + r
+        y_min = eye_pos.y - r
+        y_max = eye_pos.y + r
+        z_min = body_z1
+        z_max = body_z2
+
+        for obj_name, solid, bb in self.collision_solids:
+            bx1, bx2, by1, by2, bz1, bz2 = bb
+
+            if x_max < bx1 or x_min > bx2:
+                continue
+            if y_max < by1 or y_min > by2:
+                continue
+            if z_max < bz1 or z_min > bz2:
+                continue
+
+            for point in probes:
+                if (
+                    point.x < bx1 - COLLISION_TOL_MM
+                    or point.x > bx2 + COLLISION_TOL_MM
+                    or point.y < by1 - COLLISION_TOL_MM
+                    or point.y > by2 + COLLISION_TOL_MM
+                    or point.z < bz1 - COLLISION_TOL_MM
+                    or point.z > bz2 + COLLISION_TOL_MM
+                ):
+                    continue
+
+                try:
+                    if solid.isInside(point, COLLISION_TOL_MM, True):
+                        self._log_collision(obj_name)
+                        return True
+                except Exception:
+                    continue
+
+        return False
+
+    def _log_collision(self, obj_name):
+        now = time.perf_counter()
+
+        if (
+            obj_name != self.last_collision_name
+            or now - self.last_collision_log_time > 1.0
+        ):
+            log("Colision con: " + str(obj_name))
+            self.last_collision_name = obj_name
+            self.last_collision_log_time = now
+
+    # -----------------------------------------------------------------------
+    # HUD
+    # -----------------------------------------------------------------------
+
+    def _create_hud(self):
+        parent = self.gl_widget
+
+        self.hud = QtWidgets.QLabel(parent)
+        self.hud.setObjectName("ElectricCR_Recorrido3D_HUD")
+        self.hud.setAttribute(qt_widget_attr("WA_TransparentForMouseEvents"), True)
+        self.hud.setStyleSheet(
+            "QLabel {"
+            " color: white;"
+            " background-color: rgba(0, 0, 0, 150);"
+            " border: 1px solid rgba(255, 255, 255, 90);"
+            " border-radius: 4px;"
+            " padding: 6px;"
+            " font-family: Consolas;"
+            " font-size: 11px;"
+            "}"
+        )
+
+        self.crosshair = QtWidgets.QLabel("+", parent)
+        self.crosshair.setObjectName("ElectricCR_Recorrido3D_Crosshair")
+        self.crosshair.setAttribute(qt_widget_attr("WA_TransparentForMouseEvents"), True)
+        self.crosshair.setAlignment(qt_align("AlignCenter"))
+        self.crosshair.setStyleSheet(
+            "QLabel {"
+            " color: white;"
+            " background-color: rgba(0, 0, 0, 80);"
+            " font-family: Consolas;"
+            " font-size: 18px;"
+            " font-weight: bold;"
+            "}"
+        )
+
+        self.hud.show()
+        self.crosshair.show()
+
+        self._update_hud(force=True)
+        self._position_hud()
+
+    def _destroy_hud(self):
+        for widget in (self.hud, self.crosshair):
+            if widget is not None:
+                try:
+                    widget.hide()
+                    widget.deleteLater()
+                except Exception:
+                    pass
+
+        self.hud = None
+        self.crosshair = None
+
+    def _update_hud(self, force=False):
+        if self.hud is None:
+            return
+
+        try:
+            pos = self._camera_position()
+            mode_text = "CAMINAR" if self.mode == "WALK" else "VOLAR"
+            collision_text = "ON" if self.collision_enabled else "OFF"
+
+            text = (
+                "ElectricCR - Recorrido 3D\n"
+                "Modo: {}   Vel: {:.2f} m/s   Colision: {}\n"
+                "X: {:.0f}  Y: {:.0f}  Z: {:.0f} mm\n"
+                "WASD | Shift rapido | F modo | Q/E vertical | "
+                "C colision | R altura | Esc salir"
+            ).format(
+                mode_text,
+                self.speed / 1000.0,
+                collision_text,
+                pos.x,
+                pos.y,
+                pos.z
+            )
+
+            self.hud.setText(text)
+            self.hud.adjustSize()
+
+            if force:
+                self._position_hud()
+        except Exception:
+            pass
+
+    def _position_hud(self):
+        if self.gl_widget is None:
+            return
+
+        try:
+            if self.hud is not None:
+                self.hud.move(12, 12)
+
+            if self.crosshair is not None:
+                size = 28
+                x = int((self.gl_widget.width() - size) / 2)
+                y = int((self.gl_widget.height() - size) / 2)
+                self.crosshair.setGeometry(x, y, size, size)
+        except Exception:
+            pass
+
+
+# ---------------------------------------------------------------------------
+# Lanzador
+# ---------------------------------------------------------------------------
+
+def start_recorrido3d():
+    app = QtWidgets.QApplication.instance()
+    if app is None:
+        raise RuntimeError("No existe QApplication.")
+
+    old_controller = getattr(app, APP_SINGLETON_NAME, None)
+
+    if old_controller is not None:
+        try:
+            old_controller.stop("reinicio de macro")
+        except Exception:
+            pass
+
+    controller = Recorrido3DController()
+    setattr(app, APP_SINGLETON_NAME, controller)
+
+    try:
+        controller.start()
+    except Exception:
+        setattr(app, APP_SINGLETON_NAME, None)
+        raise
+
+    return controller
+
+
+try:
+    RECORRIDO3D = start_recorrido3d()
+except Exception as exc:
+    err("No se pudo iniciar Recorrido3D: " + str(exc))
+    raise

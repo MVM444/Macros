@@ -1,147 +1,75 @@
-# Qt compatibility for FreeCAD 1.x (PySide6) and older builds.
-def _ensure_qt_compat():
-    import sys
-    import types
+# -*- coding: utf-8 -*-
+# MenuText: Extraer propiedades del objeto
+# ToolTip: Extrae las propiedades de los objetos seleccionados y las copia como JSON.
+# Version: 2.0.0 | Date: 2026-08-12 00:00 CST
+"""Serialize selected objects safely with depth and size limits; read-only."""
 
-    QtCore = QtGui = QtWidgets = None
-    binding_name = None
-
-    for candidate in ("PySide6", "PySide2", "PySide"):
-        try:
-            if candidate == "PySide":
-                from PySide import QtCore as _QtCore, QtGui as _QtGui
-                _QtWidgets = _QtGui
-            else:
-                module = __import__(candidate, fromlist=["QtCore", "QtGui", "QtWidgets"])
-                _QtCore = module.QtCore
-                _QtGui = module.QtGui
-                _QtWidgets = module.QtWidgets
-            QtCore, QtGui, QtWidgets = _QtCore, _QtGui, _QtWidgets
-            binding_name = candidate
-            break
-        except Exception:
-            continue
-
-    if QtCore is None:
-        return
-
-    qtgui_compat = types.ModuleType("QtGui")
-    qtgui_compat.__dict__.update(getattr(QtGui, "__dict__", {}))
-    qtgui_compat.__dict__.update(getattr(QtWidgets, "__dict__", {}))
-
-    qtsvg_compat = None
-    for module_name in ("QtSvg", "QtSvgWidgets"):
-        try:
-            module = __import__(binding_name, fromlist=[module_name])
-            qt_module = getattr(module, module_name)
-        except Exception:
-            continue
-        if qtsvg_compat is None:
-            qtsvg_compat = types.ModuleType("QtSvg")
-        qtsvg_compat.__dict__.update(getattr(qt_module, "__dict__", {}))
-
-    qtuitools_compat = None
-    try:
-        module = __import__(binding_name, fromlist=["QtUiTools"])
-        qtuitools_compat = module.QtUiTools
-    except Exception:
-        pass
-
-    for package_name in ("PySide2", "PySide"):
-        package = sys.modules.get(package_name)
-        if package is None:
-            package = types.ModuleType(package_name)
-            sys.modules[package_name] = package
-        package.QtCore = QtCore
-        package.QtGui = qtgui_compat
-        package.QtWidgets = QtWidgets
-        sys.modules[package_name + ".QtCore"] = QtCore
-        sys.modules[package_name + ".QtGui"] = qtgui_compat
-        sys.modules[package_name + ".QtWidgets"] = QtWidgets
-        if qtsvg_compat is not None:
-            package.QtSvg = qtsvg_compat
-            sys.modules[package_name + ".QtSvg"] = qtsvg_compat
-        if qtuitools_compat is not None:
-            package.QtUiTools = qtuitools_compat
-            sys.modules[package_name + ".QtUiTools"] = qtuitools_compat
-
-
-_ensure_qt_compat()
-
-# Macro: CopyObjectProperties.FCMacro
-# Descripcion: Extrae propiedades de objetos seleccionados y copia JSON al portapapeles
-# Date: 2025-07-05 11:00
-# Version: 1.1
-
-import FreeCAD
-import FreeCADGui
-from FreeCAD import Units
 import json
-from PySide2.QtWidgets import QApplication
 
-# Función para serializar valores no JSON-serializables
-def serialize_value(val):
-    # Quantities: convertir a float
-    try:
-        if isinstance(val, Units.Quantity):
-            return val.Value
-    except Exception:
-        pass
-    # Vectores: convertir a lista
-    if hasattr(val, 'x') and hasattr(val, 'y'):
-        return [val.x, val.y, getattr(val, 'z', 0)]
-    # Otros tipos básicos
-    if isinstance(val, (str, int, float, bool)):
-        return val
-    # Para tuplas o listas, serializar recursivamente
-    if isinstance(val, (list, tuple)):
-        return [serialize_value(v) for v in val]
-    # Valor por defecto: convertir a string
-    return str(val)
+import FreeCAD as App
+import FreeCADGui as Gui
 
-# Función para obtener propiedades de un objeto
-def get_obj_properties(obj):
+from programacion_common import clipboard_set, document_metadata, info, link_data, path_text, text, warning
+
+TOOL = "PROPIEDADES"
+MAX_DEPTH = 4
+MAX_ITEMS = 100
+MAX_TEXT = 4000
+
+
+def safe(value, depth=0):
+    if depth >= MAX_DEPTH:
+        return "<limite de profundidad>"
+    if value is None or isinstance(value, (bool, int, float)):
+        return value
+    if isinstance(value, str):
+        return value[:MAX_TEXT] + ("<truncado>" if len(value) > MAX_TEXT else "")
+    if hasattr(value, "Value") and hasattr(value, "Unit"):
+        return {"value": float(value.Value), "unit": text(value.Unit)}
+    if all(hasattr(value, key) for key in ("x", "y", "z")):
+        return {"x": float(value.x), "y": float(value.y), "z": float(value.z)}
+    if hasattr(value, "Name") and hasattr(value, "TypeId"):
+        return {"Name": text(value.Name), "Label": text(getattr(value, "Label", "")), "TypeId": text(value.TypeId)}
+    if isinstance(value, dict):
+        return {text(key): safe(item, depth + 1) for key, item in list(value.items())[:MAX_ITEMS]}
+    if isinstance(value, (list, tuple)):
+        result = [safe(item, depth + 1) for item in list(value)[:MAX_ITEMS]]
+        if len(value) > MAX_ITEMS:
+            result.append("<{} elementos omitidos>".format(len(value) - MAX_ITEMS))
+        return result
+    rendered = text(value, "<no serializable>")
+    return rendered[:MAX_TEXT] + ("<truncado>" if len(rendered) > MAX_TEXT else "")
+
+
+def record(obj):
+    failures = []
     props = {}
-    props['Name'] = obj.Name
-    props['Label'] = obj.Label
-    props['TypeId'] = obj.TypeId
-    # Placement (posición y rotación)
-    try:
-        plc = obj.Placement
-        props['Placement'] = {
-            'Position': serialize_value(plc.Base),
-            'Rotation': serialize_value([
-                plc.Rotation.Axis.x,
-                plc.Rotation.Axis.y,
-                plc.Rotation.Axis.z,
-                plc.Rotation.Angle
-            ])
-        }
-    except Exception:
-        FreeCAD.Console.PrintMessage(f"No Placement for {obj.Name}\n")
-    # Otras propiedades disponibles
-    for p in obj.PropertiesList:
-        if p in ['Placement', 'Name', 'Label', 'TypeId']:
-            continue
+    for name in list(getattr(obj, "PropertiesList", []) or []):
         try:
-            val = obj.getPropertyByName(p)
-            props[p] = serialize_value(val)
-        except Exception:
-            FreeCAD.Console.PrintMessage(f"Unable to read property {p} of {obj.Name}\n")
-    return props
+            props[name] = safe(obj.getPropertyByName(name))
+        except Exception as exc:
+            failures.append({"property": name, "error": text(exc)})
+    return {
+        "Name": text(getattr(obj, "Name", "")),
+        "Label": text(getattr(obj, "Label", "")),
+        "TypeId": text(getattr(obj, "TypeId", "")),
+        "paths": path_text(obj),
+        "link": link_data(obj),
+        "properties": props,
+        "serialization_failures": failures,
+    }
 
-# Obtener selección
-targets = FreeCADGui.Selection.getSelection()
-if not targets:
-    FreeCAD.Console.PrintError("Select one or more objects first.\n")
-else:
-    data = []
-    for obj in targets:
-        FreeCAD.Console.PrintMessage(f"Reading properties of {obj.Name}\n")
-        data.append(get_obj_properties(obj))
-    # Convertir a JSON
-    json_data = json.dumps(data, indent=2, ensure_ascii=False)
-    # Copiar al portapapeles
-    clipboard = QApplication.clipboard()
-    clipboard.setText(json_data)
-    FreeCAD.Console.PrintMessage("Properties copied to clipboard as JSON.\n")
+
+def main():
+    objects = list(Gui.Selection.getSelection() or [])
+    if not objects:
+        warning(TOOL, "No hay objetos seleccionados.")
+        return
+    payload = {"document": document_metadata(), "objects": [record(obj) for obj in objects]}
+    value = json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True)
+    clipboard_set(value)
+    failures = sum(len(item["serialization_failures"]) for item in payload["objects"])
+    info(TOOL, "JSON copiado. Objetos={}; propiedades no leidas={}.".format(len(objects), failures))
+
+
+main()

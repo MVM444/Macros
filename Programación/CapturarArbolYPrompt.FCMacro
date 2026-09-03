@@ -1,0 +1,674 @@
+# -*- coding: utf-8 -*-
+# ============================================================================
+# Nombre: CapturarArbolYPrompt.FCMacro
+# Proposito: Exportar el arbol completo del documento activo de FreeCAD o,
+#            cuando existe seleccion, solamente la rama o ramas seleccionadas.
+# Funcionamiento principal:
+#   1. Reconstruye la jerarquia que FreeCAD muestra en el Tree View usando
+#      ViewProvider.claimChildren() cuando esta disponible.
+#   2. Conserva compatibilidad con App::DocumentObjectGroup mediante Group.
+#   3. Sin seleccion exporta todas las raices visibles del documento.
+#   4. Con seleccion exporta unicamente las ramas seleccionadas, eliminando
+#      duplicados cuando se seleccionan simultaneamente padre e hijo.
+#   5. Genera una seccion separada de relaciones internas (Base, Hosts,
+#      LinkedObject, InList, OutList y padres visuales multiples).
+#   6. Genera TXT, Markdown y JSON, conserva metadatos utiles y copia un prompt tecnico al portapapeles.
+# Instrucciones para futuras modificaciones:
+#   - No volver a limitar las raices seleccionadas a objetos tipo Group.
+#   - No sustituir claimChildren() por OutList: OutList representa dependencias
+#     y no necesariamente la jerarquia visual del Tree View.
+#   - Mantener la ejecucion de solo lectura sobre el documento.
+#   - Mantener salida JSON compatible y proteccion contra ciclos.
+#   - Mantener las relaciones fuera del arbol principal para conservar legibilidad.
+# Version: 1.3.0
+# Fecha y hora: 2026-08-28 08:45 America/Costa_Rica
+# FreeCAD objetivo: 1.1.3
+# ============================================================================
+
+"""Captura y exporta el arbol del documento activo.
+
+Alcance:
+- Con uno o mas objetos seleccionados: exporta solamente esas ramas.
+- Sin seleccion: exporta el arbol completo del documento.
+
+La jerarquia se obtiene preferentemente desde ``ViewProvider.claimChildren()``,
+que es el mecanismo usado por FreeCAD para anidar objetos en el Tree View.
+``Group`` se conserva como respaldo para tipos basados en grupos.
+"""
+
+import datetime
+import json
+import os
+import re
+
+import FreeCAD as App
+
+try:
+    import FreeCADGui as Gui
+except Exception:
+    Gui = None
+
+try:
+    from PySide6 import QtWidgets
+except Exception:
+    try:
+        from PySide2 import QtWidgets
+    except Exception:
+        try:
+            from PySide import QtGui as QtWidgets  # type: ignore
+        except Exception:
+            QtWidgets = None
+
+
+TAG = "[ARBOL_MODELO]"
+VERSION = "1.3.0"
+
+
+def info(msg):
+    App.Console.PrintMessage("{} {}\n".format(TAG, msg))
+
+
+def warn(msg):
+    App.Console.PrintWarning("{} {}\n".format(TAG, msg))
+
+
+def err(msg):
+    App.Console.PrintError("{} {}\n".format(TAG, msg))
+
+
+def txt(value):
+    try:
+        return str(value or "")
+    except Exception:
+        return ""
+
+
+
+
+def object_visibility(obj):
+    try:
+        return bool(obj.ViewObject.Visibility)
+    except Exception:
+        return None
+
+
+def object_layer(obj):
+    for name in ("Layer", "Layers", "IfcLayer", "DraftLayer", "LayerGroup"):
+        try:
+            value = getattr(obj, name)
+        except Exception:
+            continue
+        if value in (None, "", []):
+            continue
+        if isinstance(value, (list, tuple)):
+            return ",".join(txt(item) for item in value)
+        return txt(value)
+    return ""
+
+
+def document_file(doc):
+    try:
+        value = txt(getattr(doc, "FileName", ""))
+    except Exception:
+        value = ""
+    return os.path.abspath(value) if value else "(documento aun no guardado)"
+
+
+def source_path_for(obj, parents_by_key, doc):
+    """Devuelve una ruta visual estable desde una raiz hasta el objeto."""
+    chain = [obj]
+    seen = {object_key(obj)}
+    current = obj
+    while True:
+        parents = unique_objects(parents_by_key.get(object_key(current), []) or [])
+        if not parents:
+            break
+        parents.sort(key=lambda item: natural_key(txt(getattr(item, "Label", "")) or txt(getattr(item, "Name", ""))))
+        parent = parents[0]
+        key = object_key(parent)
+        if key in seen:
+            break
+        seen.add(key)
+        chain.append(parent)
+        current = parent
+    chain.reverse()
+    doc_token = "{}<{}>".format(txt(getattr(doc, "Label", "")) or txt(getattr(doc, "Name", "")), txt(getattr(doc, "Name", "")))
+    return " / ".join([doc_token] + ["{}<{}>".format(txt(getattr(item, "Label", "")) or txt(getattr(item, "Name", "")), txt(getattr(item, "Name", ""))) for item in chain])
+
+
+def optional_objective():
+    if QtWidgets is None or Gui is None:
+        return ""
+    try:
+        value, ok = QtWidgets.QInputDialog.getText(Gui.getMainWindow(), "Capturar arbol y prompt", "Objetivo opcional del analisis:")
+        return txt(value).strip() if ok else ""
+    except Exception:
+        return ""
+
+def natural_key(value):
+    value = txt(value)
+    return [int(part) if part.isdigit() else part.lower()
+            for part in re.split(r"([0-9]+)", value)]
+
+
+def object_key(obj):
+    name = txt(getattr(obj, "Name", ""))
+    return name or "@{}".format(id(obj))
+
+
+def unique_objects(objects):
+    result = []
+    seen = set()
+    for obj in list(objects or []):
+        if obj is None:
+            continue
+        key = object_key(obj)
+        if key in seen:
+            continue
+        seen.add(key)
+        result.append(obj)
+    return result
+
+
+def belongs_to_document(obj, doc):
+    try:
+        return getattr(obj, "Document", None) is doc
+    except Exception:
+        return False
+
+
+def show_in_tree(obj):
+    """Devuelve False solo cuando FreeCAD declara explicitamente que no se muestra."""
+    try:
+        view = getattr(obj, "ViewObject", None)
+        method = getattr(view, "showInTree", None)
+        if callable(method):
+            return bool(method())
+    except Exception:
+        pass
+    return True
+
+
+def _call_claim_children(provider):
+    if provider is None:
+        return None
+    method = getattr(provider, "claimChildren", None)
+    if not callable(method):
+        return None
+    try:
+        return list(method() or [])
+    except Exception:
+        return None
+
+
+def tree_children(obj, doc):
+    """Obtiene hijos segun la jerarquia visual de FreeCAD.
+
+    Orden de preferencia:
+      1. ViewObject.claimChildren() (C++/Python ViewProvider).
+      2. ViewObject.Proxy.claimChildren() para ViewProviders Python.
+      3. Propiedad Group como compatibilidad/fallback.
+
+    No se usa OutList porque incluye dependencias que pueden no ser hijos del
+    objeto en el Tree View.
+    """
+    children = None
+
+    try:
+        view = getattr(obj, "ViewObject", None)
+    except Exception:
+        view = None
+
+    children = _call_claim_children(view)
+
+    if children is None and view is not None:
+        try:
+            children = _call_claim_children(getattr(view, "Proxy", None))
+        except Exception:
+            children = None
+
+    if children is None:
+        try:
+            if hasattr(obj, "Group"):
+                children = list(getattr(obj, "Group", []) or [])
+        except Exception:
+            children = None
+
+    if children is None:
+        children = []
+
+    result = []
+    for child in unique_objects(children):
+        if not belongs_to_document(child, doc):
+            continue
+        if not show_in_tree(child):
+            continue
+        result.append(child)
+
+    result.sort(key=lambda item: natural_key(
+        txt(getattr(item, "Label", "")) or txt(getattr(item, "Name", ""))))
+    return result
+
+
+def build_tree_index(doc):
+    """Construye hijos y padres una sola vez para mantener una vista consistente."""
+    visible_objects = [obj for obj in list(doc.Objects or []) if show_in_tree(obj)]
+    children_by_key = {}
+    parents_by_key = {}
+
+    for obj in visible_objects:
+        key = object_key(obj)
+        children = tree_children(obj, doc)
+        children_by_key[key] = children
+        for child in children:
+            child_key = object_key(child)
+            parents_by_key.setdefault(child_key, []).append(obj)
+
+    return visible_objects, children_by_key, parents_by_key
+
+
+def document_roots(doc, visible_objects, parents_by_key):
+    """Raices del Tree View: objetos visibles no reclamados por otro objeto."""
+    roots = []
+    for obj in visible_objects:
+        if object_key(obj) not in parents_by_key:
+            roots.append(obj)
+
+    roots.sort(key=lambda item: natural_key(
+        txt(getattr(item, "Label", "")) or txt(getattr(item, "Name", ""))))
+    return unique_objects(roots)
+
+
+def selected_objects(doc):
+    if Gui is None:
+        return []
+    try:
+        selection = list(Gui.Selection.getSelection() or [])
+    except Exception:
+        selection = []
+
+    return unique_objects([
+        obj for obj in selection
+        if belongs_to_document(obj, doc) and show_in_tree(obj)
+    ])
+
+
+def descendants_of(root, children_by_key):
+    result = set()
+    stack = list(children_by_key.get(object_key(root), []) or [])
+    while stack:
+        obj = stack.pop()
+        key = object_key(obj)
+        if key in result:
+            continue
+        result.add(key)
+        stack.extend(children_by_key.get(key, []) or [])
+    return result
+
+
+def normalize_selected_roots(selection, children_by_key):
+    """Evita exportar dos veces un hijo si tambien esta seleccionado su padre."""
+    selection = unique_objects(selection)
+    selected_keys = {object_key(obj) for obj in selection}
+    covered = set()
+
+    for obj in selection:
+        desc = descendants_of(obj, children_by_key)
+        covered.update(desc.intersection(selected_keys))
+
+    roots = [obj for obj in selection if object_key(obj) not in covered]
+    roots.sort(key=lambda item: natural_key(
+        txt(getattr(item, "Label", "")) or txt(getattr(item, "Name", ""))))
+    return roots
+
+
+def node_title(obj):
+    name = txt(getattr(obj, "Name", ""))
+    label = txt(getattr(obj, "Label", "")) or name
+    type_id = txt(getattr(obj, "TypeId", ""))
+    return "{} | Name={} | Type={} | visible={}{}".format(label, name, type_id, object_visibility(obj), (" | layer=" + object_layer(obj)) if object_layer(obj) else "")
+
+
+RELATION_FIELDS = ("Base", "Hosts", "LinkedObject", "InList", "OutList")
+
+
+def relation_ref(obj):
+    """Devuelve una referencia JSON/Texto compacta a un DocumentObject."""
+    return {
+        "name": txt(getattr(obj, "Name", "")),
+        "label": txt(getattr(obj, "Label", "")),
+        "type_id": txt(getattr(obj, "TypeId", "")),
+    }
+
+
+def relation_ref_text(ref):
+    name = txt(ref.get("name", ""))
+    label = txt(ref.get("label", "")) or name
+    if label and label != name:
+        return "{}<{}>".format(label, name)
+    return name or label or "?"
+
+
+def _relation_objects(value, doc):
+    """Extrae DocumentObjects de una propiedad Link/LinkList/LinkSub de forma segura."""
+    result = []
+
+    def visit(item):
+        if item is None:
+            return
+        if belongs_to_document(item, doc):
+            result.append(item)
+            return
+        if isinstance(item, (list, tuple)):
+            for sub in item:
+                visit(sub)
+
+    visit(value)
+    return unique_objects(result)
+
+
+def object_relations(obj, doc, parents_by_key):
+    """Lee relaciones sin modificar el documento.
+
+    Group no se repite aqui porque ya forma parte de la jerarquia exportada.
+    TreeParents se agrega solo cuando el mismo objeto es reclamado visualmente
+    por mas de un padre, que es el caso clave para detectar repeticiones.
+    """
+    relations = {}
+
+    for field in RELATION_FIELDS:
+        try:
+            value = getattr(obj, field)
+        except Exception:
+            continue
+        refs = [relation_ref(item) for item in _relation_objects(value, doc)]
+        if refs:
+            relations[field] = refs
+
+    tree_parents = unique_objects(
+        parents_by_key.get(object_key(obj), []) or [])
+    if len(tree_parents) > 1:
+        relations["TreeParents"] = [relation_ref(item) for item in tree_parents]
+
+    return relations
+
+
+def collect_exported_objects(roots, children_by_key):
+    """Lista unica de objetos incluidos en las ramas exportadas."""
+    result = []
+    seen = set()
+    stack = list(reversed(list(roots or [])))
+
+    while stack:
+        obj = stack.pop()
+        key = object_key(obj)
+        if key in seen:
+            continue
+        seen.add(key)
+        result.append(obj)
+        children = list(children_by_key.get(key, []) or [])
+        stack.extend(reversed(children))
+
+    return result
+
+
+def build_relations_payload(objects, doc, parents_by_key):
+    payload = []
+    for obj in objects:
+        relations = object_relations(obj, doc, parents_by_key)
+        if not relations:
+            continue
+        payload.append({
+            "name": txt(getattr(obj, "Name", "")),
+            "label": txt(getattr(obj, "Label", "")),
+            "type_id": txt(getattr(obj, "TypeId", "")),
+            "relations": relations,
+        })
+    return payload
+
+
+def append_relation_lines(lines, relations_payload):
+    if not relations_payload:
+        return
+
+    lines.append("[RELACIONES INTERNAS]")
+    lines.append(
+        "Base/Hosts/LinkedObject/InList/OutList; TreeParents solo si hay mas de un padre visual.")
+    lines.append("")
+
+    order = list(RELATION_FIELDS) + ["TreeParents"]
+    for item in relations_payload:
+        parts = []
+        relations = item.get("relations", {})
+        for field in order:
+            refs = relations.get(field, [])
+            if not refs:
+                continue
+            parts.append("{}=[{}]".format(
+                field, ", ".join(relation_ref_text(ref) for ref in refs)))
+        if not parts:
+            continue
+        lines.append("- {} | {}".format(
+            "{} | Name={} | Type={}".format(
+                txt(item.get("label", "")) or txt(item.get("name", "")),
+                txt(item.get("name", "")),
+                txt(item.get("type_id", ""))),
+            " | ".join(parts)))
+    lines.append("")
+
+
+def walk_lines(obj, children_by_key, lines, depth=0, branch=None):
+    if branch is None:
+        branch = set()
+
+    key = object_key(obj)
+    lines.append("  " * depth + "- " + node_title(obj))
+
+    if key in branch:
+        lines.append("  " * (depth + 1) + "- [CICLO DETECTADO]")
+        return
+
+    next_branch = set(branch)
+    next_branch.add(key)
+
+    for child in children_by_key.get(key, []) or []:
+        child_key = object_key(child)
+        if child_key in next_branch:
+            lines.append("  " * (depth + 1) + "- [LOOP] " + node_title(child))
+            continue
+        walk_lines(child, children_by_key, lines, depth + 1, next_branch)
+
+
+def build_node_dict(obj, children_by_key, branch=None):
+    if branch is None:
+        branch = set()
+
+    key = object_key(obj)
+    node = {
+        "name": txt(getattr(obj, "Name", "")),
+        "label": txt(getattr(obj, "Label", "")),
+        "type_id": txt(getattr(obj, "TypeId", "")),
+        "visibility": object_visibility(obj),
+        "layer": object_layer(obj),
+        "children": [],
+    }
+
+    if key in branch:
+        node["loop"] = True
+        return node
+
+    next_branch = set(branch)
+    next_branch.add(key)
+
+    for child in children_by_key.get(key, []) or []:
+        child_key = object_key(child)
+        if child_key in next_branch:
+            node["children"].append({
+                "name": txt(getattr(child, "Name", "")),
+                "label": txt(getattr(child, "Label", "")),
+                "type_id": txt(getattr(child, "TypeId", "")),
+                "loop": True,
+                "children": [],
+            })
+        else:
+            node["children"].append(
+                build_node_dict(child, children_by_key, next_branch))
+
+    return node
+
+
+def copy_to_clipboard(text):
+    if QtWidgets is None:
+        return False
+    try:
+        app = QtWidgets.QApplication.instance()
+        if app is None:
+            return False
+        clipboard = app.clipboard()
+        if clipboard is None:
+            return False
+        clipboard.setText(text)
+        return True
+    except Exception:
+        return False
+
+
+def sanitize_filename(text):
+    base = txt(text).strip()
+    if not base:
+        return "Documento"
+    base = re.sub(r"[^0-9A-Za-z_ -]+", "_", base)
+    base = re.sub(r"\s+", "_", base).strip(" _")
+    return base or "Documento"
+
+
+def main():
+    doc = App.ActiveDocument
+    if doc is None:
+        err("No hay documento activo.")
+        return
+
+    visible_objects, children_by_key, parents_by_key = build_tree_index(doc)
+
+    selection = selected_objects(doc)
+    if selection:
+        roots = normalize_selected_roots(selection, children_by_key)
+        scope = "seleccion"
+    else:
+        roots = document_roots(doc, visible_objects, parents_by_key)
+        scope = "documento_completo"
+
+    if not roots:
+        err("No se encontraron objetos raiz para exportar.")
+        return
+
+    exported_objects = collect_exported_objects(roots, children_by_key)
+    relations_payload = build_relations_payload(
+        exported_objects, doc, parents_by_key)
+
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    doc_id = sanitize_filename(
+        txt(getattr(doc, "Label", "")) or txt(getattr(doc, "Name", "")))
+
+    out_dir = os.path.join(os.path.dirname(__file__), "_reportes_arbol")
+    try:
+        os.makedirs(out_dir, exist_ok=True)
+    except Exception as ex:
+        err("No se pudo crear carpeta de salida: {}".format(ex))
+        return
+
+    base_name = "Arbol_Grupos_{}_{}".format(doc_id, timestamp)
+    txt_path = os.path.join(out_dir, base_name + ".txt")
+    md_path = os.path.join(out_dir, base_name + ".md")
+    json_path = os.path.join(out_dir, base_name + ".json")
+
+    lines = [
+        "{} Version: {}".format(TAG, VERSION),
+        "{} Documento: {}".format(
+            TAG, txt(getattr(doc, "Label", "")) or txt(getattr(doc, "Name", ""))),
+        "{} Archivo fuente: {}".format(TAG, document_file(doc)),
+        "{} Alcance: {}".format(TAG, scope),
+        "{} Rutas de origen:".format(TAG),
+    ] + ["{}   - {}".format(TAG, source_path_for(root, parents_by_key, doc)) for root in roots] + [
+        "{} Raices exportadas: {}".format(TAG, len(roots)),
+        "{} Objetos visibles analizados: {}".format(TAG, len(visible_objects)),
+        "{} Objetos exportados unicos: {}".format(TAG, len(exported_objects)),
+        "{} Objetos con relaciones internas: {}".format(TAG, len(relations_payload)),
+        "",
+    ]
+
+    for root in roots:
+        walk_lines(root, children_by_key, lines, depth=0, branch=set())
+        lines.append("")
+
+    append_relation_lines(lines, relations_payload)
+
+    text_blob = "\n".join(lines).rstrip() + "\n"
+
+    payload = {
+        "tag": TAG,
+        "version": VERSION,
+        "document": {
+            "name": txt(getattr(doc, "Name", "")),
+            "label": txt(getattr(doc, "Label", "")),
+            "file": document_file(doc),
+        },
+        "scope": scope,
+        "selected_objects": [
+            txt(getattr(obj, "Name", "")) for obj in selection
+        ],
+        "root_objects": [
+            build_node_dict(root, children_by_key, set()) for root in roots
+        ],
+        "source_paths": [source_path_for(root, parents_by_key, doc) for root in roots],
+        "relations": relations_payload,
+    }
+
+    try:
+        with open(txt_path, "w", encoding="utf-8") as handle:
+            handle.write(text_blob)
+        with open(md_path, "w", encoding="utf-8") as handle:
+            handle.write("```text\n")
+            handle.write(text_blob)
+            handle.write("```\n")
+        with open(json_path, "w", encoding="utf-8") as handle:
+            json.dump(payload, handle, ensure_ascii=False, indent=2)
+    except Exception as ex:
+        err("No se pudo escribir reporte: {}".format(ex))
+        return
+
+    objective = optional_objective()
+    prompt = """Analice primero este arbol de FreeCAD y presente solamente hallazgos. Revise jerarquia, objetos fuera de lugar, duplicados, niveles innecesarios, nombres, Links y relaciones internas problematicas. No modifique el documento ni genere codigo hasta definir la correccion.
+
+Objetivo adicional: {objective}
+Documento: {label} ({name})
+Archivo: {file}
+Alcance: {scope}
+FreeCAD objetivo: 1.1.3
+
+----- INICIO ARBOL -----
+{tree}
+----- FIN ARBOL -----
+""".format(
+        objective=objective or "ninguno",
+        label=txt(getattr(doc, "Label", "")),
+        name=txt(getattr(doc, "Name", "")),
+        file=document_file(doc),
+        scope=scope,
+        tree=text_blob,
+    )
+    copied = copy_to_clipboard(prompt)
+    try:
+        App.Console.PrintMessage(text_blob)
+    except Exception:
+        pass
+    info("Exportado: {}".format(txt_path))
+    info("Exportado: {}".format(md_path))
+    info("Exportado: {}".format(json_path))
+    info(
+        "Resumen: alcance={} | raices={} | objetos={} | relaciones={} | prompt_clipboard={}".format(
+            scope, len(roots), len(exported_objects), len(relations_payload),
+            "SI" if copied else "NO"))
+
+
+main()
